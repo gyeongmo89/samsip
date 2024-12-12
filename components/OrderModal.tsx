@@ -32,6 +32,15 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
     fetchUnits()
   }, [])
 
+  useEffect(() => {
+    if (isOpen) {
+      const lastOrder = JSON.parse(localStorage.getItem('lastOrder') || '{}')
+      if (Object.keys(lastOrder).length > 0) {
+        setFormData(lastOrder)
+      }
+    }
+  }, [isOpen])
+
   const fetchSuppliers = async () => {
     try {
       const response = await fetch('http://localhost:8000/suppliers')
@@ -65,11 +74,10 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
     }
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
     try {
-      console.log('Raw form data:', formData);
-
       // Convert string values to appropriate types before sending
       const orderData = {
         supplier_id: parseInt(formData.supplier_id),
@@ -83,8 +91,6 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
         notes: formData.notes || ''
       }
 
-      console.log('Sending order data:', orderData);
-
       const response = await fetch('http://localhost:8000/orders/', {
         method: 'POST',
         headers: {
@@ -93,31 +99,16 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
         body: JSON.stringify(orderData),
       })
 
-      const responseData = await response.json();
-      console.log('Response status:', response.status);
-      console.log('Response data:', responseData);
-
-      if (!response.ok) {
-        if (responseData.detail && Array.isArray(responseData.detail)) {
-          // FastAPI validation errors come as an array in the detail field
-          throw new Error(responseData.detail.join('\n'));
-        } else if (typeof responseData.detail === 'string') {
-          throw new Error(responseData.detail);
-        } else {
-          throw new Error('서버에서 알 수 없는 오류가 발생했습니다');
-        }
-      }
-      
-      alert('주문이 등록되었습니다.')
-      onOrderComplete()
-      onClose()
-    } catch (error) {
-      console.error('Error details:', error);
-      if (error instanceof Error) {
-        alert('주문 등록 실패:\n' + error.message);
+      if (response.ok) {
+        localStorage.setItem('lastOrder', JSON.stringify(formData))
+        onClose()
+        window.dispatchEvent(new Event('ordersUpdated'))
       } else {
-        alert('주문 등록 중 오류가 발생했습니다');
+        throw new Error('주문 등록 실패')
       }
+    } catch (error) {
+      console.error('Error creating order:', error)
+      alert('주문 등록 중 오류가 발생했습니다.')
     }
   }
 
@@ -147,7 +138,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
             <select
               value={formData.supplier_id}
               onChange={(e) => setFormData(prev => ({ ...prev, supplier_id: e.target.value }))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-black text-lg h-12"
+              className="mt-1 block w-full rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-lg h-12"
               required
             >
               <option value="">선택하세요</option>
@@ -165,7 +156,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
             <select
               value={formData.item_id}
               onChange={(e) => setFormData(prev => ({ ...prev, item_id: e.target.value }))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-black text-lg h-12"
+              className="mt-1 block w-full rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-lg h-12"
               required
             >
               <option value="">선택하세요</option>
@@ -183,7 +174,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
             <select
               value={formData.unit_id}
               onChange={(e) => setFormData(prev => ({ ...prev, unit_id: e.target.value }))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-black text-lg h-12"
+              className="mt-1 block w-full rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-lg h-12"
               required
             >
               <option value="">선택하세요</option>
@@ -202,7 +193,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
               type="number"
               value={formData.price}
               onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-black text-lg h-12"
+              className="mt-1 block w-full rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-lg h-12"
               required
               min="0"
             />
@@ -217,7 +208,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
               type="number"
               value={formData.quantity}
               onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-black text-lg h-12"
+              className="mt-1 block w-full rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-lg h-12"
               required
               min="0"
             />
@@ -232,7 +223,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
               type="text"
               value={formData.total}
               readOnly
-              className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm text-black text-lg h-12"
+              className="mt-1 block w-full rounded-lg border-2 border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-lg h-12"
             />
           </div>
 
@@ -244,7 +235,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
             <select
               value={formData.payment_cycle}
               onChange={(e) => setFormData(prev => ({ ...prev, payment_cycle: e.target.value }))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-black text-lg h-12"
+              className="mt-1 block w-full rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-lg h-12"
               required
             >
               <option value="">선택하세요</option>
@@ -263,7 +254,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
               type="date"
               value={formData.date}
               onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-black text-lg h-12"
+              className="mt-1 block w-full rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-lg h-12"
               required
             />
           </div>
@@ -277,7 +268,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
               type="text"
               value={formData.client}
               onChange={(e) => setFormData(prev => ({ ...prev, client: e.target.value }))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-black text-lg h-12"
+              className="mt-1 block w-full rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-lg h-12"
               required
             />
           </div>
@@ -290,7 +281,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
             <textarea
               value={formData.notes}
               onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-black text-lg"
+              className="mt-1 block w-full rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-lg"
               rows={3}
             />
           </div>

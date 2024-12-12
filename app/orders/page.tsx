@@ -9,10 +9,28 @@ export default function OrderList() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' })
+  const [filteredOrders, setFilteredOrders] = useState([])
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([])
+  const [selectAll, setSelectAll] = useState(false)
 
   useEffect(() => {
     fetchOrders()
   }, [])
+
+  useEffect(() => {
+    let filtered = [...orders]
+
+    if (searchTerm) {
+      filtered = filtered.filter(order => 
+        order.supplier.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.item.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.notes.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }
+
+    setFilteredOrders(filtered)
+  }, [orders, searchTerm])
 
   const fetchOrders = async () => {
     try {
@@ -68,6 +86,61 @@ export default function OrderList() {
     // TODO: Implement CSV export
   }
 
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectAll(e.target.checked)
+    if (e.target.checked) {
+      setSelectedOrders(filteredOrders.map((_, index) => index.toString()))
+    } else {
+      setSelectedOrders([])
+    }
+  }
+
+  const handleSelectOrder = (index: string) => {
+    setSelectedOrders(prev => {
+      if (prev.includes(index)) {
+        return prev.filter(i => i !== index)
+      } else {
+        return [...prev, index]
+      }
+    })
+  }
+
+  const handleDeleteOrders = async () => {
+    if (selectedOrders.length === 0) {
+      alert('삭제할 주문을 선택해주세요.')
+      return
+    }
+
+    const confirmed = confirm('선택한 주문을 삭제하시겠습니까?')
+    if (!confirmed) return
+
+    try {
+      const orderIds = selectedOrders.map(index => filteredOrders[parseInt(index)].id)
+      const response = await fetch('http://localhost:8000/orders/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ order_ids: orderIds }),
+      })
+
+      if (response.ok) {
+        fetchOrders()
+        setSelectedOrders([])
+        setSelectAll(false)
+      } else {
+        throw new Error('주문 삭제 실패')
+      }
+    } catch (error) {
+      console.error('Error deleting orders:', error)
+      alert('주문 삭제 중 오류가 발생했습니다.')
+    }
+  }
+
+  const handleRowClick = (index: string) => {
+    handleSelectOrder(index)
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12">
       <div className="max-w-7xl mx-auto px-4">
@@ -94,13 +167,20 @@ export default function OrderList() {
               </div>
               
               {/* 주문등록 버튼 */}
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="bg-gradient-to-r from-green-400 to-green-500 text-white px-6 py-3 rounded-lg hover:from-green-500 hover:to-green-600 transition-all flex items-center gap-2 shadow-lg"
-              >
-                <Plus className="w-6 h-6" />
-                주문등록
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold shadow-lg hover:shadow-xl"
+                >
+                  주문등록
+                </button>
+                <button
+                  onClick={handleDeleteOrders}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold shadow-lg hover:shadow-xl"
+                >
+                  주문삭제
+                </button>
+              </div>
               
               {/* 엑셀 다운로드 버튼 */}
               <button
@@ -118,27 +198,44 @@ export default function OrderList() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th 
-                    onClick={() => handleSort('date')}
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                  >
-                    주문일자 {sortConfig.key === 'date' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  <th className="px-6 py-3 text-left">
+                    <input
+                      type="checkbox"
+                      checked={selectAll}
+                      onChange={handleSelectAll}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">공급업체</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">품목</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">단위</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">단가</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">수량</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">합계</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">대금 지급주기</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">거래처</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">비고</th>
+                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">주문일자</th>
+                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">거래처</th>
+                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">품목</th>
+                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">단위</th>
+                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">단가</th>
+                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">수량</th>
+                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">총액</th>
+                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">결제주기</th>
+                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">거래처</th>
+                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">비고</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {orders.map((order, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-black">{order.date}</td>
+                {filteredOrders.map((order, index) => (
+                  <tr 
+                    key={index} 
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => handleRowClick(index.toString())}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedOrders.includes(index.toString())}
+                        onChange={() => handleSelectOrder(index.toString())}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-black">
+                      {new Date(order.orderDate).toLocaleDateString()}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-black">{order.supplier.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-black">{order.item.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-black">{order.unit.name}</td>
