@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Date
 from sqlalchemy.orm import relationship
+from datetime import date
 from .database import Base
 
 class Supplier(Base):
@@ -51,10 +52,11 @@ class Order(Base):
     payment_cycle = Column(String)
     client = Column(String)
     notes = Column(String, nullable=True)
+    date = Column(String, nullable=True)
     
     supplier = relationship("Supplier", back_populates="orders")
     item = relationship("Item", back_populates="orders")
     unit = relationship("Unit", back_populates="orders")
 
     def __repr__(self):
-        return f"<Order(id={self.id}, supplier_id={self.supplier_id}, item_id={self.item_id})>"
+        return f"<Order(id={self.id}, date={self.date}, supplier_id={self.supplier_id})>"

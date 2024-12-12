@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from . import models
@@ -6,10 +6,15 @@ from .database import engine, get_db, Base, SessionLocal
 from pydantic import BaseModel
 from typing import Optional, List
 import logging
+from datetime import date
+from sqlalchemy.orm import joinedload
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Create database tables
+Base.metadata.create_all(bind=engine)
 
 # Create FastAPI app
 app = FastAPI()
@@ -17,15 +22,12 @@ app = FastAPI()
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # 개발 환경에서는 모든 origin 허용
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Create database tables
-
-    
 # Create database tables
 @app.on_event("startup")
 async def startup_event():
@@ -37,6 +39,7 @@ async def startup_event():
         logger.error(f"Error during startup: {e}")
         raise e
     logger.info("Database initialization completed!")
+
 
 # Pydantic models
 class SupplierBase(BaseModel):
@@ -79,6 +82,7 @@ class OrderBase(BaseModel):
     payment_cycle: str
     client: str
     notes: Optional[str] = None
+    date: Optional[str] = None
 
 class OrderResponse(OrderBase):
     id: int
@@ -133,7 +137,7 @@ def create_item(item: ItemBase, db: Session = Depends(get_db)):
 @app.get("/items/", response_model=List[ItemResponse])
 def read_items(db: Session = Depends(get_db)):
     items = db.query(models.Item).all()
-    return [ItemResponse.from_orm(item) for item in items]
+    return items
 
 @app.post("/units/", response_model=UnitResponse)
 def create_unit(unit: UnitBase, db: Session = Depends(get_db)):
@@ -152,37 +156,45 @@ def create_unit(unit: UnitBase, db: Session = Depends(get_db)):
 @app.get("/units/", response_model=List[UnitResponse])
 def read_units(db: Session = Depends(get_db)):
     units = db.query(models.Unit).all()
-    return [UnitResponse.from_orm(unit) for unit in units]
+    return units
+
+@app.get("/orders/", response_model=List[OrderResponse])
+def read_orders(db: Session = Depends(get_db)):
+    try:
+        orders = db.query(models.Order).options(
+            joinedload(models.Order.supplier),
+            joinedload(models.Order.item),
+            joinedload(models.Order.unit)
+        ).all()
+        logger.info(f"Retrieved {len(orders)} orders")
+        return orders
+    except Exception as e:
+        logger.error(f"Error retrieving orders: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/orders/", response_model=OrderResponse)
-def create_order(order: OrderBase, db: Session = Depends(get_db)):
-    # Check if supplier, item, and unit exist
-    supplier = db.query(models.Supplier).filter(models.Supplier.id == order.supplier_id).first()
-    if not supplier:
-        raise HTTPException(status_code=404, detail="Supplier not found")
-    
-    item = db.query(models.Item).filter(models.Item.id == order.item_id).first()
-    if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
-    
-    unit = db.query(models.Unit).filter(models.Unit.id == order.unit_id).first()
-    if not unit:
-        raise HTTPException(status_code=404, detail="Unit not found")
-
-    db_order = models.Order(**order.dict())
+async def create_order(order: OrderBase, db: Session = Depends(get_db)):
     try:
+        logger.info(f"Received order data: {order}")
+        db_order = models.Order(**order.dict())
         db.add(db_order)
         db.commit()
         db.refresh(db_order)
         logger.info(f"Created order: {db_order}")
         return db_order
     except Exception as e:
-        db.rollback()
         logger.error(f"Error creating order: {e}")
+        db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
 
-@app.get("/orders/", response_model=List[OrderResponse])
-def read_orders(db: Session = Depends(get_db)):
-    orders = db.query(models.Order).all()
-    logger.info(f"Retrieved {len(orders)} orders")
-    return orders
+@app.delete("/orders/bulk-delete")
+def delete_orders(ids: List[int], db: Session = Depends(get_db)):
+    try:
+        deleted_count = db.query(models.Order).filter(models.Order.id.in_(ids)).delete(synchronize_session=False)
+        db.commit()
+        logger.info(f"Deleted {deleted_count} orders")
+        return {"message": f"{deleted_count} orders deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error deleting orders: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

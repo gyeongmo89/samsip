@@ -34,10 +34,20 @@ export default function OrderList() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch('http://localhost:8000/orders')
-      if (!response.ok) throw new Error('Failed to fetch orders')
+      const response = await fetch('http://localhost:8000/orders', {
+        headers: {
+          'Accept': 'application/json',
+        }
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || 'Failed to fetch orders')
+      }
+      
       const data = await response.json()
       setOrders(data)
+      setFilteredOrders(data)
     } catch (error) {
       console.error('Error fetching orders:', error)
     }
@@ -115,21 +125,23 @@ export default function OrderList() {
     if (!confirmed) return
 
     try {
-      const orderIds = selectedOrders.map(index => filteredOrders[parseInt(index)].id)
-      const response = await fetch('http://localhost:8000/orders/delete', {
-        method: 'POST',
+      const orderIds = selectedOrders.map(index => parseInt(filteredOrders[parseInt(index)].id))
+      const response = await fetch('http://localhost:8000/orders/bulk-delete', {
+        method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ order_ids: orderIds }),
+        body: JSON.stringify(orderIds),
       })
 
       if (response.ok) {
         fetchOrders()
         setSelectedOrders([])
         setSelectAll(false)
+        alert('선택한 주문이 삭제되었습니다.')
       } else {
-        throw new Error('주문 삭제 실패')
+        const error = await response.json()
+        throw new Error(error.detail || '주문 삭제 실패')
       }
     } catch (error) {
       console.error('Error deleting orders:', error)
@@ -234,7 +246,11 @@ export default function OrderList() {
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-black">
-                      {new Date(order.orderDate).toLocaleDateString()}
+                      {order.date ? new Date(order.date).toLocaleDateString('ko-KR', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                      }).replace(/\./g, '-').replace(/ /g, '') : ''}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-black">{order.supplier.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-black">{order.item.name}</td>

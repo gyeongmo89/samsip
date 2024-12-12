@@ -17,13 +17,13 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
     supplier_id: '',
     item_id: '',
     unit_id: '',
-    price: '',
     quantity: '',
+    price: '',
     total: '',
     payment_cycle: '',
-    date: new Date().toISOString().split('T')[0],
     client: '',
-    notes: ''
+    notes: '',
+    date: new Date().toISOString().split('T')[0]
   })
 
   useEffect(() => {
@@ -78,37 +78,44 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
     e.preventDefault()
     
     try {
-      // Convert string values to appropriate types before sending
       const orderData = {
         supplier_id: parseInt(formData.supplier_id),
         item_id: parseInt(formData.item_id),
         unit_id: parseInt(formData.unit_id),
-        price: parseFloat(formData.price),
         quantity: parseFloat(formData.quantity),
+        price: parseFloat(formData.price),
         total: parseFloat(formData.total),
         payment_cycle: formData.payment_cycle,
         client: formData.client,
-        notes: formData.notes || ''
+        notes: formData.notes || '',
+        date: formData.date
       }
+
+      console.log('Sending order data:', orderData)
 
       const response = await fetch('http://localhost:8000/orders/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify(orderData),
       })
 
-      if (response.ok) {
-        localStorage.setItem('lastOrder', JSON.stringify(formData))
-        onClose()
-        window.dispatchEvent(new Event('ordersUpdated'))
-      } else {
-        throw new Error('주문 등록 실패')
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || '주문 등록 실패')
       }
+
+      const result = await response.json()
+      console.log('Order created successfully:', result)
+
+      localStorage.setItem('lastOrder', JSON.stringify(formData))
+      onClose()
+      onOrderComplete()
     } catch (error) {
       console.error('Error creating order:', error)
-      alert('주문 등록 중 오류가 발생했습니다.')
+      alert('주문 등록 중 오류가 발생했습니다: ' + (error.message || '알 수 없는 오류가 발생했습니다'))
     }
   }
 
