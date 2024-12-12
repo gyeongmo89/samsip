@@ -92,6 +92,10 @@ export default function Navbar() {
                 <div className="text-white text-sm ml-2">박희주 매니저</div>
                 <div>
                   <button
+                    onClick={() => {
+                      localStorage.removeItem('isLoggedIn')
+                      window.location.href = '/'
+                    }}
                     className="text-white align-middle hover:text-red-400 transition-colors"
                     title="로그아웃"
                   >
