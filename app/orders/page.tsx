@@ -18,18 +18,16 @@ export default function OrderList() {
   }, [])
 
   useEffect(() => {
-    let filtered = [...orders]
-
-    if (searchTerm) {
-      filtered = filtered.filter(order => 
-        order.supplier.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.item.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.notes.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    }
-
-    setFilteredOrders(filtered)
+    setFilteredOrders(
+      orders.filter((order) => {
+        const searchLower = searchTerm.toLowerCase()
+        return (
+          (order.supplier?.name || '').toLowerCase().includes(searchLower) ||
+          (order.item?.name || '').toLowerCase().includes(searchLower) ||
+          (order.client || '').toLowerCase().includes(searchLower)
+        )
+      })
+    )
   }, [orders, searchTerm])
 
   const fetchOrders = async () => {
@@ -250,7 +248,7 @@ export default function OrderList() {
                         year: 'numeric',
                         month: '2-digit',
                         day: '2-digit'
-                      }).replace(/\./g, '-').replace(/ /g, '') : ''}
+                      }).replace(/\. /g, '-').slice(0, -1) : ''}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-black">{order.supplier.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-black">{order.item.name}</td>
