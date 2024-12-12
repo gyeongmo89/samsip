@@ -14,7 +14,7 @@ export default function Home() {
     //     </div>
     //   </div>
     // </div>
-    <div className="px-4 py-2">
+    <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl px-2 py-2">
       <Dashboard />
     </div>
   )

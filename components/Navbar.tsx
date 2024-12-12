@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { XMarkIcon, Bars3Icon } from "@heroicons/react/24/outline";
 import Image from "next/image";
+import { LogOut } from "lucide-react";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,7 +33,7 @@ export default function Navbar() {
                   height={40}
                   className="mr-2 rounded-full object-cover"
                 />
-              
+
                 <h1 className="text-white text-xl font-bold">
                   삼십일미 발주관리 시스템
                 </h1>
@@ -41,20 +42,6 @@ export default function Navbar() {
             <div>
               <div className="hidden md:block">
                 <div className="ml-10 flex items-baseline space-x-4">
-                  {/* <Link
-                    href="/stats"
-                    className={`text-white hover:bg-green-400 hover:text-black rounded-md px-3 py-2 text-md font-medium transition-colors hover:scale-110 transform ${isActive(
-                      "/stats"
-                    )}`}
-                  >
-                    통계
-                  </Link> */}
-                  {/* <Link
-                  href="/orderlist"
-                  className={`text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-md px-3 py-2 text-sm font-medium transition-colors ${isActive('/orderlist')}`}
-                >
-                  주문 목록
-                </Link> */}
                   <Link
                     href="/orders"
                     className={`text-white hover:bg-green-400 hover:text-black rounded-md px-3 py-2 text-md font-medium transition-colors hover:scale-110 transform ${isActive(
@@ -87,12 +74,11 @@ export default function Navbar() {
                   >
                     단위 관리
                   </Link>
-                  
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 ml-8">
               <div>
                 <Image
                   src="/heeju.jpeg"
@@ -102,7 +88,17 @@ export default function Navbar() {
                   className="ml-2 rounded-full object-cover"
                 />
               </div>
-              <div className="text-white text-sm ml-2">박희주 매니저</div>
+              <div  className="flex items-center gap-4">
+                <div className="text-white text-sm ml-2">박희주 매니저</div>
+                <div>
+                  <button
+                    className="text-white align-middle hover:text-red-400 transition-colors"
+                    title="로그아웃"
+                  >
+                    <LogOut size={20} />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
           <div className="-mr-2 flex md:hidden">
@@ -122,6 +118,7 @@ export default function Navbar() {
         </div>
       </div>
 
+      {/* Mobile menu, show/hide based on menu state. */}
       <div className={`${isOpen ? "block" : "hidden"} md:hidden`}>
         <div className="space-y-1 px-2 pb-3 pt-2 sm:px-3">
           <Link
