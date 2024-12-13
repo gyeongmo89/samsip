@@ -44,11 +44,11 @@ export default function Navbar() {
                 <div className="ml-10 flex items-baseline space-x-4">
                   <Link
                     href="/orders"
-                    className={`text-white hover:bg-green-400 hover:text-black rounded-md px-3 py-2 text-md font-medium transition-colors hover:scale-110 transform ${isActive(
+                    className={`text-white hover:bg-green-400 hover:text-black rounded-md px-3 py-2 text-md font-medium transition-colors hover:scale-110 transform  ${isActive(
                       "/orders"
                     )}`}
                   >
-                    발주관리
+                    발주 관리
                   </Link>
                   <Link
                     href="/supplier"
@@ -74,6 +74,14 @@ export default function Navbar() {
                   >
                     단위 관리
                   </Link>
+                  <Link
+                    href="/dashboard"
+                    className={`text-white hover:bg-green-400 hover:text-black rounded-md px-3 py-2 text-md font-medium transition-colors hover:scale-110 transform ${isActive(
+                      "/dashboard"
+                    )}`}
+                  >
+                    통계 현황
+                  </Link>
                 </div>
               </div>
             </div>
@@ -88,13 +96,13 @@ export default function Navbar() {
                   className="ml-2 rounded-full object-cover"
                 />
               </div>
-              <div  className="flex items-center gap-4">
+              <div className="flex items-center gap-4">
                 <div className="text-white text-sm ml-2">박희주 매니저</div>
                 <div>
                   <button
                     onClick={() => {
-                      localStorage.removeItem('isLoggedIn')
-                      window.location.href = '/'
+                      localStorage.removeItem("isLoggedIn");
+                      window.location.href = "/";
                     }}
                     className="text-white align-middle hover:text-red-400 transition-colors"
                     title="로그아웃"
