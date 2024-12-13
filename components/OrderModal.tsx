@@ -32,7 +32,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
   const [showDaySelect, setShowDaySelect] = useState(false)
 
   const paymentMethods = ['계좌이체', '현금', '카드결제']
-  const paymentCycles = ['선택해주세요', '매월초', '매월중순', '매월말', '기타입력']
+  const paymentCycles = ['미정', '매월초', '매월중순', '매월말', '기타입력']
 
   const formatNumber = (value: string | undefined | null) => {
     if (!value) return ''
@@ -58,9 +58,34 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
   }, [isOpen])
 
   useEffect(() => {
-    fetchSuppliers()
-    fetchItems()
-    fetchUnits()
+    const fetchData = async () => {
+      try {
+        const [suppliersRes, itemsRes, unitsRes] = await Promise.all([
+          fetch('http://localhost:8000/suppliers'),
+          fetch('http://localhost:8000/items'),
+          fetch('http://localhost:8000/units')
+        ]);
+
+        if (!suppliersRes.ok || !itemsRes.ok || !unitsRes.ok) {
+          throw new Error('Failed to fetch data');
+        }
+
+        const [suppliersData, itemsData, unitsData] = await Promise.all([
+          suppliersRes.json(),
+          itemsRes.json(),
+          unitsRes.json()
+        ]);
+
+        setSuppliers(suppliersData);
+        setItems(itemsData);
+        setUnits(unitsData);
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
   }, [])
 
   useEffect(() => {
@@ -71,36 +96,6 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
       }
     }
   }, [isOpen])
-
-  const fetchSuppliers = async () => {
-    try {
-      const response = await fetch('http://localhost:8000/suppliers/')
-      const data = await response.json()
-      setSuppliers(data)
-    } catch (error) {
-      console.error('Error fetching suppliers:', error)
-    }
-  }
-
-  const fetchItems = async () => {
-    try {
-      const response = await fetch('http://localhost:8000/items/')
-      const data = await response.json()
-      setItems(data)
-    } catch (error) {
-      console.error('Error fetching items:', error)
-    }
-  }
-
-  const fetchUnits = async () => {
-    try {
-      const response = await fetch('http://localhost:8000/units/')
-      const data = await response.json()
-      setUnits(data)
-    } catch (error) {
-      console.error('Error fetching units:', error)
-    }
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -292,7 +287,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
               결제주기 <span className="text-red-500">*</span>
             </label>
             <select
-              value={formData.payment_cycle === '' ? '선택해주세요' : 
+              value={formData.payment_cycle === '' ? '미정' : 
                      showDaySelect ? '기타입력' : formData.payment_cycle}
               onChange={(e) => handlePaymentCycleChange(e.target.value)}
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"

@@ -114,19 +114,17 @@ def create_supplier(supplier: SupplierBase, db: Session = Depends(get_db)):
 
 @app.get("/suppliers/", response_model=List[SupplierResponse])
 def read_suppliers(db: Session = Depends(get_db)):
-    suppliers = db.query(models.Supplier).all()
-    print(f"Found suppliers: {[f'{s.id}: {s.name}' for s in suppliers]}")
+    suppliers = db.query(models.Supplier).filter(models.Supplier.is_deleted == False).all()
     return suppliers
 
 @app.delete("/suppliers/bulk-delete")
-def delete_suppliers(ids: List[int], db: Session = Depends(get_db)):
+def bulk_delete_suppliers(supplier_ids: List[int], db: Session = Depends(get_db)):
     try:
-        for supplier_id in ids:
-            supplier = db.query(models.Supplier).filter(models.Supplier.id == supplier_id).first()
-            if supplier:
-                db.delete(supplier)
+        suppliers = db.query(models.Supplier).filter(models.Supplier.id.in_(supplier_ids)).all()
+        for supplier in suppliers:
+            supplier.is_deleted = True
         db.commit()
-        return {"message": "Suppliers deleted successfully"}
+        return {"message": f"Successfully deleted {len(suppliers)} suppliers"}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
@@ -149,18 +147,17 @@ def create_item(item: ItemBase, db: Session = Depends(get_db)):
 
 @app.get("/items/", response_model=List[ItemResponse])
 def read_items(db: Session = Depends(get_db)):
-    items = db.query(models.Item).all()
+    items = db.query(models.Item).filter(models.Item.is_deleted == False).all()
     return items
 
 @app.delete("/items/bulk-delete")
-def delete_items(ids: List[int], db: Session = Depends(get_db)):
+def bulk_delete_items(item_ids: List[int], db: Session = Depends(get_db)):
     try:
-        for item_id in ids:
-            item = db.query(models.Item).filter(models.Item.id == item_id).first()
-            if item:
-                db.delete(item)
+        items = db.query(models.Item).filter(models.Item.id.in_(item_ids)).all()
+        for item in items:
+            item.is_deleted = True
         db.commit()
-        return {"message": "Items deleted successfully"}
+        return {"message": f"Successfully deleted {len(items)} items"}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
@@ -181,18 +178,17 @@ def create_unit(unit: UnitBase, db: Session = Depends(get_db)):
 
 @app.get("/units/", response_model=List[UnitResponse])
 def read_units(db: Session = Depends(get_db)):
-    units = db.query(models.Unit).all()
+    units = db.query(models.Unit).filter(models.Unit.is_deleted == False).all()
     return units
 
 @app.delete("/units/bulk-delete")
-def delete_units(ids: List[int], db: Session = Depends(get_db)):
+def bulk_delete_units(unit_ids: List[int], db: Session = Depends(get_db)):
     try:
-        for unit_id in ids:
-            unit = db.query(models.Unit).filter(models.Unit.id == unit_id).first()
-            if unit:
-                db.delete(unit)
+        units = db.query(models.Unit).filter(models.Unit.id.in_(unit_ids)).all()
+        for unit in units:
+            unit.is_deleted = True
         db.commit()
-        return {"message": "Units deleted successfully"}
+        return {"message": f"Successfully deleted {len(units)} units"}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
@@ -200,14 +196,7 @@ def delete_units(ids: List[int], db: Session = Depends(get_db)):
 @app.get("/orders/", response_model=List[OrderResponse])
 def read_orders(db: Session = Depends(get_db)):
     try:
-        # 관련 데이터가 모두 존재하는 발주만 조회
-        orders = db.query(models.Order).join(
-            models.Supplier
-        ).join(
-            models.Item
-        ).join(
-            models.Unit
-        ).options(
+        orders = db.query(models.Order).options(
             joinedload(models.Order.supplier),
             joinedload(models.Order.item),
             joinedload(models.Order.unit)
