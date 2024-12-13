@@ -48,7 +48,7 @@ export default function Navbar() {
                       "/orders"
                     )}`}
                   >
-                    주문관리
+                    발주관리
                   </Link>
                   <Link
                     href="/supplier"
@@ -56,7 +56,7 @@ export default function Navbar() {
                       "/supplier"
                     )}`}
                   >
-                    공급업체 관리
+                    구입처 관리
                   </Link>
                   <Link
                     href="/items"

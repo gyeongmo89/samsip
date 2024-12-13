@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import OrderModal from '@/components/OrderModal'
-import { FileDown, Plus, Search } from 'lucide-react'
+import { FileDown, FileUp, Plus, Search } from 'lucide-react'
 
 export default function OrderList() {
   const [orders, setOrders] = useState([])
@@ -156,7 +156,7 @@ export default function OrderList() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">주문 현황</h2>
+            <h2 className="text-2xl font-bold text-gray-800">발주현황</h2>
             <div className="flex gap-4">
               {/* 검색 */}
               <div className="flex gap-2">
@@ -176,19 +176,19 @@ export default function OrderList() {
                 </button>
               </div>
               
-              {/* 주문등록 버튼 */}
+              {/* 발주등록 버튼 */}
               <div className="flex gap-2">
                 <button
                   onClick={() => setIsModalOpen(true)}
                   className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold shadow-lg hover:shadow-xl"
                 >
-                  주문등록
+                  발주등록
                 </button>
                 <button
                   onClick={handleDeleteOrders}
                   className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold shadow-lg hover:shadow-xl"
                 >
-                  주문삭제
+                  발주삭제
                 </button>
               </div>
               
@@ -200,6 +200,23 @@ export default function OrderList() {
                 <FileDown className="w-6 h-6" />
                 엑셀 다운로드
               </button>
+              <button
+                // onClick={() => document.getElementById('excelUpload').click()}
+                onClick={() => alert('엑셀 업로드 기능 준비중')}
+                className="bg-gradient-to-r from-green-400 to-green-500 text-white px-6 py-3 rounded-lg hover:from-green-500 hover:to-green-600 transition-all flex items-center gap-2 shadow-lg"
+              >
+                
+                <FileUp className="w-6 h-6" />
+                엑셀 업로드
+              </button>
+              {/* <input
+                id="excelUpload"
+                type="file"
+                accept=".xlsx, .xls"
+                onChange={handleExcelUpload}
+                style={{ display: 'none' }}
+              /> */}
+
             </div>
           </div>
 
@@ -216,7 +233,7 @@ export default function OrderList() {
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                   </th>
-                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">주문일자</th>
+                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">발주일</th>
                   <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">거래처</th>
                   <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">품목</th>
                   <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">단위</th>
