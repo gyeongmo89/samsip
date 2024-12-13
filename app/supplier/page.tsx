@@ -6,6 +6,7 @@ import Modal from '@/components/Modal'
 
 export default function SupplierList() {
   const [suppliers, setSuppliers] = useState([])
+  const [filteredSuppliers, setFilteredSuppliers] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [formData, setFormData] = useState({
@@ -24,6 +25,7 @@ export default function SupplierList() {
       if (!response.ok) throw new Error('Failed to fetch suppliers')
       const data = await response.json()
       setSuppliers(data)
+      setFilteredSuppliers(data)
     } catch (error) {
       console.error('Error fetching suppliers:', error)
     }
@@ -56,9 +58,14 @@ export default function SupplierList() {
     }
   }
 
-  const handleSearch = () => {
-    // TODO: Implement search functionality
-  }
+  useEffect(() => {
+    const filtered = suppliers.filter(supplier =>
+      (supplier.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (supplier.contact?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (supplier.address?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+    );
+    setFilteredSuppliers(filtered);
+  }, [suppliers, searchTerm]);
 
   const handleExportCSV = () => {
     // TODO: Implement CSV export
@@ -78,13 +85,14 @@ export default function SupplierList() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="검색어를 입력하세요"
-                  className="px-4 py-2 border rounded-lg"
+                  className="px-4 py-2 border rounded-lg text-black"
                 />
                 <button
-                  onClick={handleSearch}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                  onClick={() => {}}
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
                 >
-                  <Search />
+                  <Search className="w-4 h-4" />
+                  검색
                 </button>
               </div>
               
@@ -93,7 +101,7 @@ export default function SupplierList() {
                 onClick={() => setIsModalOpen(true)}
                 className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
               >
-                <Plus />
+                <Plus className="w-4 h-4" />
                 구입처 등록
               </button>
               
@@ -102,24 +110,24 @@ export default function SupplierList() {
                 onClick={handleExportCSV}
                 className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
               >
-                <FileDown />
+                <FileDown className="w-4 h-4" />
                 엑셀 다운로드
               </button>
             </div>
           </div>
 
           {/* 구입처 목록 테이블 */}
-          <div className="overflow-auto">
-            <table className="min-w-full table-auto">
-              <thead className="bg-gray-50">
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white rounded-lg overflow-hidden">
+              <thead className="bg-gray-100">
                 <tr>
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">구입처명</th>
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">연락처</th>
-                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">주소</th>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">비고</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {suppliers.map((supplier) => (
+                {filteredSuppliers.map((supplier) => (
                   <tr key={supplier.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-center text-black">{supplier.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-center text-black">{supplier.contact}</td>
@@ -143,7 +151,7 @@ export default function SupplierList() {
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               required
             />
           </div>
@@ -155,18 +163,18 @@ export default function SupplierList() {
               type="text"
               value={formData.contact}
               onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              주소
+              비고
             </label>
             <input
               type="text"
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
             />
           </div>
           <div className="flex justify-end gap-4 mt-6">

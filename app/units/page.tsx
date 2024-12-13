@@ -6,9 +6,10 @@ import { FileDown, Plus, Search } from 'lucide-react'
 
 export default function UnitList() {
   const [units, setUnits] = useState([])
+  const [filteredUnits, setFilteredUnits] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
-  const [unit, setUnit] = useState('')
+  const [formData, setFormData] = useState({ name: '' })
 
   useEffect(() => {
     fetchUnits()
@@ -20,6 +21,7 @@ export default function UnitList() {
       if (!response.ok) throw new Error('Failed to fetch units')
       const data = await response.json()
       setUnits(data)
+      setFilteredUnits(data)
     } catch (error) {
       console.error('Error fetching units:', error)
     }
@@ -33,9 +35,7 @@ export default function UnitList() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: unit
-        }),
+        body: JSON.stringify(formData),
       })
 
       if (!response.ok) throw new Error('Failed to create unit')
@@ -43,25 +43,28 @@ export default function UnitList() {
       alert('단위가 등록되었습니다.')
       fetchUnits()
       setIsModalOpen(false)
-      setUnit('')
+      setFormData({ name: '' })
     } catch (error) {
       console.error('Error creating unit:', error)
       alert('단위 등록 중 오류가 발생했습니다.')
     }
   }
 
-  const handleSearch = () => {
-    // TODO: Implement search functionality
-  }
+  useEffect(() => {
+    const filtered = units.filter(unit =>
+      (unit.name?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+    );
+    setFilteredUnits(filtered);
+  }, [units, searchTerm]);
 
   const handleExportCSV = () => {
     // TODO: Implement CSV export
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 py-12">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-xl p-6">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12">
+      <div className="container mx-auto px-4">
+        <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-800">단위 관리</h2>
             <div className="flex gap-4">
@@ -72,13 +75,14 @@ export default function UnitList() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="검색어를 입력하세요"
-                  className="px-4 py-2 border rounded-lg"
+                  className="px-4 py-2 border rounded-lg text-black"
                 />
                 <button
-                  onClick={handleSearch}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                  onClick={() => {}}
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
                 >
-                  <Search className="w-5 h-5" />
+                  <Search className="w-4 h-4" />
+                  검색
                 </button>
               </div>
               
@@ -87,7 +91,7 @@ export default function UnitList() {
                 onClick={() => setIsModalOpen(true)}
                 className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-4 h-4" />
                 단위 등록
               </button>
               
@@ -96,7 +100,7 @@ export default function UnitList() {
                 onClick={handleExportCSV}
                 className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
               >
-                <FileDown className="w-5 h-5" />
+                <FileDown className="w-4 h-4" />
                 엑셀 다운로드
               </button>
             </div>
@@ -104,16 +108,16 @@ export default function UnitList() {
 
           {/* 단위 목록 테이블 */}
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full bg-white rounded-lg overflow-hidden">
+              <thead className="bg-gray-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">단위명</th>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">단위명</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {units.map((unit) => (
-                  <tr key={unit.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">{unit.name}</td>
+                {filteredUnits.map((unit) => (
+                  <tr key={unit.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">{unit.name}</td>
                   </tr>
                 ))}
               </tbody>
@@ -124,32 +128,30 @@ export default function UnitList() {
 
       {/* 단위 등록 모달 */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="단위 등록">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              단위 <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              단위명
             </label>
             <input
               type="text"
-              value={unit}
-              onChange={(e) => setUnit(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              placeholder="단위를 입력하세요 (예: kg, 개)"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               required
             />
           </div>
-
-          <div className="flex justify-end gap-4">
+          <div className="flex justify-end gap-4 mt-6">
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
             >
               취소
             </button>
             <button
               type="submit"
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               등록
             </button>

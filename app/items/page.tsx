@@ -6,6 +6,7 @@ import Modal from '@/components/Modal'
 
 export default function ItemList() {
   const [items, setItems] = useState([])
+  const [filteredItems, setFilteredItems] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [formData, setFormData] = useState({
@@ -24,10 +25,19 @@ export default function ItemList() {
       if (!response.ok) throw new Error('Failed to fetch items')
       const data = await response.json()
       setItems(data)
+      setFilteredItems(data)
     } catch (error) {
       console.error('Error fetching items:', error)
     }
   }
+
+  useEffect(() => {
+    const filtered = items.filter(item =>
+      (item.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (item.description?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+    );
+    setFilteredItems(filtered);
+  }, [items, searchTerm]);
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -56,10 +66,6 @@ export default function ItemList() {
     }
   }
 
-  const handleSearch = () => {
-    // TODO: Implement search functionality
-  }
-
   const handleExportCSV = () => {
     // TODO: Implement CSV export
   }
@@ -78,13 +84,14 @@ export default function ItemList() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="검색어를 입력하세요"
-                  className="px-4 py-2 border rounded-lg"
+                  className="px-4 py-2 border rounded-lg text-black"
                 />
                 <button
-                  onClick={handleSearch}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                  onClick={() => setSearchTerm('')}
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
                 >
-                  <Search />
+                  <Search className="w-4 h-4" />
+                  검색
                 </button>
               </div>
               
@@ -93,7 +100,7 @@ export default function ItemList() {
                 onClick={() => setIsModalOpen(true)}
                 className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
               >
-                <Plus />
+                <Plus className="w-4 h-4" />
                 품목 등록
               </button>
               
@@ -102,24 +109,24 @@ export default function ItemList() {
                 onClick={handleExportCSV}
                 className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
               >
-                <FileDown />
+                <FileDown className="w-4 h-4" />
                 엑셀 다운로드
               </button>
             </div>
           </div>
 
           {/* 품목 목록 테이블 */}
-          <div className="overflow-auto">
-            <table className="min-w-full table-auto">
-              <thead className="bg-gray-50">
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white rounded-lg overflow-hidden">
+              <thead className="bg-gray-100">
                 <tr>
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">품목명</th>
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">단가</th>
-                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">설명</th>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">비고</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {items.map((item) => (
+              <tbody>
+                {filteredItems.map((item, index) => (
                   <tr key={item.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-center text-black">{item.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-center text-black">{item.price?.toLocaleString()}</td>
@@ -143,7 +150,7 @@ export default function ItemList() {
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               required
             />
           </div>
@@ -158,18 +165,18 @@ export default function ItemList() {
                 const value = e.target.value.replace(/[^\d]/g, '')
                 setFormData({ ...formData, price: value })
               }}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              설명
+              비고
             </label>
             <input
               type="text"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
             />
           </div>
           <div className="flex justify-end gap-4 mt-6">

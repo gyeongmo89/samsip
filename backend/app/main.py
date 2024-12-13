@@ -99,22 +99,18 @@ class OrderResponse(OrderBase):
 @app.post("/suppliers/", response_model=SupplierResponse)
 def create_supplier(supplier: SupplierBase, db: Session = Depends(get_db)):
     try:
-        # Create new supplier
         db_supplier = models.Supplier(
             name=supplier.name,
             contact=supplier.contact,
-            address=supplier.address
+            address=supplier.address  # address 필드를 비고로 사용
         )
         db.add(db_supplier)
         db.commit()
         db.refresh(db_supplier)
-        
-        print(f"Created supplier: {db_supplier.id}, {db_supplier.name}")
         return db_supplier
     except Exception as e:
         db.rollback()
-        print(f"Error creating supplier: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.get("/suppliers/", response_model=List[SupplierResponse])
 def read_suppliers(db: Session = Depends(get_db)):
@@ -127,18 +123,16 @@ def create_item(item: ItemBase, db: Session = Depends(get_db)):
     try:
         db_item = models.Item(
             name=item.name,
-            description=item.description,
-            price=item.price
+            price=item.price,
+            description=item.description  # description 필드를 비고로 사용
         )
         db.add(db_item)
         db.commit()
         db.refresh(db_item)
-        logger.info(f"Created item: {db_item}")
         return db_item
     except Exception as e:
-        logger.error(f"Error creating item: {e}")
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.get("/items/", response_model=List[ItemResponse])
 def read_items(db: Session = Depends(get_db)):
