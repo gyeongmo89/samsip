@@ -153,7 +153,7 @@ export default function OrderList() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12">
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="container mx-auto px-4">
         <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-800">발주현황</h2>
@@ -220,9 +220,9 @@ export default function OrderList() {
             </div>
           </div>
 
-          {/* 주문 목록 테이블 */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+          {/* 발주 목록 테이블 */}
+          <div className="overflow-auto">
+            <table className="min-w-full table-auto">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">

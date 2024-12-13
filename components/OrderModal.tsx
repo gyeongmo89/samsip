@@ -104,22 +104,20 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    try {    
+    try {
       const response = await fetch('http://localhost:8000/orders/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
         },
         body: JSON.stringify({
           supplier_id: parseInt(formData.supplier_id),
           item_id: parseInt(formData.item_id),
           unit_id: parseInt(formData.unit_id),
-          price: parseInt(formData.price.replace(/[^\d]/g, '')),
-          quantity: parseInt(formData.quantity.replace(/[^\d]/g, '')),
-          total: parseInt(formData.total.replace(/[^\d]/g, '')),
-          payment_cycle: formData.payment_cycle,
+          quantity: parseFloat(formData.quantity.replace(/,/g, '')),
+          price: parseFloat(formData.price.replace(/,/g, '')),
+          total: parseFloat(formData.total.replace(/,/g, '')),
+          payment_cycle: formData.payment_cycle === '기타입력' ? formData.custom_payment_cycle : formData.payment_cycle,
           payment_method: formData.payment_method,
           client: formData.client,
           notes: formData.notes,
@@ -127,17 +125,14 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
         }),
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || '발주 등록 실패')
-      }
-
-      const result = await response.json()
+      if (!response.ok) throw new Error('Failed to create order')
+      
+      alert('발주가 등록되었습니다.')
       onClose()
-      onOrderComplete()
+      window.location.reload()
     } catch (error) {
       console.error('Error creating order:', error)
-      alert('발주 등록 중 오류가 발생했습니다: ' + (error.message || '알 수 없는 오류가 발생했습니다'))
+      alert('발주 등록 중 오류가 발생했습니다.')
     }
   }
 

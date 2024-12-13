@@ -38,7 +38,8 @@ export default function ItemList() {
         },
         body: JSON.stringify({
           name: formData.name,
-          description: `단가: ${formData.price}원`
+          description: '',
+          price: parseFloat(formData.price)
         }),
       })
 

@@ -56,6 +56,7 @@ class SupplierResponse(SupplierBase):
 class ItemBase(BaseModel):
     name: str
     description: Optional[str] = None
+    price: Optional[float] = None
 
 class ItemResponse(ItemBase):
     id: int
@@ -80,6 +81,7 @@ class OrderBase(BaseModel):
     price: float
     total: float
     payment_cycle: str
+    payment_method: str
     client: str
     notes: Optional[str] = None
     date: Optional[str] = None
@@ -122,17 +124,21 @@ def read_suppliers(db: Session = Depends(get_db)):
 
 @app.post("/items/", response_model=ItemResponse)
 def create_item(item: ItemBase, db: Session = Depends(get_db)):
-    db_item = models.Item(**item.dict())
     try:
+        db_item = models.Item(
+            name=item.name,
+            description=item.description,
+            price=item.price
+        )
         db.add(db_item)
         db.commit()
         db.refresh(db_item)
         logger.info(f"Created item: {db_item}")
         return db_item
     except Exception as e:
-        db.rollback()
         logger.error(f"Error creating item: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/items/", response_model=List[ItemResponse])
 def read_items(db: Session = Depends(get_db)):
@@ -173,19 +179,29 @@ def read_orders(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/orders/", response_model=OrderResponse)
-async def create_order(order: OrderBase, db: Session = Depends(get_db)):
+def create_order(order: OrderBase, db: Session = Depends(get_db)):
     try:
-        logger.info(f"Received order data: {order}")
-        db_order = models.Order(**order.dict())
+        db_order = models.Order(
+            supplier_id=order.supplier_id,
+            item_id=order.item_id,
+            unit_id=order.unit_id,
+            quantity=order.quantity,
+            price=order.price,
+            total=order.total,
+            payment_cycle=order.payment_cycle,
+            payment_method=order.payment_method,
+            client=order.client,
+            notes=order.notes,
+            date=order.date
+        )
         db.add(db_order)
         db.commit()
         db.refresh(db_order)
-        logger.info(f"Created order: {db_order}")
         return db_order
     except Exception as e:
         logger.error(f"Error creating order: {e}")
         db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.delete("/orders/bulk-delete")
 def delete_orders(ids: List[int], db: Session = Depends(get_db)):
