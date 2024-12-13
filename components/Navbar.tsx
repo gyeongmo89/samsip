@@ -82,6 +82,14 @@ export default function Navbar() {
                   >
                     통계 현황
                   </Link>
+                  <Link
+                    href="/formDownload"
+                    className={`text-white hover:bg-green-400 hover:text-black rounded-md px-3 py-2 text-md font-medium transition-colors hover:scale-110 transform ${isActive(
+                      "/formDownload"
+                    )}`}
+                  >
+                    양식 다운로드
+                  </Link>
                 </div>
               </div>
             </div>
