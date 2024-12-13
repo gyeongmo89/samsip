@@ -123,30 +123,36 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center gap-2 ml-8">
-              <div onClick={handleImageClick} className="cursor-default">
-                <Image
-                  src="/heeju.jpeg"
-                  alt="avatar"
-                  width={40}
-                  height={40}
-                  className="ml-2 rounded-full object-cover"
-                />
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="text-white text-sm ml-2 cursor-default" onClick={handleNameClick}>박희주 매니저</div>
-                <div>
-                  <button
-                    onClick={() => {
-                      localStorage.removeItem("isLoggedIn");
-                      window.location.href = "/";
-                    }}
-                    className="text-white align-middle hover:text-red-400 transition-colors"
-                    title="로그아웃"
-                  >
-                    <LogOut size={20} />
-                  </button>
-                </div>
-              </div>
+              {localStorage.getItem("isLoggedIn") ? (
+                <>
+                  <div onClick={handleImageClick} className="cursor-default">
+                    <Image
+                      src="/heeju.jpeg"
+                      alt="avatar"
+                      width={40}
+                      height={40}
+                      className="ml-2 rounded-full object-cover"
+                    />
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-white text-sm ml-2 cursor-default" onClick={handleNameClick}>박희주 매니저</div>
+                    <div>
+                      <button
+                        onClick={() => {
+                          localStorage.removeItem("isLoggedIn");
+                          window.location.href = "/";
+                        }}
+                        className="text-white align-middle hover:text-red-400 transition-colors"
+                        title="로그아웃"
+                      >
+                        <LogOut size={20} />
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="w-[200px] h-[40px]"></div>
+              )}
             </div>
           </div>
           <div className="-mr-2 flex md:hidden">
