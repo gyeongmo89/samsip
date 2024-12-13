@@ -243,7 +243,7 @@ export default function OrderList() {
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">결제주기</th>
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">대금지급방법</th>
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">구입 연락처</th>
-                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">비고</th>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider min-w-[200px]">비고</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -277,7 +277,7 @@ export default function OrderList() {
                     <td className="px-6 py-4 whitespace-nowrap text-center text-black">{order.payment_cycle}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-center text-black">{order.payment_method}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-center text-black">{order.client}</td>
-                    <td className="px-6 py-4 text-center text-black break-words">{order.notes}</td>
+                    <td className="px-6 py-4 text-center text-black break-words min-w-[200px]">{order.notes}</td>
                   </tr>
                 ))}
               </tbody>

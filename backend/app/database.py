@@ -5,12 +5,12 @@ import os
 
 # Get the absolute path to the database file
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
 DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'orders.db')}"
 
 # Create SQLAlchemy engine
 engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False}
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
 )
 
 # Create SessionLocal class

@@ -19,6 +19,7 @@ class Supplier(SupplierBase):
 class ItemBase(BaseModel):
     name: str
     description: Optional[str] = None
+    price: Optional[float] = None
 
 class ItemCreate(ItemBase):
     pass
@@ -27,7 +28,7 @@ class Item(ItemBase):
     id: int
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 class UnitBase(BaseModel):
     name: str
@@ -49,6 +50,7 @@ class OrderBase(BaseModel):
     price: float
     total: float
     payment_cycle: str
+    payment_method: str = '계좌이체'
     client: str
     notes: Optional[str] = None
     date: Optional[date] = None

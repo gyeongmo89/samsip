@@ -22,11 +22,12 @@ class Item(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
     description = Column(String, nullable=True)
+    price = Column(Float, nullable=True)  # 단가 필드 추가
     
     orders = relationship("Order", back_populates="item")
 
     def __repr__(self):
-        return f"<Item(id={self.id}, name='{self.name}')>"
+        return f"<Item(id={self.id}, name='{self.name}', price={self.price})>"
 
 class Unit(Base):
     __tablename__ = "units"
@@ -50,6 +51,7 @@ class Order(Base):
     price = Column(Float)
     total = Column(Float)
     payment_cycle = Column(String)
+    payment_method = Column(String, default='계좌이체')
     client = Column(String)
     notes = Column(String, nullable=True)
     date = Column(String, nullable=True)
