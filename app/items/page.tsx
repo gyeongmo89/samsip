@@ -26,8 +26,10 @@ export default function ItemList() {
       const response = await fetch('http://localhost:8000/items')
       if (!response.ok) throw new Error('Failed to fetch items')
       const data = await response.json()
-      setItems(data)
-      setFilteredItems(data)
+      // 최신 데이터가 위로 오도록 정렬
+      const sortedData = [...data].sort((a, b) => b.id - a.id)
+      setItems(sortedData)
+      setFilteredItems(sortedData)
     } catch (error) {
       console.error('Error fetching items:', error)
     }
@@ -52,7 +54,7 @@ export default function ItemList() {
         body: JSON.stringify({
           name: formData.name,
           description: formData.description,
-          price: parseFloat(formData.price)
+          price: parseFloat(formData.price.replace(/,/g, ''))
         }),
       })
 
@@ -228,7 +230,7 @@ export default function ItemList() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              품목명
+              품목명 <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -240,16 +242,23 @@ export default function ItemList() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              단가
+              단가 <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={formData.price}
               onChange={(e) => {
                 const value = e.target.value.replace(/[^\d]/g, '')
-                setFormData({ ...formData, price: value })
+                if (value) {
+                  const numValue = parseInt(value)
+                  setFormData({ ...formData, price: numValue.toLocaleString() })
+                } else {
+                  setFormData({ ...formData, price: '' })
+                }
               }}
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+              required
+              placeholder="0"
             />
           </div>
           <div>

@@ -22,8 +22,10 @@ export default function UnitList() {
       const response = await fetch('http://localhost:8000/units')
       if (!response.ok) throw new Error('Failed to fetch units')
       const data = await response.json()
-      setUnits(data)
-      setFilteredUnits(data)
+      // 최신 데이터가 위로 오도록 정렬
+      const sortedData = [...data].sort((a, b) => b.id - a.id)
+      setUnits(sortedData)
+      setFilteredUnits(sortedData)
     } catch (error) {
       console.error('Error fetching units:', error)
     }
@@ -215,7 +217,7 @@ export default function UnitList() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              단위명
+              단위명 <span className="text-red-500">*</span>
             </label>
             <input
               type="text"

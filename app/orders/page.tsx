@@ -49,8 +49,14 @@ export default function OrderList() {
       }
       
       const data = await response.json()
-      setOrders(data)
-      setFilteredOrders(data)
+      // 최신 데이터가 위로 오도록 정렬
+      const sortedData = [...data].sort((a, b) => {
+        const dateA = new Date(a.date)
+        const dateB = new Date(b.date)
+        return dateB.getTime() - dateA.getTime()
+      })
+      setOrders(sortedData)
+      setFilteredOrders(sortedData)
     } catch (error) {
       console.error('Error fetching orders:', error)
       setOrders([])
@@ -78,7 +84,15 @@ export default function OrderList() {
     }
     setSortConfig({ key, direction })
 
-    const sortedOrders = [...orders].sort((a, b) => {
+    const sortedOrders = [...filteredOrders].sort((a, b) => {
+      if (key === 'date') {
+        const dateA = new Date(a[key])
+        const dateB = new Date(b[key])
+        return direction === 'asc' 
+          ? dateA.getTime() - dateB.getTime()
+          : dateB.getTime() - dateA.getTime()
+      }
+
       let aValue = key.includes('.') ? key.split('.').reduce((obj, k) => obj[k], a) : a[key]
       let bValue = key.includes('.') ? key.split('.').reduce((obj, k) => obj[k], b) : b[key]
 
@@ -94,7 +108,7 @@ export default function OrderList() {
       }
     })
 
-    setOrders(sortedOrders)
+    setFilteredOrders(sortedOrders)
   }
 
   const handleExportCSV = () => {
@@ -242,7 +256,17 @@ export default function OrderList() {
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                   </th>
-                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">발주일</th>
+                  <th 
+                    className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('date')}
+                  >
+                    발주일
+                    {sortConfig.key === 'date' && (
+                      <span className="ml-1">
+                        {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </th>
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">구입처</th>
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">품목</th>                  
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">단가</th>

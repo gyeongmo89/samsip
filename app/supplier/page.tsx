@@ -26,8 +26,10 @@ export default function SupplierList() {
       const response = await fetch('http://localhost:8000/suppliers')
       if (!response.ok) throw new Error('Failed to fetch suppliers')
       const data = await response.json()
-      setSuppliers(data)
-      setFilteredSuppliers(data)
+      // 최신 데이터가 위로 오도록 정렬
+      const sortedData = [...data].sort((a, b) => b.id - a.id)
+      setSuppliers(sortedData)
+      setFilteredSuppliers(sortedData)
     } catch (error) {
       console.error('Error fetching suppliers:', error)
     }
@@ -229,7 +231,7 @@ export default function SupplierList() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              구입처명
+              구입처명 <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -246,7 +248,18 @@ export default function SupplierList() {
             <input
               type="text"
               value={formData.contact}
-              onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
+              onChange={(e) => {
+                let value = e.target.value.replace(/\D/g, '')
+                if (value.length <= 11) {
+                  if (value.length > 7) {
+                    value = value.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3')
+                  } else if (value.length > 3) {
+                    value = value.replace(/(\d{3})(\d{1,4})/, '$1-$2')
+                  }
+                  setFormData({ ...formData, contact: value })
+                }
+              }}
+              placeholder="010-0000-0000"
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
             />
           </div>
