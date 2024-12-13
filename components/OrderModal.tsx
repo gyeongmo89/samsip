@@ -21,10 +21,19 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
     price: '',
     total: '',
     payment_cycle: '',
+    payment_method: '계좌이체',
     client: '',
     notes: '',
     date: new Date().toISOString().split('T')[0]
   })
+
+  const paymentMethods = ['계좌이체', '현금', '카드결제']
+  const paymentCycles = ['선택해주세요', '매월초', '매월중순', '매월말', '기타입력']
+  const [showDaySelect, setShowDaySelect] = useState(false)
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
 
   useEffect(() => {
     fetchSuppliers()
@@ -86,6 +95,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
         price: parseFloat(formData.price),
         total: parseFloat(formData.total),
         payment_cycle: formData.payment_cycle,
+        payment_method: formData.payment_method,
         client: formData.client,
         notes: formData.notes || '',
         date: formData.date
@@ -104,7 +114,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.detail || '주문 등록 실패')
+        throw new Error(errorData.detail || '발주 등록 실패')
       }
 
       const result = await response.json()
@@ -115,7 +125,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
       onOrderComplete()
     } catch (error) {
       console.error('Error creating order:', error)
-      alert('주문 등록 중 오류가 발생했습니다: ' + (error.message || '알 수 없는 오류가 발생했습니다'))
+      alert('발주 등록 중 오류가 발생했습니다: ' + (error.message || '알 수 없는 오류가 발생했습니다'))
     }
   }
 
@@ -133,24 +143,48 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
     calculateTotal()
   }, [formData.price, formData.quantity])
 
+  const handlePaymentCycleChange = (value: string) => {
+    if (value === '기타입력') {
+      setShowDaySelect(true)
+      setFormData(prev => ({ ...prev, payment_cycle: '1' }))
+    } else {
+      setShowDaySelect(false)
+      setFormData(prev => ({ ...prev, payment_cycle: value }))
+    }
+  }
+
+  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, '')
+    if (value.length <= 11) {
+      if (value.length > 7) {
+        value = value.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3')
+      } else if (value.length > 3) {
+        value = value.replace(/(\d{3})(\d{1,4})/, '$1-$2')
+      }
+      setFormData(prev => ({ ...prev, client: value }))
+    }
+  }
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="주문 등록">
+    <Modal isOpen={isOpen} onClose={onClose} title="발주 등록">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
-          {/* 공급업체 */}
+          {/* 구입처 */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              공급업체 <span className="text-red-500">*</span>
+              구입처 <span className="text-red-500">*</span>
             </label>
             <select
               value={formData.supplier_id}
-              onChange={(e) => setFormData(prev => ({ ...prev, supplier_id: e.target.value }))}
-              className="mt-1 block w-full rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-lg h-12"
+              onChange={(e) => handleInputChange('supplier_id', e.target.value)}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               required
             >
-              <option value="">선택하세요</option>
+              <option value="">선택해주세요</option>
               {suppliers.map((supplier) => (
-                <option key={supplier.id} value={supplier.id}>{supplier.name}</option>
+                <option key={supplier.id} value={supplier.id}>
+                  {supplier.name}
+                </option>
               ))}
             </select>
           </div>
@@ -162,13 +196,25 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
             </label>
             <select
               value={formData.item_id}
-              onChange={(e) => setFormData(prev => ({ ...prev, item_id: e.target.value }))}
-              className="mt-1 block w-full rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-lg h-12"
+              onChange={(e) => {
+                handleInputChange('item_id', e.target.value)
+                const item = items.find(i => i.id === parseInt(e.target.value))
+                if (item) {
+                  setFormData(prev => ({
+                    ...prev,
+                    item_id: e.target.value,
+                    price: item.price.toString()
+                  }))
+                }
+              }}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               required
             >
-              <option value="">선택하세요</option>
+              <option value="">선택해주세요</option>
               {items.map((item) => (
-                <option key={item.id} value={item.id}>{item.name}</option>
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
               ))}
             </select>
           </div>
@@ -180,30 +226,17 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
             </label>
             <select
               value={formData.unit_id}
-              onChange={(e) => setFormData(prev => ({ ...prev, unit_id: e.target.value }))}
-              className="mt-1 block w-full rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-lg h-12"
+              onChange={(e) => handleInputChange('unit_id', e.target.value)}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               required
             >
-              <option value="">선택하세요</option>
+              <option value="">선택해주세요</option>
               {units.map((unit) => (
-                <option key={unit.id} value={unit.id}>{unit.name}</option>
+                <option key={unit.id} value={unit.id}>
+                  {unit.name}
+                </option>
               ))}
             </select>
-          </div>
-
-          {/* 단가 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              단가 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              value={formData.price}
-              onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-              className="mt-1 block w-full rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-lg h-12"
-              required
-              min="0"
-            />
           </div>
 
           {/* 수량 */}
@@ -214,68 +247,118 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
             <input
               type="number"
               value={formData.quantity}
-              onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
-              className="mt-1 block w-full rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-lg h-12"
+              onChange={(e) => handleInputChange('quantity', e.target.value)}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               required
-              min="0"
             />
           </div>
 
-          {/* 합계 */}
+          {/* 단가 */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              합계 <span className="text-red-500">*</span>
+              단가 <span className="text-red-500">*</span>
             </label>
             <input
-              type="text"
-              value={formData.total}
-              readOnly
-              className="mt-1 block w-full rounded-lg border-2 border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-lg h-12"
+              type="number"
+              value={formData.price}
+              onChange={(e) => handleInputChange('price', e.target.value)}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+              required
             />
           </div>
 
-          {/* 대금 지급주기 */}
+          {/* 총액 */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              대금 지급주기 <span className="text-red-500">*</span>
+              총액 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              value={formData.total}
+              onChange={(e) => handleInputChange('total', e.target.value)}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+              required
+              readOnly
+            />
+          </div>
+
+          {/* 결제주기 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              결제주기 <span className="text-red-500">*</span>
             </label>
             <select
-              value={formData.payment_cycle}
-              onChange={(e) => setFormData(prev => ({ ...prev, payment_cycle: e.target.value }))}
-              className="mt-1 block w-full rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-lg h-12"
+              value={formData.payment_cycle === '' ? '선택해주세요' : 
+                     showDaySelect ? '기타입력' : formData.payment_cycle}
+              onChange={(e) => handlePaymentCycleChange(e.target.value)}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               required
             >
-              <option value="">선택하세요</option>
-              <option value="weekly">주단위</option>
-              <option value="monthly">월단위</option>
-              <option value="quarterly">분기단위</option>
+              {paymentCycles.map((cycle) => (
+                <option key={cycle} value={cycle}>
+                  {cycle}
+                </option>
+              ))}
+            </select>
+            {showDaySelect && (
+              <select
+                value={formData.payment_cycle}
+                onChange={(e) => setFormData(prev => ({ ...prev, payment_cycle: e.target.value }))}
+                className="mt-2 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+              >
+                {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                  <option key={day} value={day.toString()}>
+                    {day}일
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {/* 대금지급방법 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              대금지급방법 <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.payment_method}
+              onChange={(e) => handleInputChange('payment_method', e.target.value)}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+              required
+            >
+              {paymentMethods.map((method) => (
+                <option key={method} value={method}>
+                  {method}
+                </option>
+              ))}
             </select>
           </div>
 
-          {/* 주문일자 */}
+          {/* 발주일 */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              주문일자 <span className="text-red-500">*</span>
+              발주일 <span className="text-red-500">*</span>
             </label>
             <input
               type="date"
               value={formData.date}
-              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-              className="mt-1 block w-full rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-lg h-12"
+              onChange={(e) => handleInputChange('date', e.target.value)}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               required
             />
           </div>
 
-          {/* 거래처 */}
+          {/* 구입 연락처 */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              거래처 <span className="text-red-500">*</span>
+              구입 연락처 <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={formData.client}
-              onChange={(e) => setFormData(prev => ({ ...prev, client: e.target.value }))}
-              className="mt-1 block w-full rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-lg h-12"
+              onChange={handlePhoneNumberChange}
+              placeholder="010-0000-0000"
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               required
             />
           </div>
@@ -287,24 +370,24 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
             </label>
             <textarea
               value={formData.notes}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-              className="mt-1 block w-full rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-lg"
+              onChange={(e) => handleInputChange('notes', e.target.value)}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               rows={3}
             />
           </div>
         </div>
 
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-end space-x-3 mt-6">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             취소
           </button>
           <button
             type="submit"
-            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             등록
           </button>

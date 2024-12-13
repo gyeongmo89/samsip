@@ -225,7 +225,7 @@ export default function OrderList() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left">
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">
                     <input
                       type="checkbox"
                       checked={selectAll}
@@ -233,16 +233,17 @@ export default function OrderList() {
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                   </th>
-                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">발주일</th>
-                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">거래처</th>
-                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">품목</th>
-                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">단위</th>
-                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">단가</th>
-                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">수량</th>
-                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">총액</th>
-                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">결제주기</th>
-                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">거래처</th>
-                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">비고</th>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">발주일</th>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">구입처</th>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">품목</th>                  
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">단가</th>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">단위</th>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">수량</th>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">총액</th>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">결제주기</th>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">대금지급방법</th>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">구입 연락처</th>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">비고</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -252,7 +253,7 @@ export default function OrderList() {
                     className="hover:bg-gray-50 cursor-pointer"
                     onClick={() => handleRowClick(index.toString())}
                   >
-                    <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                    <td className="px-6 py-4 whitespace-nowrap text-center" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         checked={selectedOrders.includes(index.toString())}
@@ -260,22 +261,23 @@ export default function OrderList() {
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-black">
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">
                       {order.date ? new Date(order.date).toLocaleDateString('ko-KR', {
                         year: 'numeric',
                         month: '2-digit',
                         day: '2-digit'
                       }).replace(/\. /g, '-').slice(0, -1) : ''}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-black">{order.supplier.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-black">{order.item.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-black">{order.unit.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-black">{order.price}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-black">{order.quantity}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-black">{order.total}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-black">{order.payment_cycle}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-black">{order.client}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-black">{order.notes}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">{order.supplier.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">{order.item.name}</td>                    
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">{order.price.toLocaleString()}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">{order.unit.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">{order.quantity.toLocaleString()}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">{order.total.toLocaleString()}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">{order.payment_cycle}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">{order.payment_method}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">{order.client}</td>
+                    <td className="px-6 py-4 text-center text-black break-words">{order.notes}</td>
                   </tr>
                 ))}
               </tbody>
