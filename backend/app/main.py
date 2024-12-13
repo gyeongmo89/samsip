@@ -118,6 +118,19 @@ def read_suppliers(db: Session = Depends(get_db)):
     print(f"Found suppliers: {[f'{s.id}: {s.name}' for s in suppliers]}")
     return suppliers
 
+@app.delete("/suppliers/bulk-delete")
+def delete_suppliers(ids: List[int], db: Session = Depends(get_db)):
+    try:
+        for supplier_id in ids:
+            supplier = db.query(models.Supplier).filter(models.Supplier.id == supplier_id).first()
+            if supplier:
+                db.delete(supplier)
+        db.commit()
+        return {"message": "Suppliers deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/items/", response_model=ItemResponse)
 def create_item(item: ItemBase, db: Session = Depends(get_db)):
     try:
@@ -139,6 +152,19 @@ def read_items(db: Session = Depends(get_db)):
     items = db.query(models.Item).all()
     return items
 
+@app.delete("/items/bulk-delete")
+def delete_items(ids: List[int], db: Session = Depends(get_db)):
+    try:
+        for item_id in ids:
+            item = db.query(models.Item).filter(models.Item.id == item_id).first()
+            if item:
+                db.delete(item)
+        db.commit()
+        return {"message": "Items deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/units/", response_model=UnitResponse)
 def create_unit(unit: UnitBase, db: Session = Depends(get_db)):
     db_unit = models.Unit(**unit.dict())
@@ -158,14 +184,35 @@ def read_units(db: Session = Depends(get_db)):
     units = db.query(models.Unit).all()
     return units
 
+@app.delete("/units/bulk-delete")
+def delete_units(ids: List[int], db: Session = Depends(get_db)):
+    try:
+        for unit_id in ids:
+            unit = db.query(models.Unit).filter(models.Unit.id == unit_id).first()
+            if unit:
+                db.delete(unit)
+        db.commit()
+        return {"message": "Units deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/orders/", response_model=List[OrderResponse])
 def read_orders(db: Session = Depends(get_db)):
     try:
-        orders = db.query(models.Order).options(
+        # 관련 데이터가 모두 존재하는 발주만 조회
+        orders = db.query(models.Order).join(
+            models.Supplier
+        ).join(
+            models.Item
+        ).join(
+            models.Unit
+        ).options(
             joinedload(models.Order.supplier),
             joinedload(models.Order.item),
             joinedload(models.Order.unit)
         ).all()
+        
         logger.info(f"Retrieved {len(orders)} orders")
         return orders
     except Exception as e:
@@ -200,11 +247,12 @@ def create_order(order: OrderBase, db: Session = Depends(get_db)):
 @app.delete("/orders/bulk-delete")
 def delete_orders(ids: List[int], db: Session = Depends(get_db)):
     try:
-        deleted_count = db.query(models.Order).filter(models.Order.id.in_(ids)).delete(synchronize_session=False)
+        for order_id in ids:
+            order = db.query(models.Order).filter(models.Order.id == order_id).first()
+            if order:
+                db.delete(order)
         db.commit()
-        logger.info(f"Deleted {deleted_count} orders")
-        return {"message": f"{deleted_count} orders deleted successfully"}
+        return {"message": "Orders deleted successfully"}
     except Exception as e:
         db.rollback()
-        logger.error(f"Error deleting orders: {e}")
         raise HTTPException(status_code=500, detail=str(e))

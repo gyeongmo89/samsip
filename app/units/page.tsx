@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Modal from '@/components/Modal'
-import { FileDown, Plus, Search } from 'lucide-react'
+import { FileDown, Plus, Search, Minus } from 'lucide-react'
 
 export default function UnitList() {
   const [units, setUnits] = useState([])
@@ -10,6 +10,8 @@ export default function UnitList() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [formData, setFormData] = useState({ name: '' })
+  const [selectedUnits, setSelectedUnits] = useState<string[]>([])
+  const [selectAll, setSelectAll] = useState(false)
 
   useEffect(() => {
     fetchUnits()
@@ -61,6 +63,59 @@ export default function UnitList() {
     // TODO: Implement CSV export
   }
 
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectAll(e.target.checked)
+    if (e.target.checked) {
+      setSelectedUnits(filteredUnits.map((_, index) => index.toString()))
+    } else {
+      setSelectedUnits([])
+    }
+  }
+
+  const handleSelectUnit = (index: string) => {
+    setSelectedUnits(prev => {
+      if (prev.includes(index)) {
+        return prev.filter(i => i !== index)
+      } else {
+        return [...prev, index]
+      }
+    })
+  }
+
+  const handleDeleteUnits = async () => {
+    if (selectedUnits.length === 0) {
+      alert('삭제할 단위를 선택해주세요.')
+      return
+    }
+
+    const confirmed = confirm('선택한 단위를 삭제하시겠습니까?')
+    if (!confirmed) return
+
+    try {
+      const unitIds = selectedUnits.map(index => parseInt(filteredUnits[parseInt(index)].id))
+      const response = await fetch('http://localhost:8000/units/bulk-delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(unitIds),
+      })
+
+      if (response.ok) {
+        fetchUnits()
+        setSelectedUnits([])
+        setSelectAll(false)
+        alert('선택한 단위가 삭제되었습니다.')
+      } else {
+        const error = await response.json()
+        throw new Error(error.detail || '단위 삭제 실패')
+      }
+    } catch (error) {
+      console.error('Error deleting units:', error)
+      alert('단위 삭제 중 오류가 발생했습니다.')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12">
       <div className="container mx-auto px-4">
@@ -74,33 +129,42 @@ export default function UnitList() {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && setSearchTerm(e.target.value)}
                   placeholder="검색어를 입력하세요"
-                  className="px-4 py-2 border rounded-lg text-black"
+                  className="px-6 py-3 border rounded-lg text-black w-80 text-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                 />
                 <button
                   onClick={() => {}}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+                  className="bg-purple-500 text-white px-6 py-3 rounded-lg hover:bg-purple-600 transition-colors"
                 >
-                  <Search className="w-4 h-4" />
-                  검색
+                  <Search className="w-6 h-6" />
                 </button>
               </div>
               
-              {/* 단위 등록 버튼 */}
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                단위 등록
-              </button>
+              {/* 단위 등록/삭제 버튼 */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold shadow-lg hover:shadow-xl flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  단위 등록
+                </button>
+                <button
+                  onClick={handleDeleteUnits}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold shadow-lg hover:shadow-xl flex items-center gap-2"
+                >
+                  <Minus className="w-4 h-4" />
+                  단위 삭제
+                </button>
+              </div>
               
               {/* 엑셀 다운로드 버튼 */}
               <button
                 onClick={handleExportCSV}
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+                className="bg-gradient-to-r from-blue-400 to-blue-500 text-white px-6 py-3 rounded-lg hover:from-blue-500 hover:to-blue-600 transition-all flex items-center gap-2 shadow-lg"
               >
-                <FileDown className="w-4 h-4" />
+                <FileDown className="w-6 h-6" />
                 엑셀 다운로드
               </button>
             </div>
@@ -111,12 +175,32 @@ export default function UnitList() {
             <table className="min-w-full bg-white rounded-lg overflow-hidden">
               <thead className="bg-gray-100">
                 <tr>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900">
+                    <input
+                      type="checkbox"
+                      checked={selectAll}
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                  </th>
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">단위명</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredUnits.map((unit) => (
-                  <tr key={unit.id} className="hover:bg-gray-50">
+                {filteredUnits.map((unit, index) => (
+                  <tr 
+                    key={unit.id} 
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => handleSelectUnit(index.toString())}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-center" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedUnits.includes(index.toString())}
+                        onChange={() => handleSelectUnit(index.toString())}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center text-black">{unit.name}</td>
                   </tr>
                 ))}

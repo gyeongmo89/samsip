@@ -11,7 +11,7 @@ class Supplier(Base):
     contact = Column(String, nullable=True)
     address = Column(String, nullable=True)
     
-    orders = relationship("Order", back_populates="supplier")
+    orders = relationship("Order", back_populates="supplier", cascade="all, delete")
 
     def __repr__(self):
         return f"<Supplier(id={self.id}, name='{self.name}')>"
@@ -24,7 +24,7 @@ class Item(Base):
     description = Column(String, nullable=True)
     price = Column(Float, nullable=True)  # 단가 필드 추가
     
-    orders = relationship("Order", back_populates="item")
+    orders = relationship("Order", back_populates="item", cascade="all, delete")
 
     def __repr__(self):
         return f"<Item(id={self.id}, name='{self.name}', price={self.price})>"
@@ -35,7 +35,7 @@ class Unit(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
     
-    orders = relationship("Order", back_populates="unit")
+    orders = relationship("Order", back_populates="unit", cascade="all, delete")
 
     def __repr__(self):
         return f"<Unit(id={self.id}, name='{self.name}')>"
@@ -44,9 +44,9 @@ class Order(Base):
     __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True, index=True)
-    supplier_id = Column(Integer, ForeignKey("suppliers.id"))
-    item_id = Column(Integer, ForeignKey("items.id"))
-    unit_id = Column(Integer, ForeignKey("units.id"))
+    supplier_id = Column(Integer, ForeignKey("suppliers.id", ondelete="CASCADE"), nullable=False)
+    item_id = Column(Integer, ForeignKey("items.id", ondelete="CASCADE"), nullable=False)
+    unit_id = Column(Integer, ForeignKey("units.id", ondelete="CASCADE"), nullable=False)
     quantity = Column(Float)
     price = Column(Float)
     total = Column(Float)

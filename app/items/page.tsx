@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { FileDown, Plus, Search } from 'lucide-react'
+import { FileDown, Plus, Search, Minus } from 'lucide-react'
 import Modal from '@/components/Modal'
 
 export default function ItemList() {
@@ -14,6 +14,8 @@ export default function ItemList() {
     price: '',
     description: ''
   })
+  const [selectedItems, setSelectedItems] = useState<string[]>([])
+  const [selectAll, setSelectAll] = useState(false)
 
   useEffect(() => {
     fetchItems()
@@ -70,6 +72,59 @@ export default function ItemList() {
     // TODO: Implement CSV export
   }
 
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectAll(e.target.checked)
+    if (e.target.checked) {
+      setSelectedItems(filteredItems.map((_, index) => index.toString()))
+    } else {
+      setSelectedItems([])
+    }
+  }
+
+  const handleSelectItem = (index: string) => {
+    setSelectedItems(prev => {
+      if (prev.includes(index)) {
+        return prev.filter(i => i !== index)
+      } else {
+        return [...prev, index]
+      }
+    })
+  }
+
+  const handleDeleteItems = async () => {
+    if (selectedItems.length === 0) {
+      alert('삭제할 품목을 선택해주세요.')
+      return
+    }
+
+    const confirmed = confirm('선택한 품목을 삭제하시겠습니까?')
+    if (!confirmed) return
+
+    try {
+      const itemIds = selectedItems.map(index => parseInt(filteredItems[parseInt(index)].id))
+      const response = await fetch('http://localhost:8000/items/bulk-delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(itemIds),
+      })
+
+      if (response.ok) {
+        fetchItems()
+        setSelectedItems([])
+        setSelectAll(false)
+        alert('선택한 품목이 삭제되었습니다.')
+      } else {
+        const error = await response.json()
+        throw new Error(error.detail || '품목 삭제 실패')
+      }
+    } catch (error) {
+      console.error('Error deleting items:', error)
+      alert('품목 삭제 중 오류가 발생했습니다.')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12">
       <div className="container mx-auto px-4">
@@ -83,33 +138,42 @@ export default function ItemList() {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && setSearchTerm(e.target.value)}
                   placeholder="검색어를 입력하세요"
-                  className="px-4 py-2 border rounded-lg text-black"
+                  className="px-6 py-3 border rounded-lg text-black w-80 text-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                 />
                 <button
-                  onClick={() => setSearchTerm('')}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+                  onClick={() => {}}
+                  className="bg-purple-500 text-white px-6 py-3 rounded-lg hover:bg-purple-600 transition-colors"
                 >
-                  <Search className="w-4 h-4" />
-                  검색
+                  <Search className="w-6 h-6" />
                 </button>
               </div>
               
-              {/* 품목 등록 버튼 */}
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                품목 등록
-              </button>
+              {/* 품목 등록/삭제 버튼 */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold shadow-lg hover:shadow-xl flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  품목 등록
+                </button>
+                <button
+                  onClick={handleDeleteItems}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold shadow-lg hover:shadow-xl flex items-center gap-2"
+                >
+                  <Minus className="w-4 h-4" />
+                  품목 삭제
+                </button>
+              </div>
               
               {/* 엑셀 다운로드 버튼 */}
               <button
                 onClick={handleExportCSV}
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+                className="bg-gradient-to-r from-blue-400 to-blue-500 text-white px-6 py-3 rounded-lg hover:from-blue-500 hover:to-blue-600 transition-all flex items-center gap-2 shadow-lg"
               >
-                <FileDown className="w-4 h-4" />
+                <FileDown className="w-6 h-6" />
                 엑셀 다운로드
               </button>
             </div>
@@ -120,6 +184,14 @@ export default function ItemList() {
             <table className="min-w-full bg-white rounded-lg overflow-hidden">
               <thead className="bg-gray-100">
                 <tr>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900">
+                    <input
+                      type="checkbox"
+                      checked={selectAll}
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                  </th>
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">품목명</th>
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">단가</th>
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">비고</th>
@@ -127,7 +199,19 @@ export default function ItemList() {
               </thead>
               <tbody>
                 {filteredItems.map((item, index) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
+                  <tr 
+                    key={item.id} 
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => handleSelectItem(index.toString())}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-center" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.includes(index.toString())}
+                        onChange={() => handleSelectItem(index.toString())}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center text-black">{item.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-center text-black">{item.price?.toLocaleString()}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-center text-black">{item.description}</td>

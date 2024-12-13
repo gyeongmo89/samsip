@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import OrderModal from '@/components/OrderModal'
-import { FileDown, FileUp, Plus, Search } from 'lucide-react'
+import { FileDown, FileUp, Minus, Plus, Search } from 'lucide-react'
 
 export default function OrderList() {
   const [orders, setOrders] = useState([])
@@ -39,6 +39,11 @@ export default function OrderList() {
       })
       
       if (!response.ok) {
+        if (response.status === 404) {
+          setOrders([])
+          setFilteredOrders([])
+          return
+        }
         const errorData = await response.json()
         throw new Error(errorData.detail || 'Failed to fetch orders')
       }
@@ -48,6 +53,8 @@ export default function OrderList() {
       setFilteredOrders(data)
     } catch (error) {
       console.error('Error fetching orders:', error)
+      setOrders([])
+      setFilteredOrders([])
     }
   }
 
@@ -180,14 +187,16 @@ export default function OrderList() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold shadow-lg hover:shadow-xl"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold shadow-lg hover:shadow-xl flex items-center gap-2"
                 >
+                   <Plus className="w-4 h-4" />
                   발주등록
                 </button>
                 <button
                   onClick={handleDeleteOrders}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold shadow-lg hover:shadow-xl"
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold shadow-lg hover:shadow-xl flex items-center gap-2"
                 >
+                  <Minus className="w-4 h-4" />
                   발주삭제
                 </button>
               </div>
