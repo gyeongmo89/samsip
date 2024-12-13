@@ -10,7 +10,8 @@ export default function ItemList() {
   const [searchTerm, setSearchTerm] = useState('')
   const [formData, setFormData] = useState({
     name: '',
-    price: ''
+    price: '',
+    description: ''
   })
 
   useEffect(() => {
@@ -38,7 +39,7 @@ export default function ItemList() {
         },
         body: JSON.stringify({
           name: formData.name,
-          description: '',
+          description: formData.description,
           price: parseFloat(formData.price)
         }),
       })
@@ -48,7 +49,7 @@ export default function ItemList() {
       alert('품목이 등록되었습니다.')
       fetchItems()
       setIsModalOpen(false)
-      setFormData({ name: '', price: '' })
+      setFormData({ name: '', price: '', description: '' })
     } catch (error) {
       console.error('Error creating item:', error)
       alert('품목 등록 중 오류가 발생했습니다.')
@@ -64,9 +65,9 @@ export default function ItemList() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 py-12">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-xl p-6">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12">
+      <div className="container mx-auto px-4">
+        <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-800">품목 관리</h2>
             <div className="flex gap-4">
@@ -108,21 +109,21 @@ export default function ItemList() {
           </div>
 
           {/* 품목 목록 테이블 */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+          <div className="overflow-auto">
+            <table className="min-w-full table-auto">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">품목명</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">단가금액</th>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">품목명</th>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">단가</th>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">설명</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {items.map((item) => (
-                  <tr key={item.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">{item.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {item.description ? item.description.replace('단가: ', '').replace('원', '') : ''}
-                    </td>
+                  <tr key={item.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">{item.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">{item.price?.toLocaleString()}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">{item.description}</td>
                   </tr>
                 ))}
               </tbody>
@@ -133,45 +134,55 @@ export default function ItemList() {
 
       {/* 품목 등록 모달 */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="품목 등록">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              품목명 <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              품목명
             </label>
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               required
             />
           </div>
-          
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              단가금액 <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              단가
             </label>
             <input
-              type="number"
+              type="text"
               value={formData.price}
-              onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              min="0"
-              required
+              onChange={(e) => {
+                const value = e.target.value.replace(/[^\d]/g, '')
+                setFormData({ ...formData, price: value })
+              }}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-
-          <div className="flex justify-end gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              설명
+            </label>
+            <input
+              type="text"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div className="flex justify-end gap-4 mt-6">
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
             >
               취소
             </button>
             <button
               type="submit"
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               등록
             </button>
