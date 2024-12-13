@@ -175,7 +175,19 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
             </label>
             <select
               value={formData.supplier_id}
-              onChange={(e) => handleInputChange('supplier_id', e.target.value)}
+              onChange={(e) => {
+                const selectedSupplierId = e.target.value
+                const supplier = suppliers.find(s => s.id === parseInt(selectedSupplierId))
+                if (supplier) {
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    supplier_id: selectedSupplierId,
+                    client: supplier.contact || '' 
+                  }))
+                } else {
+                  setFormData(prev => ({ ...prev, supplier_id: selectedSupplierId }))
+                }
+              }}
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               required
             >
@@ -355,7 +367,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
           {/* 구입 연락처 */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              구입 연락처 <span className="text-red-500">*</span>
+              구입 연락처
             </label>
             <input
               type="text"
@@ -363,7 +375,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderMo
               onChange={handlePhoneNumberChange}
               placeholder="010-0000-0000"
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
-              required
+              
             />
           </div>
 
