@@ -214,6 +214,33 @@ export default function OrderList() {
     alert('엑셀 다운로드 완료')
   }
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const response = await fetch('http://localhost:8000/orders/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (response.ok) {
+        alert('엑셀 파일이 성공적으로 업로드되었습니다.')
+        // 목록 새로고침
+        fetchOrders()
+      } else {
+        const error = await response.json()
+        alert(`업로드 실패: ${error.detail}`)
+      }
+    } catch (error) {
+      alert('업로드 중 오류가 발생했습니다.')
+      console.error('Upload error:', error)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12">
       <div className="container mx-auto px-4">
@@ -265,23 +292,18 @@ export default function OrderList() {
                 <FileDown className="w-6 h-6" />
                 엑셀 다운로드
               </button>
-              <button
-                // onClick={() => document.getElementById('excelUpload').click()}
-                onClick={() => alert('엑셀 업로드 기능 준비중')}
-                className="bg-gradient-to-r from-green-400 to-green-500 text-white px-6 py-3 rounded-lg hover:from-green-500 hover:to-green-600 transition-all flex items-center gap-2 shadow-lg"
-              >
-                
-                <FileUp className="w-6 h-6" />
-                엑셀 업로드
-              </button>
-              {/* <input
-                id="excelUpload"
-                type="file"
-                accept=".xlsx, .xls"
-                onChange={handleExcelUpload}
-                style={{ display: 'none' }}
-              /> */}
-
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  accept=".xlsx"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <div className="bg-gradient-to-r from-green-400 to-green-500 text-white px-6 py-3 rounded-lg hover:from-green-500 hover:to-green-600 transition-all flex items-center gap-2 shadow-lg">
+                  <FileUp className="w-6 h-6" />
+                  엑셀 업로드
+                </div>
+              </label>
             </div>
           </div>
 

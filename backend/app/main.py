@@ -8,6 +8,11 @@ from typing import Optional, List
 import logging
 from datetime import date
 from sqlalchemy.orm import joinedload
+from fastapi import FastAPI, HTTPException, status, Depends, UploadFile, File
+from datetime import datetime
+import io
+from openpyxl import load_workbook
+from openpyxl.utils import get_column_letter
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -94,6 +99,20 @@ class OrderResponse(OrderBase):
 
     class Config:
         from_attributes = True
+
+def get_float_value(value):
+    if not value:
+        return 0.0
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        if value.startswith('='):  # 엑셀 수식인 경우
+            return 0.0  # 기본값 반환 또는 다른 처리 로직 추가
+        try:
+            return float(value.replace(',', ''))  # 천단위 구분자 제거
+        except ValueError:
+            return 0.0
+    return 0.0
 
 # API endpoints
 @app.post("/suppliers/", response_model=SupplierResponse)
@@ -242,6 +261,72 @@ def delete_orders(ids: List[int], db: Session = Depends(get_db)):
                 db.delete(order)
         db.commit()
         return {"message": "Orders deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/orders/upload")
+async def upload_orders(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    if not file.filename.endswith('.xlsx'):
+        raise HTTPException(status_code=400, detail="Only .xlsx files are allowed")
+
+    try:
+        contents = await file.read()
+        wb = load_workbook(filename=io.BytesIO(contents), data_only=True)  # data_only=True로 수식 대신 값을 가져옴
+        ws = wb.active
+        
+        orders = []
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if not any(row):  # 빈 행 건너뛰기
+                continue
+                
+            try:
+                order_date = datetime.strptime(str(row[0]), '%Y-%m-%d').date()
+            except:
+                order_date = datetime.now().date()
+
+            # 구입처 찾기 또는 생성
+            supplier = db.query(models.Supplier).filter(models.Supplier.name == row[1]).first()
+            if not supplier:
+                supplier = models.Supplier(name=row[1], contact=row[9])
+                db.add(supplier)
+                db.flush()
+
+            # 품목 찾기 또는 생성
+            item = db.query(models.Item).filter(models.Item.name == row[2]).first()
+            if not item:
+                item = models.Item(name=row[2], price=get_float_value(row[3]))
+                db.add(item)
+                db.flush()
+
+            # 단위 찾기 또는 생성
+            unit = db.query(models.Unit).filter(models.Unit.name == row[4]).first()
+            if not unit:
+                unit = models.Unit(name=row[4])
+                db.add(unit)
+                db.flush()
+
+            # 발주 데이터 생성
+            order = models.Order(
+                date=order_date,
+                supplier_id=supplier.id,
+                item_id=item.id,
+                unit_id=unit.id,
+                price=get_float_value(row[3]),
+                quantity=get_float_value(row[5]),
+                total=get_float_value(row[6]),
+                payment_cycle=str(row[7] or ''),
+                payment_method=str(row[8] or ''),
+                client=str(row[9] or ''),
+                notes=str(row[10] or '')
+            )
+            orders.append(order)
+
+        db.add_all(orders)
+        db.commit()
+
+        return {"message": f"Successfully uploaded {len(orders)} orders"}
+
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
