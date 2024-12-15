@@ -9,8 +9,13 @@ export default function UnitList() {
   const [units, setUnits] = useState([])
   const [filteredUnits, setFilteredUnits] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
-  const [formData, setFormData] = useState({ name: '' })
+  const [formData, setFormData] = useState({
+    name: '',
+    // description: ''
+  })
+  const [editingUnit, setEditingUnit] = useState(null)
   const [selectedUnits, setSelectedUnits] = useState<string[]>([])
   const [selectAll, setSelectAll] = useState(false)
 
@@ -23,7 +28,6 @@ export default function UnitList() {
       const response = await fetch('http://localhost:8000/units')
       if (!response.ok) throw new Error('Failed to fetch units')
       const data = await response.json()
-      // 최신 데이터가 위로 오도록 정렬
       const sortedData = [...data].sort((a, b) => b.id - a.id)
       setUnits(sortedData)
       setFilteredUnits(sortedData)
@@ -40,7 +44,10 @@ export default function UnitList() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.name,
+          // description: formData.description
+        }),
       })
 
       if (!response.ok) throw new Error('Failed to create unit')
@@ -48,30 +55,69 @@ export default function UnitList() {
       alert('단위가 등록되었습니다.')
       fetchUnits()
       setIsModalOpen(false)
-      setFormData({ name: '' })
+      // setFormData({ name: '', description: '' })
+      setFormData({ name: '',})
     } catch (error) {
       console.error('Error creating unit:', error)
       alert('단위 등록 중 오류가 발생했습니다.')
     }
   }
 
+  const handleEditClick = (unit) => {
+    setEditingUnit(unit)
+    setFormData({
+      name: unit.name,
+      // description: unit.description
+    })
+    setIsEditModalOpen(true)
+  }
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault()
+    try {
+      const response = await fetch(`http://localhost:8000/units/${editingUnit.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          // description: formData.description
+        }),
+      })
+
+      if (!response.ok) throw new Error('Failed to update unit')
+      
+      alert('단위가 수정되었습니다.')
+      fetchUnits()
+      setIsEditModalOpen(false)
+      setFormData({ name: '',})
+      setEditingUnit(null)
+    } catch (error) {
+      console.error('Error updating unit:', error)
+      alert('단위 수정 중 오류가 발생했습니다.')
+    }
+  }
+
   useEffect(() => {
     const filtered = units.filter(unit =>
       (unit.name?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-    );
-    setFilteredUnits(filtered);
-  }, [units, searchTerm]);
+    )
+    setFilteredUnits(filtered)
+  }, [units, searchTerm])
 
   const handleExcelDownload = () => {
     const excelData = units.map(unit => ({
-      '단위': unit.name
+      '단위': unit.name,
+      // '설명': unit.description
     }))
 
     const wb = XLSX.utils.book_new()
     const ws = XLSX.utils.json_to_sheet(excelData)
 
     const columnWidths = [
-      { wch: 15 }, // 단위
+      { wch: 20 }, // 단위
+      // { wch: 40 }, // 설명
     ]
     ws['!cols'] = columnWidths
 
@@ -149,7 +195,6 @@ export default function UnitList() {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && setSearchTerm(e.target.value)}
                   placeholder="검색어를 입력하세요"
                   className="px-6 py-3 border rounded-lg text-black w-80 text-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                 />
@@ -190,12 +235,11 @@ export default function UnitList() {
             </div>
           </div>
 
-          {/* 단위 목록 테이블 */}
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white rounded-lg overflow-hidden">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900">
+                  <th className="px-6 py-3 text-center">
                     <input
                       type="checkbox"
                       checked={selectAll}
@@ -203,17 +247,15 @@ export default function UnitList() {
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
                   </th>
-                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">단위명</th>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">단위</th>
+                  {/* <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">설명</th> */}
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">수정</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200">
                 {filteredUnits.map((unit, index) => (
-                  <tr 
-                    key={unit.id} 
-                    className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() => handleSelectUnit(index.toString())}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-center" onClick={(e) => e.stopPropagation()}>
+                  <tr key={unit.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-center">
                       <input
                         type="checkbox"
                         checked={selectedUnits.includes(index.toString())}
@@ -221,7 +263,16 @@ export default function UnitList() {
                         className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">{unit.name}</td>
+                    <td className="px-6 py-4 text-center text-black">{unit.name}</td>
+                    {/* <td className="px-6 py-4 text-center text-black">{unit.description}</td> */}
+                    <td className="px-6 py-4 text-center">
+                      <button
+                        onClick={() => handleEditClick(unit)}
+                        className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+                      >
+                        수정
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -230,34 +281,105 @@ export default function UnitList() {
         </div>
       </div>
 
-      {/* 단위 등록 모달 */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="단위 등록">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              단위명 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
-              required
-            />
+      {/* 등록 모달 */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="단위 등록"
+      >
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-black font-medium mb-1">단위</label>
+              <input
+                type="text"
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="px-4 py-2 border rounded-lg text-black w-full text-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                required
+              />
+            </div>
+            {/* <div>
+              <label htmlFor="description" className="block text-black font-medium mb-1">설명</label>
+              <input
+                type="text"
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="px-4 py-2 border rounded-lg text-black w-full text-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+              />
+            </div> */}
           </div>
-          <div className="flex justify-end gap-4 mt-6">
+          <div className="mt-6 flex justify-end gap-3">
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
             >
               취소
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
             >
               등록
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* 수정 모달 */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false)
+          setFormData({ name: '', })
+          setEditingUnit(null)
+        }}
+        title="단위 수정"
+      >
+        <form onSubmit={handleEditSubmit}>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="edit-name" className="block text-black font-medium mb-1">단위</label>
+              <input
+                type="text"
+                id="edit-name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="px-4 py-2 border rounded-lg text-black w-full text-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                required
+              />
+            </div>
+            {/* <div>
+              <label htmlFor="edit-description" className="block text-black font-medium mb-1">설명</label>
+              <input
+                type="text"
+                id="edit-description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="px-4 py-2 border rounded-lg text-black w-full text-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+              />
+            </div> */}
+          </div>
+          <div className="mt-6 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditModalOpen(false)
+                setFormData({ name: '',})
+                setEditingUnit(null)
+              }}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              취소
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              수정 완료
             </button>
           </div>
         </form>

@@ -100,6 +100,19 @@ class OrderResponse(OrderBase):
     class Config:
         from_attributes = True
 
+class OrderCreate(BaseModel):
+    supplier_name: str
+    item_name: str
+    unit_name: str
+    quantity: float
+    price: float
+    total: float
+    payment_cycle: str
+    payment_method: str
+    client: str
+    notes: Optional[str] = None
+    date: Optional[str] = None
+
 def get_float_value(value):
     if not value:
         return 0.0
@@ -252,6 +265,46 @@ def create_order(order: OrderBase, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.put("/orders/{order_id}")
+def update_order(order_id: int, order: OrderCreate, db: Session = Depends(get_db)):
+    db_order = db.query(models.Order).filter(models.Order.id == order_id).first()
+    if not db_order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # 구입처 찾기 또는 생성
+    supplier = db.query(models.Supplier).filter(models.Supplier.name == order.supplier_name).first()
+    if not supplier:
+        supplier = models.Supplier(name=order.supplier_name)
+        db.add(supplier)
+        db.flush()
+
+    # 품목 찾기 또는 생성
+    item = db.query(models.Item).filter(models.Item.name == order.item_name).first()
+    if not item:
+        item = models.Item(name=order.item_name)
+        db.add(item)
+        db.flush()
+
+    # 단위 찾기 또는 생성
+    unit = db.query(models.Unit).filter(models.Unit.name == order.unit_name).first()
+    if not unit:
+        unit = models.Unit(name=order.unit_name)
+        db.add(unit)
+        db.flush()
+
+    # 발주 데이터 업데이트
+    for key, value in order.dict().items():
+        if key not in ['supplier_name', 'item_name', 'unit_name']:
+            setattr(db_order, key, value)
+    
+    db_order.supplier_id = supplier.id
+    db_order.item_id = item.id
+    db_order.unit_id = unit.id
+
+    db.commit()
+    db.refresh(db_order)
+    return db_order
+
 @app.delete("/orders/bulk-delete")
 def delete_orders(ids: List[int], db: Session = Depends(get_db)):
     try:
@@ -330,3 +383,42 @@ async def upload_orders(file: UploadFile = File(...), db: Session = Depends(get_
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/suppliers/{supplier_id}", response_model=SupplierResponse)
+def update_supplier(supplier_id: int, supplier: SupplierBase, db: Session = Depends(get_db)):
+    db_supplier = db.query(models.Supplier).filter(models.Supplier.id == supplier_id).first()
+    if not db_supplier:
+        raise HTTPException(status_code=404, detail="Supplier not found")
+    
+    for key, value in supplier.dict().items():
+        setattr(db_supplier, key, value)
+    
+    db.commit()
+    db.refresh(db_supplier)
+    return db_supplier
+
+@app.put("/items/{item_id}", response_model=ItemResponse)
+def update_item(item_id: int, item: ItemBase, db: Session = Depends(get_db)):
+    db_item = db.query(models.Item).filter(models.Item.id == item_id).first()
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    for key, value in item.dict().items():
+        setattr(db_item, key, value)
+    
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+@app.put("/units/{unit_id}", response_model=UnitResponse)
+def update_unit(unit_id: int, unit: UnitBase, db: Session = Depends(get_db)):
+    db_unit = db.query(models.Unit).filter(models.Unit.id == unit_id).first()
+    if not db_unit:
+        raise HTTPException(status_code=404, detail="Unit not found")
+    
+    for key, value in unit.dict().items():
+        setattr(db_unit, key, value)
+    
+    db.commit()
+    db.refresh(db_unit)
+    return db_unit

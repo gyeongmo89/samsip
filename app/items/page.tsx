@@ -9,12 +9,14 @@ export default function ItemList() {
   const [items, setItems] = useState([])
   const [filteredItems, setFilteredItems] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [formData, setFormData] = useState({
     name: '',
     price: '',
     description: ''
   })
+  const [editingItem, setEditingItem] = useState(null)
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [selectAll, setSelectAll] = useState(false)
 
@@ -27,7 +29,6 @@ export default function ItemList() {
       const response = await fetch('http://localhost:8000/items')
       if (!response.ok) throw new Error('Failed to fetch items')
       const data = await response.json()
-      // 최신 데이터가 위로 오도록 정렬
       const sortedData = [...data].sort((a, b) => b.id - a.id)
       setItems(sortedData)
       setFilteredItems(sortedData)
@@ -35,14 +36,6 @@ export default function ItemList() {
       console.error('Error fetching items:', error)
     }
   }
-
-  useEffect(() => {
-    const filtered = items.filter(item =>
-      (item.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (item.description?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-    );
-    setFilteredItems(filtered);
-  }, [items, searchTerm]);
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -70,6 +63,52 @@ export default function ItemList() {
       alert('품목 등록 중 오류가 발생했습니다.')
     }
   }
+
+  const handleEditClick = (item) => {
+    setEditingItem(item)
+    setFormData({
+      name: item.name,
+      price: item.price,
+      description: item.description
+    })
+    setIsEditModalOpen(true)
+  }
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault()
+    try {
+      const response = await fetch(`http://localhost:8000/items/${editingItem.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description,
+          price: parseFloat(formData.price.replace(/,/g, ''))
+        }),
+      })
+
+      if (!response.ok) throw new Error('Failed to update item')
+      
+      alert('품목이 수정되었습니다.')
+      fetchItems()
+      setIsEditModalOpen(false)
+      setFormData({ name: '', price: '', description: '' })
+      setEditingItem(null)
+    } catch (error) {
+      console.error('Error updating item:', error)
+      alert('품목 수정 중 오류가 발생했습니다.')
+    }
+  }
+
+  useEffect(() => {
+    const filtered = items.filter(item =>
+      (item.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (item.description?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+    )
+    setFilteredItems(filtered)
+  }, [items, searchTerm])
 
   const handleExcelDownload = () => {
     const excelData = items.map(item => ({
@@ -219,6 +258,7 @@ export default function ItemList() {
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">품목명</th>
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">단가</th>
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">비고</th>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">수정</th>
                 </tr>
               </thead>
               <tbody>
@@ -239,6 +279,14 @@ export default function ItemList() {
                     <td className="px-6 py-4 whitespace-nowrap text-center text-black">{item.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-center text-black">{item.price?.toLocaleString()}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-center text-black">{item.description}</td>
+                    <td className="px-6 py-4 text-center">
+                      <button
+                        onClick={() => handleEditClick(item)}
+                        className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+                      >
+                        수정
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -251,7 +299,7 @@ export default function ItemList() {
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="품목 등록">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-black font-medium mb-2">
               품목명 <span className="text-red-500">*</span>
             </label>
             <input
@@ -263,7 +311,7 @@ export default function ItemList() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-black font-medium mb-2">
               단가 <span className="text-red-500">*</span>
             </label>
             <input
@@ -284,7 +332,7 @@ export default function ItemList() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-black font-medium mb-2">
               비고
             </label>
             <input
@@ -307,6 +355,85 @@ export default function ItemList() {
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               등록
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* 수정 모달 */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false)
+          setFormData({ name: '', price: '', description: '' })
+          setEditingItem(null)
+        }}
+        title="품목 수정"
+      >
+        <form onSubmit={handleEditSubmit}>
+          <div className="space-y-6">
+            <div>
+              <label className="block text-black font-medium mb-2">
+                품목명 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-black font-medium mb-2">
+                단가 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.price}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^\d]/g, '')
+                  if (value) {
+                    const numValue = parseInt(value)
+                    setFormData({ ...formData, price: numValue.toLocaleString() })
+                  } else {
+                    setFormData({ ...formData, price: '' })
+                  }
+                }}
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+                required
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="block text-black font-medium mb-2">
+                비고
+              </label>
+              <input
+                type="text"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-4 mt-6">
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditModalOpen(false)
+                setFormData({ name: '', price: '', description: '' })
+                setEditingItem(null)
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            >
+              취소
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              수정 완료
             </button>
           </div>
         </form>
