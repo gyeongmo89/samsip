@@ -14,7 +14,14 @@ export default function Navbar() {
   const [nameClickCount, setNameClickCount] = useState(0);
   const [showMessage, setShowMessage] = useState(false);
   const [message, setMessage] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsLoggedIn(!!localStorage.getItem("isLoggedIn"));
+    }
+  }, []);
 
   const isActive = (path: string) => {
     return pathname === path
@@ -47,6 +54,13 @@ export default function Navbar() {
       setNameClickCount(0);
     }
   }, [nameClickCount]);
+
+  const handleLogout = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem("isLoggedIn");
+      window.location.href = "/";
+    }
+  };
 
   return (
     <nav className="bg-gradient-to-r from-purple-950 via-blue-900 to-gray-900">
@@ -123,7 +137,7 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center gap-2 ml-8">
-              {localStorage.getItem("isLoggedIn") ? (
+              {isLoggedIn ? (
                 <>
                   <div onClick={handleImageClick} className="cursor-default">
                     <Image
@@ -138,10 +152,7 @@ export default function Navbar() {
                     <div className="text-white text-sm ml-2 cursor-default" onClick={handleNameClick}>박희주 매니저</div>
                     <div>
                       <button
-                        onClick={() => {
-                          localStorage.removeItem("isLoggedIn");
-                          window.location.href = "/";
-                        }}
+                        onClick={handleLogout}
                         className="text-white align-middle hover:text-red-400 transition-colors"
                         title="로그아웃"
                       >

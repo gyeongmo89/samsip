@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { FileDown, Plus, Search, Minus } from 'lucide-react'
 import Modal from '@/components/Modal'
+import * as XLSX from 'xlsx'
 
 export default function SupplierList() {
   const [suppliers, setSuppliers] = useState([])
@@ -71,8 +72,29 @@ export default function SupplierList() {
     setFilteredSuppliers(filtered);
   }, [suppliers, searchTerm]);
 
-  const handleExportCSV = () => {
-    // TODO: Implement CSV export
+  const handleExcelDownload = () => {
+    const excelData = suppliers.map(supplier => ({
+      '구입처': supplier.name,
+      '연락처': supplier.contact,
+      '주소': supplier.address
+    }))
+
+    const wb = XLSX.utils.book_new()
+    const ws = XLSX.utils.json_to_sheet(excelData)
+
+    const columnWidths = [
+      { wch: 20 }, // 구입처
+      { wch: 15 }, // 연락처
+      { wch: 40 }, // 주소
+    ]
+    ws['!cols'] = columnWidths
+
+    XLSX.utils.book_append_sheet(wb, ws, '구입처 목록')
+
+    const today = new Date().toISOString().split('T')[0]
+    XLSX.writeFile(wb, `구입처목록_${today}.xlsx`)
+
+    alert('엑셀 다운로드 완료')
   }
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -173,7 +195,7 @@ export default function SupplierList() {
               
               {/* 엑셀 다운로드 버튼 */}
               <button
-                onClick={handleExportCSV}
+                onClick={handleExcelDownload}
                 className="bg-gradient-to-r from-blue-400 to-blue-500 text-white px-6 py-3 rounded-lg hover:from-blue-500 hover:to-blue-600 transition-all flex items-center gap-2 shadow-lg"
               >
                 <FileDown className="w-6 h-6" />

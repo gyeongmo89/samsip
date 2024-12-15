@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import OrderModal from '@/components/OrderModal'
 import { FileDown, FileUp, Minus, Plus, Search } from 'lucide-react'
+import * as XLSX from 'xlsx'
 
 export default function OrderList() {
   const [orders, setOrders] = useState([])
@@ -115,7 +116,7 @@ export default function OrderList() {
     // TODO: Implement CSV export
   }
 
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSelectAll = (e) => {
     setSelectAll(e.target.checked)
     if (e.target.checked) {
       setSelectedOrders(filteredOrders.map((_, index) => index.toString()))
@@ -124,7 +125,7 @@ export default function OrderList() {
     }
   }
 
-  const handleSelectOrder = (index: string) => {
+  const handleSelectOrder = (index) => {
     setSelectedOrders(prev => {
       if (prev.includes(index)) {
         return prev.filter(i => i !== index)
@@ -168,8 +169,49 @@ export default function OrderList() {
     }
   }
 
-  const handleRowClick = (index: string) => {
+  const handleRowClick = (index) => {
     handleSelectOrder(index)
+  }
+
+  const handleExcelDownload = () => {
+    const excelData = orders.map(order => ({
+      '발주일': order.date,
+      '구입처': order.supplier.name,
+      '품목': order.item.name,
+      '단가': order.price,
+      '단위': order.unit.name,
+      '수량': order.quantity,
+      '총액': order.total,
+      '결제주기': order.payment_cycle,
+      '대금지급방법': order.payment_method,
+      '구입연락처': order.client,
+      '비고': order.notes
+    }))
+
+    const wb = XLSX.utils.book_new()
+    const ws = XLSX.utils.json_to_sheet(excelData)
+
+    const columnWidths = [
+      { wch: 12 }, // 발주일
+      { wch: 15 }, // 구입처
+      { wch: 20 }, // 품목
+      { wch: 10 }, // 단가
+      { wch: 8 },  // 단위
+      { wch: 8 },  // 수량
+      { wch: 12 }, // 총액
+      { wch: 12 }, // 결제주기
+      { wch: 15 }, // 대금지급방법
+      { wch: 15 }, // 구입연락처
+      { wch: 30 }, // 비고
+    ]
+    ws['!cols'] = columnWidths
+
+    XLSX.utils.book_append_sheet(wb, ws, '발주 목록')
+
+    const today = new Date().toISOString().split('T')[0]
+    XLSX.writeFile(wb, `발주목록_${today}.xlsx`)
+
+    alert('엑셀 다운로드 완료')
   }
 
   return (
@@ -217,7 +259,7 @@ export default function OrderList() {
               
               {/* 엑셀 다운로드 버튼 */}
               <button
-                onClick={handleExportCSV}
+                onClick={handleExcelDownload}
                 className="bg-gradient-to-r from-blue-400 to-blue-500 text-white px-6 py-3 rounded-lg hover:from-blue-500 hover:to-blue-600 transition-all flex items-center gap-2 shadow-lg"
               >
                 <FileDown className="w-6 h-6" />

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Modal from '@/components/Modal'
 import { FileDown, Plus, Search, Minus } from 'lucide-react'
+import * as XLSX from 'xlsx'
 
 export default function UnitList() {
   const [units, setUnits] = useState([])
@@ -61,8 +62,25 @@ export default function UnitList() {
     setFilteredUnits(filtered);
   }, [units, searchTerm]);
 
-  const handleExportCSV = () => {
-    // TODO: Implement CSV export
+  const handleExcelDownload = () => {
+    const excelData = units.map(unit => ({
+      '단위': unit.name
+    }))
+
+    const wb = XLSX.utils.book_new()
+    const ws = XLSX.utils.json_to_sheet(excelData)
+
+    const columnWidths = [
+      { wch: 15 }, // 단위
+    ]
+    ws['!cols'] = columnWidths
+
+    XLSX.utils.book_append_sheet(wb, ws, '단위 목록')
+
+    const today = new Date().toISOString().split('T')[0]
+    XLSX.writeFile(wb, `단위목록_${today}.xlsx`)
+
+    alert('엑셀 다운로드 완료')
   }
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,7 +181,7 @@ export default function UnitList() {
               
               {/* 엑셀 다운로드 버튼 */}
               <button
-                onClick={handleExportCSV}
+                onClick={handleExcelDownload}
                 className="bg-gradient-to-r from-blue-400 to-blue-500 text-white px-6 py-3 rounded-lg hover:from-blue-500 hover:to-blue-600 transition-all flex items-center gap-2 shadow-lg"
               >
                 <FileDown className="w-6 h-6" />
