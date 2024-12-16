@@ -6,9 +6,16 @@ import Modal from '@/components/Modal'
 import * as XLSX from 'xlsx'
 import { useData } from '@/contexts/DataContext'
 
+interface Item {
+  id: number;
+  name: string;
+  price: number;
+  description: string;
+}
+
 export default function ItemList() {
-  const [items, setItems] = useState([])
-  const [filteredItems, setFilteredItems] = useState([])
+  const [items, setItems] = useState<Item[]>([])
+  const [filteredItems, setFilteredItems] = useState<Item[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -17,7 +24,7 @@ export default function ItemList() {
     price: '',
     description: ''
   })
-  const [editingItem, setEditingItem] = useState(null)
+  const [editingItem, setEditingItem] = useState<Item | null>(null)
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [selectAll, setSelectAll] = useState(false)
   const { lastUpdate } = useData()
@@ -39,7 +46,7 @@ export default function ItemList() {
     }
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault()
     try {
       const response = await fetch('http://localhost:8000/items', {
@@ -66,20 +73,21 @@ export default function ItemList() {
     }
   }
 
-  const handleEditClick = (item) => {
+  const handleEditClick = (item: Item) => {
     setEditingItem(item)
     setFormData({
       name: item.name,
-      price: item.price,
+      // price: item.price.toString(),
+      price: item.price?.toLocaleString(),  
       description: item.description
     })
     setIsEditModalOpen(true)
   }
 
-  const handleEditSubmit = async (e) => {
+  const handleEditSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault()
     try {
-      const response = await fetch(`http://localhost:8000/items/${editingItem.id}`, {
+      const response = await fetch(`http://localhost:8000/items/${editingItem?.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -166,7 +174,7 @@ export default function ItemList() {
     if (!confirmed) return
 
     try {
-      const itemIds = selectedItems.map(index => parseInt(filteredItems[parseInt(index)].id))
+      const itemIds = selectedItems.map(index => filteredItems[Number(index)].id)
       const response = await fetch('http://localhost:8000/items/bulk-delete', {
         method: 'DELETE',
         headers: {
@@ -203,7 +211,7 @@ export default function ItemList() {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && setSearchTerm(e.target.value)}
+                  // onKeyPress={(e) => e.key === 'Enter' && setSearchTerm(e.target.value)}
                   placeholder="검색어를 입력하세요"
                   className="px-6 py-3 border rounded-lg text-black w-80 text-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                 />
