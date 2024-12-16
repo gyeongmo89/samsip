@@ -1,18 +1,15 @@
-from fastapi import FastAPI, Depends, HTTPException, Request
-from sqlalchemy.orm import Session
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 from . import models
-from .database import engine, get_db, Base, SessionLocal
+from .database import engine, get_db, Base
 from pydantic import BaseModel
 from typing import Optional, List
 import logging
-from datetime import date
 from sqlalchemy.orm import joinedload
-from fastapi import FastAPI, HTTPException, status, Depends, UploadFile, File
 from datetime import datetime
 import io
 from openpyxl import load_workbook
-from openpyxl.utils import get_column_letter
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -34,6 +31,8 @@ app.add_middleware(
 )
 
 # Create database tables
+
+
 @app.on_event("startup")
 async def startup_event():
     logger.info("Creating database tables...")
@@ -47,10 +46,13 @@ async def startup_event():
 
 
 # Pydantic models
+
+
 class SupplierBase(BaseModel):
     name: str
     contact: Optional[str] = None
     address: Optional[str] = None
+
 
 class SupplierResponse(SupplierBase):
     id: int
@@ -58,10 +60,12 @@ class SupplierResponse(SupplierBase):
     class Config:
         from_attributes = True
 
+
 class ItemBase(BaseModel):
     name: str
     description: Optional[str] = None
     price: Optional[float] = None
+
 
 class ItemResponse(ItemBase):
     id: int
@@ -69,14 +73,17 @@ class ItemResponse(ItemBase):
     class Config:
         from_attributes = True
 
+
 class UnitBase(BaseModel):
     name: str
+
 
 class UnitResponse(UnitBase):
     id: int
 
     class Config:
         from_attributes = True
+
 
 class OrderBase(BaseModel):
     supplier_id: int
@@ -91,6 +98,7 @@ class OrderBase(BaseModel):
     notes: Optional[str] = None
     date: Optional[str] = None
 
+
 class OrderResponse(OrderBase):
     id: int
     supplier: SupplierResponse
@@ -99,6 +107,7 @@ class OrderResponse(OrderBase):
 
     class Config:
         from_attributes = True
+
 
 class OrderCreate(BaseModel):
     supplier_name: str
@@ -113,28 +122,32 @@ class OrderCreate(BaseModel):
     notes: Optional[str] = None
     date: Optional[str] = None
 
+
 def get_float_value(value):
     if not value:
         return 0.0
     if isinstance(value, (int, float)):
         return float(value)
     if isinstance(value, str):
-        if value.startswith('='):  # 엑셀 수식인 경우
+        if value.startswith("="):  # 엑셀 수식인 경우
             return 0.0  # 기본값 반환 또는 다른 처리 로직 추가
         try:
-            return float(value.replace(',', ''))  # 천단위 구분자 제거
+            return float(value.replace(",", ""))  # 천단위 구분자 제거
         except ValueError:
             return 0.0
     return 0.0
 
+
 # API endpoints
+
+
 @app.post("/suppliers/", response_model=SupplierResponse)
 def create_supplier(supplier: SupplierBase, db: Session = Depends(get_db)):
     try:
         db_supplier = models.Supplier(
             name=supplier.name,
             contact=supplier.contact,
-            address=supplier.address  # address 필드를 비고로 사용
+            address=supplier.address,  # address 필드를 비고로 사용
         )
         db.add(db_supplier)
         db.commit()
@@ -144,15 +157,19 @@ def create_supplier(supplier: SupplierBase, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @app.get("/suppliers/", response_model=List[SupplierResponse])
 def read_suppliers(db: Session = Depends(get_db)):
-    suppliers = db.query(models.Supplier).filter(models.Supplier.is_deleted == False).all()
+    suppliers = db.query(models.Supplier).filter(not models.Supplier.is_deleted).all()
     return suppliers
+
 
 @app.delete("/suppliers/bulk-delete")
 def bulk_delete_suppliers(supplier_ids: List[int], db: Session = Depends(get_db)):
     try:
-        suppliers = db.query(models.Supplier).filter(models.Supplier.id.in_(supplier_ids)).all()
+        suppliers = (
+            db.query(models.Supplier).filter(models.Supplier.id.in_(supplier_ids)).all()
+        )
         for supplier in suppliers:
             supplier.is_deleted = True
         db.commit()
@@ -161,13 +178,14 @@ def bulk_delete_suppliers(supplier_ids: List[int], db: Session = Depends(get_db)
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/items/", response_model=ItemResponse)
 def create_item(item: ItemBase, db: Session = Depends(get_db)):
     try:
         db_item = models.Item(
             name=item.name,
             price=item.price,
-            description=item.description  # description 필드를 비고로 사용
+            description=item.description,  # description 필드를 비고로 사용
         )
         db.add(db_item)
         db.commit()
@@ -177,10 +195,12 @@ def create_item(item: ItemBase, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @app.get("/items/", response_model=List[ItemResponse])
 def read_items(db: Session = Depends(get_db)):
-    items = db.query(models.Item).filter(models.Item.is_deleted == False).all()
+    items = db.query(models.Item).filter(not models.Item.is_deleted).all()
     return items
+
 
 @app.delete("/items/bulk-delete")
 def bulk_delete_items(item_ids: List[int], db: Session = Depends(get_db)):
@@ -193,6 +213,7 @@ def bulk_delete_items(item_ids: List[int], db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/units/", response_model=UnitResponse)
 def create_unit(unit: UnitBase, db: Session = Depends(get_db)):
@@ -208,10 +229,12 @@ def create_unit(unit: UnitBase, db: Session = Depends(get_db)):
         logger.error(f"Error creating unit: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @app.get("/units/", response_model=List[UnitResponse])
 def read_units(db: Session = Depends(get_db)):
-    units = db.query(models.Unit).filter(models.Unit.is_deleted == False).all()
+    units = db.query(models.Unit).filter(not models.Unit.is_deleted).all()
     return units
+
 
 @app.delete("/units/bulk-delete")
 def bulk_delete_units(unit_ids: List[int], db: Session = Depends(get_db)):
@@ -225,20 +248,26 @@ def bulk_delete_units(unit_ids: List[int], db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/orders/", response_model=List[OrderResponse])
 def read_orders(db: Session = Depends(get_db)):
     try:
-        orders = db.query(models.Order).options(
-            joinedload(models.Order.supplier),
-            joinedload(models.Order.item),
-            joinedload(models.Order.unit)
-        ).all()
-        
+        orders = (
+            db.query(models.Order)
+            .options(
+                joinedload(models.Order.supplier),
+                joinedload(models.Order.item),
+                joinedload(models.Order.unit),
+            )
+            .all()
+        )
+
         logger.info(f"Retrieved {len(orders)} orders")
         return orders
     except Exception as e:
         logger.error(f"Error retrieving orders: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/orders/", response_model=OrderResponse)
 def create_order(order: OrderBase, db: Session = Depends(get_db)):
@@ -254,7 +283,7 @@ def create_order(order: OrderBase, db: Session = Depends(get_db)):
             payment_method=order.payment_method,
             client=order.client,
             notes=order.notes,
-            date=order.date
+            date=order.date,
         )
         db.add(db_order)
         db.commit()
@@ -265,14 +294,19 @@ def create_order(order: OrderBase, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.put("/orders/{order_id}")
 def update_order(order_id: int, order: OrderCreate, db: Session = Depends(get_db)):
     db_order = db.query(models.Order).filter(models.Order.id == order_id).first()
     if not db_order:
         raise HTTPException(status_code=404, detail="Order not found")
-    
+
     # 구입처 찾기 또는 생성
-    supplier = db.query(models.Supplier).filter(models.Supplier.name == order.supplier_name).first()
+    supplier = (
+        db.query(models.Supplier)
+        .filter(models.Supplier.name == order.supplier_name)
+        .first()
+    )
     if not supplier:
         supplier = models.Supplier(name=order.supplier_name)
         db.add(supplier)
@@ -294,9 +328,9 @@ def update_order(order_id: int, order: OrderCreate, db: Session = Depends(get_db
 
     # 발주 데이터 업데이트
     for key, value in order.dict().items():
-        if key not in ['supplier_name', 'item_name', 'unit_name']:
+        if key not in ["supplier_name", "item_name", "unit_name"]:
             setattr(db_order, key, value)
-    
+
     db_order.supplier_id = supplier.id
     db_order.item_id = item.id
     db_order.unit_id = unit.id
@@ -304,6 +338,7 @@ def update_order(order_id: int, order: OrderCreate, db: Session = Depends(get_db
     db.commit()
     db.refresh(db_order)
     return db_order
+
 
 @app.delete("/orders/bulk-delete")
 def delete_orders(ids: List[int], db: Session = Depends(get_db)):
@@ -318,28 +353,34 @@ def delete_orders(ids: List[int], db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/orders/upload")
 async def upload_orders(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    if not file.filename.endswith('.xlsx'):
+    if not file.filename.endswith(".xlsx"):
         raise HTTPException(status_code=400, detail="Only .xlsx files are allowed")
 
     try:
         contents = await file.read()
-        wb = load_workbook(filename=io.BytesIO(contents), data_only=True)  # data_only=True로 수식 대신 값을 가져옴
+        wb = load_workbook(
+            filename=io.BytesIO(contents), data_only=True
+        )  # data_only=True로 수식 대신 값을 가져옴
         ws = wb.active
-        
+
         orders = []
         for row in ws.iter_rows(min_row=2, values_only=True):
             if not any(row):  # 빈 행 건너뛰기
                 continue
-                
+
             try:
-                order_date = datetime.strptime(str(row[0]), '%Y-%m-%d').date()
-            except:
+                order_date = datetime.strptime(str(row[0]), "%Y-%m-%d").date()
+            except ValueError:
+                order_date = datetime.now().date()
                 order_date = datetime.now().date()
 
             # 구입처 찾기 또는 생성
-            supplier = db.query(models.Supplier).filter(models.Supplier.name == row[1]).first()
+            supplier = (
+                db.query(models.Supplier).filter(models.Supplier.name == row[1]).first()
+            )
             if not supplier:
                 supplier = models.Supplier(name=row[1], contact=row[9])
                 db.add(supplier)
@@ -368,10 +409,10 @@ async def upload_orders(file: UploadFile = File(...), db: Session = Depends(get_
                 price=get_float_value(row[3]),
                 quantity=get_float_value(row[5]),
                 total=get_float_value(row[6]),
-                payment_cycle=str(row[7] or ''),
-                payment_method=str(row[8] or ''),
-                client=str(row[9] or ''),
-                notes=str(row[10] or '')
+                payment_cycle=str(row[7] or ""),
+                payment_method=str(row[8] or ""),
+                client=str(row[9] or ""),
+                notes=str(row[10] or ""),
             )
             orders.append(order)
 
@@ -384,41 +425,48 @@ async def upload_orders(file: UploadFile = File(...), db: Session = Depends(get_
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.put("/suppliers/{supplier_id}", response_model=SupplierResponse)
-def update_supplier(supplier_id: int, supplier: SupplierBase, db: Session = Depends(get_db)):
-    db_supplier = db.query(models.Supplier).filter(models.Supplier.id == supplier_id).first()
+def update_supplier(
+    supplier_id: int, supplier: SupplierBase, db: Session = Depends(get_db)
+):
+    db_supplier = (
+        db.query(models.Supplier).filter(models.Supplier.id == supplier_id).first()
+    )
     if not db_supplier:
         raise HTTPException(status_code=404, detail="Supplier not found")
-    
+
     for key, value in supplier.dict().items():
         setattr(db_supplier, key, value)
-    
+
     db.commit()
     db.refresh(db_supplier)
     return db_supplier
+
 
 @app.put("/items/{item_id}", response_model=ItemResponse)
 def update_item(item_id: int, item: ItemBase, db: Session = Depends(get_db)):
     db_item = db.query(models.Item).filter(models.Item.id == item_id).first()
     if not db_item:
         raise HTTPException(status_code=404, detail="Item not found")
-    
+
     for key, value in item.dict().items():
         setattr(db_item, key, value)
-    
+
     db.commit()
     db.refresh(db_item)
     return db_item
+
 
 @app.put("/units/{unit_id}", response_model=UnitResponse)
 def update_unit(unit_id: int, unit: UnitBase, db: Session = Depends(get_db)):
     db_unit = db.query(models.Unit).filter(models.Unit.id == unit_id).first()
     if not db_unit:
         raise HTTPException(status_code=404, detail="Unit not found")
-    
+
     for key, value in unit.dict().items():
         setattr(db_unit, key, value)
-    
+
     db.commit()
     db.refresh(db_unit)
     return db_unit

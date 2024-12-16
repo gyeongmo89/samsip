@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,7 +7,7 @@ import Modal from "@/components/Modal";
 import Select from "react-select";
 import { FileDown, FileUp, Minus, Plus, Search } from "lucide-react";
 import * as XLSX from "xlsx";
-import { useData } from '@/contexts/DataContext'
+import { useData } from "@/contexts/DataContext";
 
 interface Order {
   id: number;
@@ -24,7 +25,7 @@ interface Order {
 }
 
 export default function OrderList() {
-  const { refreshData } = useData()
+  const { refreshData } = useData();
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]); // Added type annotation
   const [suppliers, setSuppliers] = useState([]);
@@ -178,10 +179,20 @@ export default function OrderList() {
       }
 
       let aValue = key.includes(".")
-        ? key.split(".").reduce((obj: { [x: string]: any; }, k: string | number) => obj[k], a)
+        ? key
+            .split(".")
+            .reduce(
+              (obj: { [x: string]: any }, k: string | number) => obj[k],
+              a
+            )
         : (a as any)[key];
       let bValue = key.includes(".")
-        ? key.split(".").reduce((obj: { [x: string]: any; }, k: string | number) => obj[k], b)
+        ? key
+            .split(".")
+            .reduce(
+              (obj: { [x: string]: any }, k: string | number) => obj[k],
+              b
+            )
         : (b as any)[key];
 
       if (typeof aValue === "string") {
@@ -199,11 +210,9 @@ export default function OrderList() {
     setFilteredOrders(sortedOrders);
   };
 
-  const handleExportCSV = () => {
-    // TODO: Implement CSV export
-  };
-
-  const handleSelectAll = (e: { target: { checked: boolean | ((prevState: boolean) => boolean); }; }) => {
+  const handleSelectAll = (e: {
+    target: { checked: boolean | ((prevState: boolean) => boolean) };
+  }) => {
     setSelectAll(e.target.checked);
     if (e.target.checked) {
       setSelectedOrders(filteredOrders.map((_, index) => index.toString()));
@@ -232,8 +241,8 @@ export default function OrderList() {
     if (!confirmed) return;
 
     try {
-      const orderIds = selectedOrders.map((index) =>
-        filteredOrders[Number(index)].id
+      const orderIds = selectedOrders.map(
+        (index) => filteredOrders[Number(index)].id
       );
       const response = await fetch("http://localhost:8000/orders/bulk-delete", {
         method: "DELETE",

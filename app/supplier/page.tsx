@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, SetStateAction } from 'react'
+import { useState, useEffect, } from 'react'
 import { FileDown, Plus, Search, Minus } from 'lucide-react'
 import Modal from '@/components/Modal'
 import * as XLSX from 'xlsx'

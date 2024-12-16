@@ -44,7 +44,7 @@ const defaultFormData = {
   custom_payment_cycle: ''
 }
 
-export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderModalProps) {
+export default function OrderModal({ isOpen, onClose, }: OrderModalProps) {
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [items, setItems] = useState<Item[]>([])
   const [units, setUnits] = useState<Unit[]>([])
