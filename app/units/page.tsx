@@ -7,8 +7,14 @@ import * as XLSX from 'xlsx'
 import { useData } from '@/contexts/DataContext'
 
 export default function UnitList() {
-  const [units, setUnits] = useState([])
-  const [filteredUnits, setFilteredUnits] = useState([])
+  interface Unit {
+    id: number;
+    name: string;
+    // Add other unit properties here if needed
+  }
+
+  const [units, setUnits] = useState<Unit[]>([])
+  const [filteredUnits, setFilteredUnits] = useState<Unit[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -16,7 +22,7 @@ export default function UnitList() {
     name: '',
     // description: ''
   })
-  const [editingUnit, setEditingUnit] = useState(null)
+  const [editingUnit, setEditingUnit] = useState<Unit | null>(null)
   const [selectedUnits, setSelectedUnits] = useState<string[]>([])
   const [selectAll, setSelectAll] = useState(false)
   const { lastUpdate } = useData()
@@ -38,7 +44,7 @@ export default function UnitList() {
     }
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault()
     try {
       const response = await fetch('http://localhost:8000/units', {
@@ -65,7 +71,7 @@ export default function UnitList() {
     }
   }
 
-  const handleEditClick = (unit) => {
+  const handleEditClick = (unit: Unit) => {
     setEditingUnit(unit)
     setFormData({
       name: unit.name,
@@ -74,10 +80,10 @@ export default function UnitList() {
     setIsEditModalOpen(true)
   }
 
-  const handleEditSubmit = async (e) => {
+  const handleEditSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault()
     try {
-      const response = await fetch(`http://localhost:8000/units/${editingUnit.id}`, {
+      const response = await fetch(`http://localhost:8000/units/${editingUnit?.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -160,7 +166,7 @@ export default function UnitList() {
     if (!confirmed) return
 
     try {
-      const unitIds = selectedUnits.map(index => parseInt(filteredUnits[parseInt(index)].id))
+      const unitIds = selectedUnits.map(index => filteredUnits[parseInt(index)].id.toString())
       const response = await fetch('http://localhost:8000/units/bulk-delete', {
         method: 'DELETE',
         headers: {
