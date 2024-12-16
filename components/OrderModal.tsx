@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
 
 import { useState, useEffect, ReactNode } from 'react'
@@ -8,6 +10,7 @@ interface OrderModalProps {
   isOpen: boolean
   onClose: () => void
   onOrderComplete: () => void
+  onSubmit?: (formData: any) => Promise<void>
 }
 
 interface Supplier {
@@ -44,7 +47,7 @@ const defaultFormData = {
   custom_payment_cycle: ''
 }
 
-export default function OrderModal({ isOpen, onClose, }: OrderModalProps) {
+export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit }: OrderModalProps) {
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [items, setItems] = useState<Item[]>([])
   const [units, setUnits] = useState<Unit[]>([])

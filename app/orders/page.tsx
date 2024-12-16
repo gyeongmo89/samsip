@@ -7,7 +7,7 @@ import Modal from "@/components/Modal";
 import Select from "react-select";
 import { FileDown, FileUp, Minus, Plus, Search } from "lucide-react";
 import * as XLSX from "xlsx";
-import { useData } from "@/contexts/DataContext";
+// import { useData } from "@/contexts/DataContext";
 
 interface Order {
   id: number;
@@ -24,8 +24,14 @@ interface Order {
   notes: string;
 }
 
+// interface OrderModalProps {
+//   isOpen: boolean
+//   onClose: () => void
+//   onOrderComplete: () => void
+// }
+
 export default function OrderList() {
-  const { refreshData } = useData();
+  // const { refreshData } = useData();
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]); // Added type annotation
   const [suppliers, setSuppliers] = useState([]);
@@ -433,6 +439,8 @@ export default function OrderList() {
     }
   };
 
+  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12">
       <div className="container mx-auto px-4">
@@ -635,6 +643,13 @@ export default function OrderList() {
       </div>
 
       {/* 주문 등록 모달 */}
+      {/* <OrderModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onOrderComplete={fetchOrders}
+        // onSubmit={handleSubmit}
+        onSubmit={handleSubmit}
+      /> */}
       <OrderModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
