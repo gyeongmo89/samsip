@@ -514,9 +514,10 @@ async def upload_orders(file: UploadFile = File(...), db: Session = Depends(get_
                 db.flush()
 
             # 단위 찾기 또는 생성
-            unit = db.query(models.Unit).filter(models.Unit.name == row[4]).first()
+            unit_name = str(row[4] or "개")  # None이면 기본값 "개" 사용
+            unit = db.query(models.Unit).filter(models.Unit.name == unit_name).first()
             if not unit:
-                unit = models.Unit(name=row[4])
+                unit = models.Unit(name=unit_name)
                 db.add(unit)
                 db.flush()
 
@@ -529,8 +530,8 @@ async def upload_orders(file: UploadFile = File(...), db: Session = Depends(get_
                 price=get_float_value(row[3]),
                 quantity=get_float_value(row[5]),
                 total=get_float_value(row[6]),
-                payment_cycle=str(row[7] or ""),
-                payment_method=str(row[8] or ""),
+                payment_cycle=str(row[7] or "미정"),
+                payment_method=str(row[8] or "미정"),
                 client=str(row[9] or ""),
                 notes=str(row[10] or ""),
             )
