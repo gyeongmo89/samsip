@@ -329,7 +329,7 @@ def read_orders(db: Session = Depends(get_db)):
     try:
         orders = (
             db.query(models.Order)
-            .filter(models.Order.is_deleted == False)
+            .filter(models.Order.is_deleted.is_(False))
             .options(
                 joinedload(models.Order.supplier),
                 joinedload(models.Order.item),
