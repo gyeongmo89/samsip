@@ -153,6 +153,8 @@ export default function OrderList() {
       }
 
       const data = await response.json();
+      console.log("Fetched orders:", data); // 디버깅 로그 추가
+      
       // Sort orders by date in descending order
       const sortedData = [...data].sort((a, b) => {
         if (!a.date || !b.date) return 0;
@@ -163,6 +165,7 @@ export default function OrderList() {
 
       setOrders(sortedData);
       setFilteredOrders(sortedData);
+      console.log("Sorted and set orders:", sortedData); // 디버깅 로그 추가
     } catch (error) {
       console.error("Error fetching orders:", error);
       alert("발주 목록을 불러오는데 실패했습니다. 잠시 후 다시 시도해주세요.");
@@ -170,17 +173,19 @@ export default function OrderList() {
   };
 
   const handleSearch = () => {
-    const filteredOrders = orders.filter(
+    if (!searchTerm) {
+      setFilteredOrders(orders);
+      return;
+    }
+    
+    const filtered = orders.filter(
       (order) =>
         order.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.unit.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    setOrders(filteredOrders);
-    if (!searchTerm) {
-      fetchOrders();
-    }
+    setFilteredOrders(filtered);
   };
 
   const handleSort = (key: string) => {
