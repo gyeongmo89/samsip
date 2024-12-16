@@ -6,6 +6,7 @@ from .database import engine, get_db, Base
 from pydantic import BaseModel
 from typing import Optional, List
 import logging
+
 from sqlalchemy.orm import joinedload
 from datetime import datetime
 import io
@@ -174,15 +175,12 @@ def create_supplier(supplier: SupplierBase, db: Session = Depends(get_db)):
             db.query(models.Supplier)
             .filter(
                 models.Supplier.name == supplier.name,
-                models.Supplier.is_deleted == False
+                models.Supplier.is_deleted is False,
             )
             .first()
         )
         if existing_supplier:
-            raise HTTPException(
-                status_code=400,
-                detail="already_exists"
-            )
+            raise HTTPException(status_code=400, detail="already_exists")
 
         db_supplier = models.Supplier(
             name=supplier.name,
@@ -228,17 +226,11 @@ def create_item(item: ItemCreate, db: Session = Depends(get_db)):
         # Check if item with same name already exists
         existing_item = (
             db.query(models.Item)
-            .filter(
-                models.Item.name == item.name,
-                models.Item.is_deleted == False
-            )
+            .filter(models.Item.name == item.name, models.Item.is_deleted is False)
             .first()
         )
         if existing_item:
-            raise HTTPException(
-                status_code=400,
-                detail="already_exists"
-            )
+            raise HTTPException(status_code=400, detail="already_exists")
 
         # Convert price to float if it exists
         item_data = item.dict()
@@ -246,16 +238,10 @@ def create_item(item: ItemCreate, db: Session = Depends(get_db)):
             try:
                 price = float(item_data["price"])
                 if price < 0:
-                    raise HTTPException(
-                        status_code=400,
-                        detail="price_invalid"
-                    )
+                    raise HTTPException(status_code=400, detail="price_invalid")
                 item_data["price"] = price
             except ValueError:
-                raise HTTPException(
-                    status_code=400,
-                    detail="price_invalid"
-                )
+                raise HTTPException(status_code=400, detail="price_invalid")
 
         db_item = models.Item(**item_data, is_deleted=False)
         db.add(db_item)
@@ -295,7 +281,7 @@ def create_unit(unit: UnitCreate, db: Session = Depends(get_db)):
         # Check if unit with same name already exists
         existing_unit = (
             db.query(models.Unit)
-            .filter(models.Unit.name == unit.name, models.Unit.is_deleted == False)
+            .filter(models.Unit.name == unit.name, models.Unit.is_deleted is False)
             .first()
         )
         if existing_unit:
@@ -343,11 +329,11 @@ def read_orders(db: Session = Depends(get_db)):
     try:
         orders = (
             db.query(models.Order)
-            .filter(models.Order.is_deleted == False)
+            .filter(models.Order.is_deleted is False)
             .options(
                 joinedload(models.Order.supplier),
                 joinedload(models.Order.item),
-                joinedload(models.Order.unit)
+                joinedload(models.Order.unit),
             )
             .all()
         )
@@ -605,7 +591,7 @@ def update_unit(unit_id: int, unit: UnitCreate, db: Session = Depends(get_db)):
             .filter(
                 models.Unit.name == unit.name,
                 models.Unit.id != unit_id,
-                models.Unit.is_deleted == False,
+                models.Unit.is_deleted is False,
             )
             .first()
         )
