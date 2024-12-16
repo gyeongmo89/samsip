@@ -8,6 +8,10 @@ import Image from "next/image";
 import { LogOut } from "lucide-react";
 import { Heart } from "lucide-react";
 
+  /**
+   * @description Navigation bar component.
+   * @returns {JSX.Element}
+   */
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [imageClickCount, setImageClickCount] = useState(0);
