@@ -26,6 +26,7 @@ interface Order {
 export default function OrderList() {
   const { refreshData } = useData()
   const [orders, setOrders] = useState<Order[]>([]);
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]); // Added type annotation
   const [suppliers, setSuppliers] = useState([]);
   const [items, setItems] = useState([]);
   const [units, setUnits] = useState([]);
@@ -54,7 +55,6 @@ export default function OrderList() {
     key: "date",
     direction: "desc",
   });
-  const [filteredOrders, setFilteredOrders] = useState([]);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
 
@@ -161,7 +161,7 @@ export default function OrderList() {
     }
   };
 
-  const handleSort = (key) => {
+  const handleSort = (key: string) => {
     let direction = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
       direction = "desc";
@@ -178,11 +178,11 @@ export default function OrderList() {
       }
 
       let aValue = key.includes(".")
-        ? key.split(".").reduce((obj, k) => obj[k], a)
-        : a[key];
+        ? key.split(".").reduce((obj: { [x: string]: any; }, k: string | number) => obj[k], a)
+        : (a as any)[key];
       let bValue = key.includes(".")
-        ? key.split(".").reduce((obj, k) => obj[k], b)
-        : b[key];
+        ? key.split(".").reduce((obj: { [x: string]: any; }, k: string | number) => obj[k], b)
+        : (b as any)[key];
 
       if (typeof aValue === "string") {
         aValue = aValue.toLowerCase();
@@ -203,7 +203,7 @@ export default function OrderList() {
     // TODO: Implement CSV export
   };
 
-  const handleSelectAll = (e) => {
+  const handleSelectAll = (e: { target: { checked: boolean | ((prevState: boolean) => boolean); }; }) => {
     setSelectAll(e.target.checked);
     if (e.target.checked) {
       setSelectedOrders(filteredOrders.map((_, index) => index.toString()));
@@ -212,7 +212,7 @@ export default function OrderList() {
     }
   };
 
-  const handleSelectOrder = (index) => {
+  const handleSelectOrder = (index: string) => {
     setSelectedOrders((prev) => {
       if (prev.includes(index)) {
         return prev.filter((i) => i !== index);
@@ -233,7 +233,7 @@ export default function OrderList() {
 
     try {
       const orderIds = selectedOrders.map((index) =>
-        parseInt(filteredOrders[parseInt(index)].id)
+        filteredOrders[Number(index)].id
       );
       const response = await fetch("http://localhost:8000/orders/bulk-delete", {
         method: "DELETE",
@@ -259,7 +259,7 @@ export default function OrderList() {
     }
   };
 
-  const handleRowClick = (index) => {
+  const handleRowClick = (index: string) => {
     handleSelectOrder(index);
   };
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
