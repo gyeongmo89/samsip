@@ -120,39 +120,78 @@ export default function OrderList() {
     );
   }, [orders, searchTerm]);
 
+  // const fetchOrders = async () => {
+  //   try {
+  //     const response = await fetch("http://localhost:8000/orders", {
+  //       headers: {
+  //         Accept: "application/json",
+  //       },
+  //     });
+
+  //     if (!response.ok) {
+  //       if (response.status === 404) {
+  //         setOrders([]);
+  //         setFilteredOrders([]);
+  //         return;
+  //       }
+  //       const errorData = await response.json();
+  //       throw new Error(errorData.detail || "Failed to fetch orders");
+  //     }
+
+  //     const data = await response.json();
+  //     // 최신 데이터가 위로 오도록 정렬
+  //     const sortedData = [...data].sort((a, b) => {
+  //       const dateA = new Date(a.date);
+  //       const dateB = new Date(b.date);
+  //       return dateB.getTime() - dateA.getTime();
+  //     });
+  //     setOrders(sortedData);
+  //     setFilteredOrders(sortedData);
+  //   } catch (error) {
+  //     console.error("Error fetching orders:", error);
+  //     setOrders([]);
+  //     setFilteredOrders([]);
+  //   }
+  // };
   const fetchOrders = async () => {
-    try {
-      const response = await fetch("http://localhost:8000/orders", {
-        headers: {
-          Accept: "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          setOrders([]);
-          setFilteredOrders([]);
-          return;
+      try {
+        const response = await fetch("http://localhost:8000/orders", {
+          headers: {
+            Accept: "application/json",
+          },
+        });
+  
+        if (!response.ok) {
+          if (response.status === 404) {
+            setOrders([]);
+            setFilteredOrders([]);
+            return;
+          }
+          const errorData = await response.json().catch(() => null);
+          throw new Error(errorData?.detail || "Failed to fetch orders");
         }
-        const errorData = await response.json();
-        throw new Error(errorData.detail || "Failed to fetch orders");
+  
+        const data = await response.json();
+        // Sort orders by date in descending order
+        const sortedData = [...data].sort((a, b) => {
+          if (!a.date || !b.date) return 0;
+          const dateA = new Date(a.date).getTime();
+          const dateB = new Date(b.date).getTime();
+          return dateB - dateA;
+        });
+  
+        // Filter out orders with missing relationships
+        const validOrders = sortedData.filter(
+          order => order.supplier && order.item && order.unit
+        );
+  
+        setOrders(validOrders);
+        setFilteredOrders(validOrders);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+        alert("발주 목록을 불러오는데 실패했습니다. 잠시 후 다시 시도해주세요.");
       }
-
-      const data = await response.json();
-      // 최신 데이터가 위로 오도록 정렬
-      const sortedData = [...data].sort((a, b) => {
-        const dateA = new Date(a.date);
-        const dateB = new Date(b.date);
-        return dateB.getTime() - dateA.getTime();
-      });
-      setOrders(sortedData);
-      setFilteredOrders(sortedData);
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-      setOrders([]);
-      setFilteredOrders([]);
-    }
-  };
+  }
 
   const handleSearch = () => {
     const filteredOrders = orders.filter(

@@ -258,8 +258,16 @@ def read_orders(db: Session = Depends(get_db)):
             .all()
         )
 
-        logger.info(f"Retrieved {len(orders)} orders")
-        return orders
+        # Filter out orders with missing relationships
+        valid_orders = [
+            order for order in orders 
+            if order.supplier is not None 
+            and order.item is not None 
+            and order.unit is not None
+        ]
+
+        logger.info(f"Retrieved {len(valid_orders)} valid orders out of {len(orders)} total orders")
+        return valid_orders
     except Exception as e:
         logger.error(f"Error retrieving orders: {e}")
         raise HTTPException(status_code=500, detail=str(e))
