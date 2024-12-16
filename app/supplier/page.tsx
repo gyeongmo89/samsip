@@ -1,14 +1,21 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, SetStateAction } from 'react'
 import { FileDown, Plus, Search, Minus } from 'lucide-react'
 import Modal from '@/components/Modal'
 import * as XLSX from 'xlsx'
 import { useData } from '@/contexts/DataContext'
 
+interface Supplier {
+  id: number;
+  name: string;
+  contact: string;
+  address: string;
+}
+
 export default function SupplierList() {
-  const [suppliers, setSuppliers] = useState([])
-  const [filteredSuppliers, setFilteredSuppliers] = useState([])
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
+  const [filteredSuppliers, setFilteredSuppliers] = useState<Supplier[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -17,7 +24,8 @@ export default function SupplierList() {
     contact: '',
     address: ''
   })
-  const [editingSupplier, setEditingSupplier] = useState(null)
+  // const [editingSupplier, setEditingSupplier] = useState(null)
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null)
   const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([])
   const [selectAll, setSelectAll] = useState(false)
   const { lastUpdate } = useData()
@@ -40,7 +48,7 @@ export default function SupplierList() {
     }
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault()
     try {
       const response = await fetch('http://localhost:8000/suppliers', {
@@ -67,7 +75,16 @@ export default function SupplierList() {
     }
   }
 
-  const handleEditClick = (supplier) => {
+  // const handleEditClick = (supplier: SetStateAction<null>) => {
+  //   setEditingSupplier(supplier)
+  //   setFormData({
+  //     name: supplier.name,
+  //     contact: supplier.contact,
+  //     address: supplier.address
+  //   })
+  //   setIsEditModalOpen(true)
+  // }
+  const handleEditClick = (supplier: Supplier) => {
     setEditingSupplier(supplier)
     setFormData({
       name: supplier.name,
@@ -77,9 +94,12 @@ export default function SupplierList() {
     setIsEditModalOpen(true)
   }
 
-  const handleEditSubmit = async (e) => {
+  const handleEditSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault()
     try {
+      if (!editingSupplier) {
+        throw new Error('No supplier selected for editing');
+      }
       const response = await fetch(`http://localhost:8000/suppliers/${editingSupplier.id}`, {
         method: 'PUT',
         headers: {
@@ -168,7 +188,7 @@ export default function SupplierList() {
     if (!confirmed) return
 
     try {
-      const supplierIds = selectedSuppliers.map(index => parseInt(filteredSuppliers[parseInt(index)].id))
+      const supplierIds = selectedSuppliers.map(index => filteredSuppliers[parseInt(index)].id.toString())
       const response = await fetch('http://localhost:8000/suppliers/bulk-delete', {
         method: 'DELETE',
         headers: {
@@ -205,7 +225,7 @@ export default function SupplierList() {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && setSearchTerm(e.target.value)}
+                  // onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && setSearchTerm(e.currentTarget.value)}
                   placeholder="검색어를 입력하세요"
                   className="px-6 py-3 border rounded-lg text-black w-80 text-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                 />
