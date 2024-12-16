@@ -154,7 +154,7 @@ export default function OrderList() {
 
       const data = await response.json();
       console.log("Fetched orders:", data); // 디버깅 로그 추가
-      
+
       // Sort orders by date in descending order
       const sortedData = [...data].sort((a, b) => {
         if (!a.date || !b.date) return 0;
@@ -177,7 +177,7 @@ export default function OrderList() {
       setFilteredOrders(orders);
       return;
     }
-    
+
     const filtered = orders.filter(
       (order) =>
         order.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -461,7 +461,9 @@ export default function OrderList() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12">
-      <div className="container mx-auto px-4">
+      {/* <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12"> */}
+      {/* <div className="container bg-red-500 mx-auto px-4"> */}
+      <div className="container mx-auto px-4 w-full max-w-none">
         <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-800">발주현황</h2>
