@@ -24,6 +24,20 @@ interface Order {
   notes: string;
 }
 
+interface FormData {
+  date: string;
+  supplier_name: string;
+  item_name: string;
+  unit_name: string;
+  quantity: string;
+  price: string;
+  total: string;
+  payment_cycle: string;
+  payment_method: string;
+  client: string;
+  notes: string;
+}
+
 // interface OrderModalProps {
 //   isOpen: boolean
 //   onClose: () => void
@@ -40,7 +54,7 @@ export default function OrderList() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     date: "",
     supplier_name: "",
     item_name: "",

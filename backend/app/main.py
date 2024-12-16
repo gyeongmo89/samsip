@@ -113,8 +113,19 @@ class OrderBase(BaseModel):
     date: Optional[str] = None
 
 
-class OrderResponse(OrderBase):
+class OrderResponse(BaseModel):
     id: int
+    date: Optional[str] = None
+    supplier_id: int
+    item_id: int
+    unit_id: int
+    quantity: float
+    price: float
+    total: float
+    payment_cycle: str
+    payment_method: str
+    client: str
+    notes: Optional[str] = None
     supplier: SupplierResponse
     item: ItemResponse
     unit: UnitResponse
@@ -162,7 +173,7 @@ def create_supplier(supplier: SupplierBase, db: Session = Depends(get_db)):
             name=supplier.name,
             contact=supplier.contact,
             address=supplier.address,
-            is_deleted=False  # 명시적으로 is_deleted를 False로 설정
+            is_deleted=False,  # 명시적으로 is_deleted를 False로 설정
         )
         db.add(db_supplier)
         db.commit()
@@ -183,7 +194,9 @@ def read_suppliers(db: Session = Depends(get_db)):
 def bulk_delete_suppliers(supplier_ids: List[int], db: Session = Depends(get_db)):
     try:
         # 실제로 데이터를 삭제
-        db.query(models.Supplier).filter(models.Supplier.id.in_(supplier_ids)).delete(synchronize_session=False)
+        db.query(models.Supplier).filter(models.Supplier.id.in_(supplier_ids)).delete(
+            synchronize_session=False
+        )
         db.commit()
         return {"message": "Suppliers deleted successfully"}
     except Exception as e:
@@ -213,7 +226,9 @@ def read_items(db: Session = Depends(get_db)):
 @app.delete("/items/bulk-delete")
 def bulk_delete_items(item_ids: List[int], db: Session = Depends(get_db)):
     try:
-        db.query(models.Item).filter(models.Item.id.in_(item_ids)).delete(synchronize_session=False)
+        db.query(models.Item).filter(models.Item.id.in_(item_ids)).delete(
+            synchronize_session=False
+        )
         db.commit()
         return {"message": "Items deleted successfully"}
     except Exception as e:
@@ -225,15 +240,13 @@ def bulk_delete_items(item_ids: List[int], db: Session = Depends(get_db)):
 def create_unit(unit: UnitCreate, db: Session = Depends(get_db)):
     try:
         # Check if unit with same name already exists
-        existing_unit = db.query(models.Unit).filter(
-            models.Unit.name == unit.name,
-            models.Unit.is_deleted == False
-        ).first()
+        existing_unit = (
+            db.query(models.Unit)
+            .filter(models.Unit.name == unit.name, models.Unit.is_deleted == False)
+            .first()
+        )
         if existing_unit:
-            raise HTTPException(
-                status_code=400,
-                detail="already_exists"
-            )
+            raise HTTPException(status_code=400, detail="already_exists")
 
         # Convert None to empty string for description
         unit_data = unit.dict()
@@ -262,7 +275,9 @@ def read_units(db: Session = Depends(get_db)):
 @app.delete("/units/bulk-delete")
 def bulk_delete_units(unit_ids: List[int], db: Session = Depends(get_db)):
     try:
-        db.query(models.Unit).filter(models.Unit.id.in_(unit_ids)).delete(synchronize_session=False)
+        db.query(models.Unit).filter(models.Unit.id.in_(unit_ids)).delete(
+            synchronize_session=False
+        )
         db.commit()
         return {"message": "Units deleted successfully"}
     except Exception as e:
@@ -275,71 +290,60 @@ def read_orders(db: Session = Depends(get_db)):
     try:
         orders = (
             db.query(models.Order)
+            .filter(models.Order.is_deleted == False)
             .options(
                 joinedload(models.Order.supplier),
                 joinedload(models.Order.item),
-                joinedload(models.Order.unit),
+                joinedload(models.Order.unit)
             )
             .all()
         )
-
-        # Convert orders to response format with dummy data for deleted relationships
         order_responses = []
+
         for order in orders:
+            # 공급처 정보
             supplier_data = {
-                "id": -1,
-                "name": "[삭제됨]",
-                "contact": None,
-                "address": None
-            } if order.supplier is None else {
-                "id": order.supplier.id,
-                "name": order.supplier.name,
-                "contact": order.supplier.contact,
-                "address": order.supplier.address
+                "id": order.supplier.id if order.supplier else -1,
+                "name": order.supplier.name if order.supplier else "[삭제됨]",
+                "contact": order.supplier.contact if order.supplier else None,
+                "address": order.supplier.address if order.supplier else None,
             }
 
+            # 품목 정보
             item_data = {
-                "id": -1,
-                "name": "[삭제됨]",
-                "description": None,
-                "price": None
-            } if order.item is None else {
-                "id": order.item.id,
-                "name": order.item.name,
-                "description": order.item.description,
-                "price": order.item.price
+                "id": order.item.id if order.item else -1,
+                "name": order.item.name if order.item else "[삭제됨]",
+                "description": order.item.description if order.item else None,
+                "price": order.item.price if order.item else None,
             }
 
+            # 단위 정보
             unit_data = {
-                "id": -1,
-                "name": "[삭제됨]",
-                "description": None
-            } if order.unit is None else {
-                "id": order.unit.id,
-                "name": order.unit.name,
-                "description": order.unit.description
+                "id": order.unit.id if order.unit else -1,
+                "name": order.unit.name if order.unit else "[삭제됨]",
+                "description": order.unit.description if order.unit else None,
             }
 
+            # 주문 정보를 딕셔너리로 변환
             order_dict = {
                 "id": order.id,
                 "date": order.date,
-                "quantity": order.quantity,
                 "supplier_id": order.supplier_id,
                 "item_id": order.item_id,
                 "unit_id": order.unit_id,
-                "price": order.price,
-                "total": order.total,
+                "quantity": float(order.quantity),
+                "price": float(order.price),  # 등록 당시의 가격 사용
+                "total": float(order.total),  # 등록 당시의 총액 사용
                 "payment_cycle": order.payment_cycle,
                 "payment_method": order.payment_method,
                 "client": order.client,
                 "notes": order.notes,
                 "supplier": supplier_data,
                 "item": item_data,
-                "unit": unit_data
+                "unit": unit_data,
             }
             order_responses.append(order_dict)
 
-        logger.info(f"Retrieved {len(orders)} orders")
         return order_responses
     except Exception as e:
         logger.error(f"Error retrieving orders: {e}")
@@ -543,16 +547,17 @@ def update_unit(unit_id: int, unit: UnitCreate, db: Session = Depends(get_db)):
             raise HTTPException(status_code=404, detail="Unit not found")
 
         # Check if another unit with the same name exists
-        existing_unit = db.query(models.Unit).filter(
-            models.Unit.name == unit.name,
-            models.Unit.id != unit_id,
-            models.Unit.is_deleted == False
-        ).first()
-        if existing_unit:
-            raise HTTPException(
-                status_code=400,
-                detail="already_exists"
+        existing_unit = (
+            db.query(models.Unit)
+            .filter(
+                models.Unit.name == unit.name,
+                models.Unit.id != unit_id,
+                models.Unit.is_deleted == False,
             )
+            .first()
+        )
+        if existing_unit:
+            raise HTTPException(status_code=400, detail="already_exists")
 
         # Convert None to empty string for description
         unit_data = unit.dict()
