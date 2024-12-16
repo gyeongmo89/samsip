@@ -1,10 +1,10 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { FileDown, Plus, Search, Minus } from 'lucide-react'
-import Modal from '@/components/Modal'
-import * as XLSX from 'xlsx'
-import { useData } from '@/contexts/DataContext'
+import { useState, useEffect } from "react";
+import { FileDown, Plus, Search, Minus } from "lucide-react";
+import Modal from "@/components/Modal";
+import * as XLSX from "xlsx";
+import { useData } from "@/contexts/DataContext";
 
 interface Supplier {
   id: number;
@@ -14,204 +14,221 @@ interface Supplier {
 }
 
 export default function SupplierList() {
-  const [suppliers, setSuppliers] = useState<Supplier[]>([])
-  const [filteredSuppliers, setFilteredSuppliers] = useState<Supplier[]>([])
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [filteredSuppliers, setFilteredSuppliers] = useState<Supplier[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
-    name: '',
-    contact: '',
-    address: ''
-  })
-  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null)
-  const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([])
-  const [selectAll, setSelectAll] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const { lastUpdate } = useData()
+    name: "",
+    contact: "",
+    address: "",
+  });
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+  const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([]);
+  const [selectAll, setSelectAll] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { lastUpdate } = useData();
 
   useEffect(() => {
-    fetchSuppliers()
-  }, [lastUpdate])
+    fetchSuppliers();
+  }, [lastUpdate]);
 
   const fetchSuppliers = async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
     try {
-      console.log('Fetching suppliers...')
-      const response = await fetch('http://localhost:8000/suppliers')
-      console.log('Response status:', response.status)
-      if (!response.ok) throw new Error('Failed to fetch suppliers')
-      const data = await response.json()
-      console.log('Received data:', data)
+      console.log("Fetching suppliers...");
+      const response = await fetch("http://localhost:8000/suppliers");
+      console.log("Response status:", response.status);
+      if (!response.ok) throw new Error("Failed to fetch suppliers");
+      const data = await response.json();
+      console.log("Received data:", data);
       // 최신 데이터가 위로 오도록 정렬
-      const sortedData = [...data].sort((a, b) => b.id - a.id)
-      setSuppliers(sortedData)
-      setFilteredSuppliers(sortedData)
+      const sortedData = [...data].sort((a, b) => b.id - a.id);
+      setSuppliers(sortedData);
+      setFilteredSuppliers(sortedData);
     } catch (error) {
-      console.error('Error fetching suppliers:', error)
-      setError('구입처 목록을 불러오는데 실패했습니다.')
+      console.error("Error fetching suppliers:", error);
+      setError("구입처 목록을 불러오는데 실패했습니다.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleSubmit = async (e: { preventDefault: () => void }) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
-      console.log('Submitting supplier data:', formData)
-      const response = await fetch('http://localhost:8000/suppliers', {
-        method: 'POST',
+      console.log("Submitting supplier data:", formData);
+      const response = await fetch("http://localhost:8000/suppliers", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           name: formData.name,
           contact: formData.contact,
-          address: formData.address //비고로 사용
+          address: formData.address, //비고로 사용
         }),
-      })
-      console.log('Response status:', response.status)
+      });
+      console.log("Response status:", response.status);
 
-      if (!response.ok) throw new Error('Failed to create supplier')
-      
-      alert('구입처가 등록되었습니다.')
-      fetchSuppliers()
-      setIsModalOpen(false)
-      setFormData({ name: '', contact: '', address: '' })
+      if (!response.ok) throw new Error("Failed to create supplier");
+
+      alert("구입처가 등록되었습니다.");
+      fetchSuppliers();
+      setIsModalOpen(false);
+      setFormData({ name: "", contact: "", address: "" });
     } catch (error) {
-      console.error('Error creating supplier:', error)
-      alert('구입처 등록 중 오류가 발생했습니다.')
+      console.error("Error creating supplier:", error);
+      alert("구입처 등록 중 오류가 발생했습니다.");
     }
-  }
+  };
 
   const handleEditClick = (supplier: Supplier) => {
-    setEditingSupplier(supplier)
+    setEditingSupplier(supplier);
     setFormData({
       name: supplier.name,
       contact: supplier.contact,
-      address: supplier.address
-    })
-    setIsEditModalOpen(true)
-  }
+      address: supplier.address,
+    });
+    setIsEditModalOpen(true);
+  };
 
   const handleEditSubmit = async (e: { preventDefault: () => void }) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
-      if (!editingSupplier) return
+      if (!editingSupplier) return;
 
-      const response = await fetch(`http://localhost:8000/suppliers/${editingSupplier.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          contact: formData.contact,
-          address: formData.address
-        }),
-      })
+      const response = await fetch(
+        `http://localhost:8000/suppliers/${editingSupplier.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: formData.name,
+            contact: formData.contact,
+            address: formData.address,
+          }),
+        }
+      );
 
-      if (!response.ok) throw new Error('Failed to update supplier')
-      
-      alert('구입처가 수정되었습니다.')
-      fetchSuppliers()
-      setIsEditModalOpen(false)
-      setFormData({ name: '', contact: '', address: '' })
-      setEditingSupplier(null)
+      if (!response.ok) throw new Error("Failed to update supplier");
+
+      alert("구입처가 수정되었습니다.");
+      fetchSuppliers();
+      setIsEditModalOpen(false);
+      setFormData({ name: "", contact: "", address: "" });
+      setEditingSupplier(null);
     } catch (error) {
-      console.error('Error updating supplier:', error)
-      alert('구입처 수정 중 오류가 발생했습니다.')
+      console.error("Error updating supplier:", error);
+      alert("구입처 수정 중 오류가 발생했습니다.");
     }
-  }
+  };
 
   useEffect(() => {
-    const filtered = suppliers.filter(supplier =>
-      (supplier.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (supplier.contact?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (supplier.address?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-    )
-    setFilteredSuppliers(filtered)
-  }, [suppliers, searchTerm])
+    const filtered = suppliers.filter(
+      (supplier) =>
+        (supplier.name?.toLowerCase() || "").includes(
+          searchTerm.toLowerCase()
+        ) ||
+        (supplier.contact?.toLowerCase() || "").includes(
+          searchTerm.toLowerCase()
+        ) ||
+        (supplier.address?.toLowerCase() || "").includes(
+          searchTerm.toLowerCase()
+        )
+    );
+    setFilteredSuppliers(filtered);
+  }, [suppliers, searchTerm]);
 
   const handleExcelDownload = () => {
-    const excelData = suppliers.map(supplier => ({
-      '구입처': supplier.name,
-      '연락처': supplier.contact,
-      '주소': supplier.address
-    }))
+    const excelData = suppliers.map((supplier) => ({
+      구입처: supplier.name,
+      연락처: supplier.contact,
+      주소: supplier.address,
+    }));
 
-    const wb = XLSX.utils.book_new()
-    const ws = XLSX.utils.json_to_sheet(excelData)
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(excelData);
 
     const columnWidths = [
       { wch: 20 }, // 구입처
       { wch: 15 }, // 연락처
       { wch: 40 }, // 주소
-    ]
-    ws['!cols'] = columnWidths
+    ];
+    ws["!cols"] = columnWidths;
 
-    XLSX.utils.book_append_sheet(wb, ws, '구입처 목록')
+    XLSX.utils.book_append_sheet(wb, ws, "구입처 목록");
 
-    const today = new Date().toISOString().split('T')[0]
-    XLSX.writeFile(wb, `구입처목록_${today}.xlsx`)
+    const today = new Date().toISOString().split("T")[0];
+    XLSX.writeFile(wb, `구입처목록_${today}.xlsx`);
 
-    alert('엑셀 다운로드 완료')
-  }
+    alert("엑셀 다운로드 완료");
+  };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectAll(e.target.checked)
+    setSelectAll(e.target.checked);
     if (e.target.checked) {
-      setSelectedSuppliers(filteredSuppliers.map((_, index) => index.toString()))
+      setSelectedSuppliers(
+        filteredSuppliers.map((_, index) => index.toString())
+      );
     } else {
-      setSelectedSuppliers([])
+      setSelectedSuppliers([]);
     }
-  }
+  };
 
   const handleSelectSupplier = (index: string) => {
-    setSelectedSuppliers(prev => {
+    setSelectedSuppliers((prev) => {
       if (prev.includes(index)) {
-        return prev.filter(i => i !== index)
+        return prev.filter((i) => i !== index);
       } else {
-        return [...prev, index]
+        return [...prev, index];
       }
-    })
-  }
+    });
+  };
 
   const handleDeleteSuppliers = async () => {
     if (selectedSuppliers.length === 0) {
-      alert('삭제할 구입처를 선택해주세요.')
-      return
+      alert("삭제할 구입처를 선택해주세요.");
+      return;
     }
 
-    const confirmed = confirm('선택한 구입처를 삭제하시겠습니까?')
-    if (!confirmed) return
+    const confirmed = confirm("선택한 구입처를 삭제하시겠습니까?");
+    if (!confirmed) return;
 
     try {
-      const supplierIds = selectedSuppliers.map(index => filteredSuppliers[parseInt(index)].id)
-      const response = await fetch('http://localhost:8000/suppliers/bulk-delete', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(supplierIds),
-      })
+      const supplierIds = selectedSuppliers.map(
+        (index) => filteredSuppliers[parseInt(index)].id
+      );
+      const response = await fetch(
+        "http://localhost:8000/suppliers/bulk-delete",
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(supplierIds),
+        }
+      );
 
       if (response.ok) {
-        fetchSuppliers()
-        setSelectedSuppliers([])
-        setSelectAll(false)
-        alert('선택한 구입처가 삭제되었습니다.')
+        fetchSuppliers();
+        setSelectedSuppliers([]);
+        setSelectAll(false);
+        alert("선택한 구입처가 삭제되었습니다.");
       } else {
-        const error = await response.json()
-        throw new Error(error.detail || '구입처 삭제 실패')
+        const error = await response.json();
+        throw new Error(error.detail || "구입처 삭제 실패");
       }
     } catch (error) {
-      console.error('Error deleting suppliers:', error)
-      alert('구입처 삭제 중 오류가 발생했습니다.')
+      console.error("Error deleting suppliers:", error);
+      alert("구입처 삭제 중 오류가 발생했습니다.");
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12">
@@ -226,7 +243,7 @@ export default function SupplierList() {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && setSearchTerm(e.target.value)}
+                  // onKeyPress={(e) => e.key === 'Enter' && setSearchTerm(e.target.value)}
                   placeholder="검색어를 입력하세요"
                   className="px-6 py-3 border rounded-lg text-black w-80 text-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                 />
@@ -237,7 +254,7 @@ export default function SupplierList() {
                   <Search className="w-6 h-6" />
                 </button>
               </div>
-              
+
               {/* 구입처 등록/삭제 버튼 */}
               <div className="flex gap-2">
                 <button
@@ -255,7 +272,7 @@ export default function SupplierList() {
                   구입처 삭제
                 </button>
               </div>
-              
+
               {/* 엑셀 다운로드 버튼 */}
               <button
                 onClick={handleExcelDownload}
@@ -302,30 +319,49 @@ export default function SupplierList() {
                         className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
                     </th>
-                    <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">구입처명</th>
-                    <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">연락처</th>
-                    <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">비고</th>
-                    <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">수정</th>
+                    <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">
+                      구입처명
+                    </th>
+                    <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">
+                      연락처
+                    </th>
+                    <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">
+                      비고
+                    </th>
+                    <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">
+                      수정
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredSuppliers.map((supplier, index) => (
-                    <tr 
-                      key={supplier.id} 
+                    <tr
+                      key={supplier.id}
                       className="hover:bg-gray-50 cursor-pointer"
                       onClick={() => handleSelectSupplier(index.toString())}
                     >
-                      <td className="px-6 py-4 whitespace-nowrap text-center" onClick={(e) => e.stopPropagation()}>
+                      <td
+                        className="px-6 py-4 whitespace-nowrap text-center"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <input
                           type="checkbox"
                           checked={selectedSuppliers.includes(index.toString())}
-                          onChange={() => handleSelectSupplier(index.toString())}
+                          onChange={() =>
+                            handleSelectSupplier(index.toString())
+                          }
                           className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                         />
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-black">{supplier.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-black">{supplier.contact}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-black">{supplier.address}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-black">
+                        {supplier.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-black">
+                        {supplier.contact}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-black">
+                        {supplier.address}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-black">
                         <button
                           onClick={() => handleEditClick(supplier)}
@@ -357,7 +393,9 @@ export default function SupplierList() {
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               required
             />
@@ -370,14 +408,14 @@ export default function SupplierList() {
               type="text"
               value={formData.contact}
               onChange={(e) => {
-                let value = e.target.value.replace(/\D/g, '')
+                let value = e.target.value.replace(/\D/g, "");
                 if (value.length <= 11) {
                   if (value.length > 7) {
-                    value = value.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3')
+                    value = value.replace(/(\d{3})(\d{4})(\d{4})/, "$1-$2-$3");
                   } else if (value.length > 3) {
-                    value = value.replace(/(\d{3})(\d{1,4})/, '$1-$2')
+                    value = value.replace(/(\d{3})(\d{1,4})/, "$1-$2");
                   }
-                  setFormData({ ...formData, contact: value })
+                  setFormData({ ...formData, contact: value });
                 }
               }}
               placeholder="010-0000-0000"
@@ -391,7 +429,9 @@ export default function SupplierList() {
             <input
               type="text"
               value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, address: e.target.value })
+              }
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
             />
           </div>
@@ -417,9 +457,9 @@ export default function SupplierList() {
       <Modal
         isOpen={isEditModalOpen}
         onClose={() => {
-          setIsEditModalOpen(false)
-          setFormData({ name: '', contact: '', address: '' })
-          setEditingSupplier(null)
+          setIsEditModalOpen(false);
+          setFormData({ name: "", contact: "", address: "" });
+          setEditingSupplier(null);
         }}
         title="구입처 수정"
       >
@@ -432,7 +472,9 @@ export default function SupplierList() {
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
                 required
               />
@@ -445,14 +487,17 @@ export default function SupplierList() {
                 type="text"
                 value={formData.contact}
                 onChange={(e) => {
-                  let value = e.target.value.replace(/\D/g, '')
+                  let value = e.target.value.replace(/\D/g, "");
                   if (value.length <= 11) {
                     if (value.length > 7) {
-                      value = value.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3')
+                      value = value.replace(
+                        /(\d{3})(\d{4})(\d{4})/,
+                        "$1-$2-$3"
+                      );
                     } else if (value.length > 3) {
-                      value = value.replace(/(\d{3})(\d{1,4})/, '$1-$2')
+                      value = value.replace(/(\d{3})(\d{1,4})/, "$1-$2");
                     }
-                    setFormData({ ...formData, contact: value })
+                    setFormData({ ...formData, contact: value });
                   }
                 }}
                 placeholder="010-0000-0000"
@@ -466,7 +511,9 @@ export default function SupplierList() {
               <input
                 type="text"
                 value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, address: e.target.value })
+                }
                 className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               />
             </div>
@@ -475,9 +522,9 @@ export default function SupplierList() {
             <button
               type="button"
               onClick={() => {
-                setIsEditModalOpen(false)
-                setFormData({ name: '', contact: '', address: '' })
-                setEditingSupplier(null)
+                setIsEditModalOpen(false);
+                setFormData({ name: "", contact: "", address: "" });
+                setEditingSupplier(null);
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
             >
@@ -493,5 +540,5 @@ export default function SupplierList() {
         </form>
       </Modal>
     </div>
-  )
+  );
 }
