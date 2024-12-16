@@ -169,19 +169,37 @@ def get_float_value(value):
 @app.post("/suppliers/", response_model=SupplierResponse)
 def create_supplier(supplier: SupplierBase, db: Session = Depends(get_db)):
     try:
+        # Check if supplier with same name already exists
+        existing_supplier = (
+            db.query(models.Supplier)
+            .filter(
+                models.Supplier.name == supplier.name,
+                models.Supplier.is_deleted == False
+            )
+            .first()
+        )
+        if existing_supplier:
+            raise HTTPException(
+                status_code=400,
+                detail="already_exists"
+            )
+
         db_supplier = models.Supplier(
             name=supplier.name,
             contact=supplier.contact,
             address=supplier.address,
-            is_deleted=False,  # 명시적으로 is_deleted를 False로 설정
+            is_deleted=False,
         )
         db.add(db_supplier)
         db.commit()
         db.refresh(db_supplier)
         return db_supplier
+    except HTTPException as e:
+        raise e
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error(f"Error creating supplier: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/suppliers/", response_model=List[SupplierResponse])
@@ -207,14 +225,49 @@ def bulk_delete_suppliers(supplier_ids: List[int], db: Session = Depends(get_db)
 @app.post("/items/", response_model=ItemResponse)
 def create_item(item: ItemCreate, db: Session = Depends(get_db)):
     try:
-        db_item = models.Item(**item.dict())
+        # Check if item with same name already exists
+        existing_item = (
+            db.query(models.Item)
+            .filter(
+                models.Item.name == item.name,
+                models.Item.is_deleted == False
+            )
+            .first()
+        )
+        if existing_item:
+            raise HTTPException(
+                status_code=400,
+                detail="already_exists"
+            )
+
+        # Convert price to float if it exists
+        item_data = item.dict()
+        if item_data.get("price") is not None:
+            try:
+                price = float(item_data["price"])
+                if price < 0:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="price_invalid"
+                    )
+                item_data["price"] = price
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="price_invalid"
+                )
+
+        db_item = models.Item(**item_data, is_deleted=False)
         db.add(db_item)
         db.commit()
         db.refresh(db_item)
         return db_item
+    except HTTPException as e:
+        raise e
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error(f"Error creating item: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/items/", response_model=List[ItemResponse])

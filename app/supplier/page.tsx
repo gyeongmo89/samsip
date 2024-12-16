@@ -60,29 +60,31 @@ export default function SupplierList() {
   const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     try {
-      console.log("Submitting supplier data:", formData);
-      const response = await fetch("http://localhost:8000/suppliers", {
-        method: "POST",
+      const response = await fetch('http://localhost:8000/suppliers/', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: formData.name,
-          contact: formData.contact,
-          address: formData.address, //비고로 사용
-        }),
+        body: JSON.stringify(formData),
       });
-      console.log("Response status:", response.status);
 
-      if (!response.ok) throw new Error("Failed to create supplier");
+      const data = await response.json();
 
-      alert("구입처가 등록되었습니다.");
+      if (!response.ok) {
+        if (data.detail === 'already_exists') {
+          alert('이미 등록된 구입처입니다.');
+          return;
+        }
+        throw new Error(data.detail || 'Failed to create supplier');
+      }
+
+      alert('구입처가 등록되었습니다.');
       fetchSuppliers();
       setIsModalOpen(false);
-      setFormData({ name: "", contact: "", address: "" });
+      setFormData({ name: '', contact: '', address: '' });
     } catch (error) {
-      console.error("Error creating supplier:", error);
-      alert("구입처 등록 중 오류가 발생했습니다.");
+      console.error('Error creating supplier:', error);
+      alert('구입처 등록 중 오류가 발생했습니다.');
     }
   };
 

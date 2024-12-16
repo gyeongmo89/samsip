@@ -47,31 +47,59 @@ export default function ItemList() {
   }
 
   const handleSubmit = async (e: { preventDefault: () => void }) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
-      const response = await fetch('http://localhost:8000/items', {
+      // 단가에서 쉼표 제거하고 숫자로 변환
+      const priceValue = formData.price ? parseFloat(formData.price.replace(/,/g, '')) : null;
+
+      const response = await fetch('http://localhost:8000/items/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           name: formData.name,
-          price: parseFloat(formData.price.replace(/,/g, '')),
-          description: formData.description
+          description: formData.description,
+          price: priceValue
         }),
-      })
+      });
 
-      if (!response.ok) throw new Error('Failed to create item')
-      
-      alert('품목이 등록되었습니다.')
-      fetchItems()
-      setIsModalOpen(false)
-      setFormData({ name: '', price: '', description: '' })
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.detail === 'already_exists') {
+          alert('이미 등록된 품목입니다.');
+          return;
+        }
+        throw new Error(data.detail || 'Failed to create item');
+      }
+
+      alert('품목이 등록되었습니다.');
+      fetchItems();
+      setIsModalOpen(false);
+      setFormData({ name: '', description: '', price: '' });
     } catch (error) {
-      console.error('Error creating item:', error)
-      alert('품목 등록 중 오류가 발생했습니다.')
+      console.error('Error creating item:', error);
+      alert('품목 등록 중 오류가 발생했습니다.');
     }
-  }
+  };
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // 숫자와 쉼표만 허용
+    const numericValue = value.replace(/[^\d,]/g, '');
+    // 쉼표 제거 후 숫자만 추출
+    const numberOnly = numericValue.replace(/,/g, '');
+    
+    if (numberOnly.length > 0) {
+      // 숫자를 파싱하고 천단위 쉼표 추가
+      const number = parseInt(numberOnly);
+      const formattedValue = number.toLocaleString();
+      setFormData({ ...formData, price: formattedValue });
+    } else {
+      setFormData({ ...formData, price: '' });
+    }
+  };
 
   const handleEditClick = (item: Item) => {
     setEditingItem(item)
@@ -328,15 +356,7 @@ export default function ItemList() {
             <input
               type="text"
               value={formData.price}
-              onChange={(e) => {
-                const value = e.target.value.replace(/[^\d]/g, '')
-                if (value) {
-                  const numValue = parseInt(value)
-                  setFormData({ ...formData, price: numValue.toLocaleString() })
-                } else {
-                  setFormData({ ...formData, price: '' })
-                }
-              }}
+              onChange={handlePriceChange}
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               required
               placeholder="0"
@@ -402,15 +422,7 @@ export default function ItemList() {
               <input
                 type="text"
                 value={formData.price}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^\d]/g, '')
-                  if (value) {
-                    const numValue = parseInt(value)
-                    setFormData({ ...formData, price: numValue.toLocaleString() })
-                  } else {
-                    setFormData({ ...formData, price: '' })
-                  }
-                }}
+                onChange={handlePriceChange}
                 className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
                 required
                 placeholder="0"
