@@ -76,9 +76,9 @@ export default function ItemList() {
   const handleEditClick = (item: Item) => {
     setEditingItem(item)
     setFormData({
-      name: item.name,
-      price: item.price?.toLocaleString(),  
-      description: item.description
+      name: item.name || '',
+      price: item.price ? item.price.toLocaleString() : '',
+      description: item.description || ''
     })
     setIsEditModalOpen(true)
   }

@@ -89,9 +89,9 @@ export default function SupplierList() {
   const handleEditClick = (supplier: Supplier) => {
     setEditingSupplier(supplier);
     setFormData({
-      name: supplier.name,
-      contact: supplier.contact,
-      address: supplier.address,
+      name: supplier.name || "",
+      contact: supplier.contact || "",
+      address: supplier.address || "",
     });
     setIsEditModalOpen(true);
   };
