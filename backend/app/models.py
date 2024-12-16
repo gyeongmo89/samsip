@@ -36,6 +36,7 @@ class Unit(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
+    description = Column(String, nullable=True, server_default="")
     is_deleted = Column(Boolean, default=False)
     
     orders = relationship("Order", back_populates="unit")

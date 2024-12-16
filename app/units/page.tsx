@@ -37,11 +37,13 @@ export default function UnitList() {
       const response = await fetch('http://localhost:8000/units')
       if (!response.ok) throw new Error('Failed to fetch units')
       const data = await response.json()
+      // 최신 데이터가 위로 오도록 정렬
       const sortedData = [...data].sort((a, b) => b.id - a.id)
       setUnits(sortedData)
       setFilteredUnits(sortedData)
     } catch (error) {
       console.error('Error fetching units:', error)
+      alert('단위 목록을 불러오는데 실패했습니다.')
     }
   }
 
@@ -55,12 +57,20 @@ export default function UnitList() {
         },
         body: JSON.stringify({
           name: formData.name,
-          description: formData.description
+          description: formData.description || ""
         }),
       })
 
-      if (!response.ok) throw new Error('Failed to create unit')
-      
+      const data = await response.json()
+
+      if (!response.ok) {
+        if (data.detail === 'already_exists') {
+          alert('이미 등록된 단위입니다.')
+          return
+        }
+        throw new Error(data.detail || 'Failed to create unit')
+      }
+
       alert('단위가 등록되었습니다.')
       fetchUnits()
       setIsModalOpen(false)
@@ -74,8 +84,8 @@ export default function UnitList() {
   const handleEditClick = (unit: Unit) => {
     setEditingUnit(unit)
     setFormData({
-      name: unit.name,
-      description: unit.description
+      name: unit.name || '',
+      description: unit.description || ''
     })
     setIsEditModalOpen(true)
   }
@@ -92,11 +102,18 @@ export default function UnitList() {
         },
         body: JSON.stringify({
           name: formData.name,
-          description: formData.description
+          description: formData.description || ""
         }),
       })
 
-      if (!response.ok) throw new Error('Failed to update unit')
+      if (!response.ok) {
+        const data = await response.json()
+        if (data.detail === 'already_exists') {
+          alert('이미 등록된 단위입니다.')
+          return
+        }
+        throw new Error(data.detail || 'Failed to update unit')
+      }
 
       alert('단위가 수정되었습니다.')
       fetchUnits()
@@ -119,7 +136,7 @@ export default function UnitList() {
   const handleExcelDownload = () => {
     const excelData = units.map(unit => ({
       '단위': unit.name,
-      '설명': unit.description
+      '비고': unit.description
     }))
 
     const wb = XLSX.utils.book_new()
@@ -127,7 +144,7 @@ export default function UnitList() {
 
     const columnWidths = [
       { wch: 20 }, // 단위
-      { wch: 40 }, // 설명
+      { wch: 40 }, // 비고
     ]
     ws['!cols'] = columnWidths
 
@@ -219,7 +236,10 @@ export default function UnitList() {
               {/* 단위 등록/삭제 버튼 */}
               <div className="flex gap-2">
                 <button
-                  onClick={() => setIsModalOpen(true)}
+                  onClick={() => {
+                    setIsModalOpen(true)
+                    setFormData({ name: '', description: '' })
+                  }}
                   className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold shadow-lg hover:shadow-xl flex items-center gap-2"
                 >
                   <Plus className="w-4 h-4" />
@@ -258,7 +278,7 @@ export default function UnitList() {
                     />
                   </th>
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">단위</th>
-                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">설명</th>
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">비고</th>
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">수정</th>
                 </tr>
               </thead>
@@ -294,13 +314,18 @@ export default function UnitList() {
       {/* 등록 모달 */}
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false)
+          setFormData({ name: '', description: '' })
+        }}
         title="단위 등록"
       >
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-black font-medium mb-1">단위</label>
+              <label htmlFor="name" className="block text-black font-medium mb-1">
+                단위 <span className="text-red-500">*</span>
+              </label>
               <input
                 type="text"
                 id="name"
@@ -311,7 +336,7 @@ export default function UnitList() {
               />
             </div>
             <div>
-              <label htmlFor="description" className="block text-black font-medium mb-1">설명</label>
+              <label htmlFor="description" className="block text-black font-medium mb-1">비고</label>
               <input
                 type="text"
                 id="description"
@@ -324,14 +349,17 @@ export default function UnitList() {
           <div className="mt-6 flex justify-end gap-3">
             <button
               type="button"
-              onClick={() => setIsModalOpen(false)}
+              onClick={() => {
+                setIsModalOpen(false)
+                setFormData({ name: '', description: '' })
+              }}
               className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
             >
               취소
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
             >
               등록
             </button>
@@ -352,7 +380,9 @@ export default function UnitList() {
         <form onSubmit={handleEditSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="edit-name" className="block text-black font-medium mb-1">단위</label>
+              <label htmlFor="edit-name" className="block text-black font-medium mb-1">
+                단위 <span className="text-red-500">*</span>
+              </label>
               <input
                 type="text"
                 id="edit-name"
@@ -363,7 +393,7 @@ export default function UnitList() {
               />
             </div>
             <div>
-              <label htmlFor="edit-description" className="block text-black font-medium mb-1">설명</label>
+              <label htmlFor="edit-description" className="block text-black font-medium mb-1">비고</label>
               <input
                 type="text"
                 id="edit-description"
@@ -387,9 +417,9 @@ export default function UnitList() {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
             >
-              수정 완료
+              수정
             </button>
           </div>
         </form>

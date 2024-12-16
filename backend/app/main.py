@@ -85,6 +85,7 @@ class ItemResponse(ItemBase):
 
 class UnitBase(BaseModel):
     name: str
+    description: Optional[str] = None
 
 
 class UnitCreate(UnitBase):
@@ -223,14 +224,33 @@ def bulk_delete_items(item_ids: List[int], db: Session = Depends(get_db)):
 @app.post("/units/", response_model=UnitResponse)
 def create_unit(unit: UnitCreate, db: Session = Depends(get_db)):
     try:
-        db_unit = models.Unit(**unit.dict())
+        # Check if unit with same name already exists
+        existing_unit = db.query(models.Unit).filter(
+            models.Unit.name == unit.name,
+            models.Unit.is_deleted == False
+        ).first()
+        if existing_unit:
+            raise HTTPException(
+                status_code=400,
+                detail="already_exists"
+            )
+
+        # Convert None to empty string for description
+        unit_data = unit.dict()
+        if unit_data.get("description") is None:
+            unit_data["description"] = ""
+
+        db_unit = models.Unit(**unit_data)
         db.add(db_unit)
         db.commit()
         db.refresh(db_unit)
         return db_unit
+    except HTTPException as e:
+        raise e
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error(f"Error creating unit: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/units/", response_model=List[UnitResponse])
@@ -292,10 +312,12 @@ def read_orders(db: Session = Depends(get_db)):
 
             unit_data = {
                 "id": -1,
-                "name": "[삭제됨]"
+                "name": "[삭제됨]",
+                "description": None
             } if order.unit is None else {
                 "id": order.unit.id,
-                "name": order.unit.name
+                "name": order.unit.name,
+                "description": order.unit.description
             }
 
             order_dict = {
@@ -514,14 +536,38 @@ def update_item(item_id: int, item: ItemBase, db: Session = Depends(get_db)):
 
 
 @app.put("/units/{unit_id}", response_model=UnitResponse)
-def update_unit(unit_id: int, unit: UnitBase, db: Session = Depends(get_db)):
-    db_unit = db.query(models.Unit).filter(models.Unit.id == unit_id).first()
-    if not db_unit:
-        raise HTTPException(status_code=404, detail="Unit not found")
+def update_unit(unit_id: int, unit: UnitCreate, db: Session = Depends(get_db)):
+    try:
+        db_unit = db.query(models.Unit).filter(models.Unit.id == unit_id).first()
+        if not db_unit:
+            raise HTTPException(status_code=404, detail="Unit not found")
 
-    for key, value in unit.dict().items():
-        setattr(db_unit, key, value)
+        # Check if another unit with the same name exists
+        existing_unit = db.query(models.Unit).filter(
+            models.Unit.name == unit.name,
+            models.Unit.id != unit_id,
+            models.Unit.is_deleted == False
+        ).first()
+        if existing_unit:
+            raise HTTPException(
+                status_code=400,
+                detail="already_exists"
+            )
 
-    db.commit()
-    db.refresh(db_unit)
-    return db_unit
+        # Convert None to empty string for description
+        unit_data = unit.dict()
+        if unit_data.get("description") is None:
+            unit_data["description"] = ""
+
+        for key, value in unit_data.items():
+            setattr(db_unit, key, value)
+
+        db.commit()
+        db.refresh(db_unit)
+        return db_unit
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error updating unit: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

@@ -39,6 +39,7 @@ class Item(ItemBase):
 
 class UnitBase(BaseModel):
     name: str
+    description: Optional[str] = None
 
 
 class UnitCreate(UnitBase):
