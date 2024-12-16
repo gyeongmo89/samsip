@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, ReactNode } from 'react'
 import Modal from './Modal'
 import Select from 'react-select'
 
@@ -8,6 +8,25 @@ interface OrderModalProps {
   isOpen: boolean
   onClose: () => void
   onOrderComplete: () => void
+}
+
+interface Supplier {
+  [x: string]: ReactNode
+  // [x: string]: ReactNode
+  id: number;
+  contact?: string;
+  // Add other supplier properties as needed
+}
+
+interface Item {
+  id: number;
+  name: string;
+  price?: number;
+}
+
+interface Unit {
+  id: number;
+  name: string;
 }
 
 const defaultFormData = {
@@ -21,13 +40,14 @@ const defaultFormData = {
   payment_method: '계좌이체',
   client: '',
   notes: '',
-  date: new Date().toISOString().split('T')[0]
+  date: new Date().toISOString().split('T')[0],
+  custom_payment_cycle: ''
 }
 
 export default function OrderModal({ isOpen, onClose, onOrderComplete }: OrderModalProps) {
-  const [suppliers, setSuppliers] = useState([])
-  const [items, setItems] = useState([])
-  const [units, setUnits] = useState([])
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
+  const [items, setItems] = useState<Item[]>([])
+  const [units, setUnits] = useState<Unit[]>([])
   const [formData, setFormData] = useState(defaultFormData)
   const [showDaySelect, setShowDaySelect] = useState(false)
 
