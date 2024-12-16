@@ -10,6 +10,7 @@ export default function UnitList() {
   interface Unit {
     id: number;
     name: string;
+    description: string;
     // Add other unit properties here if needed
   }
 
@@ -20,7 +21,7 @@ export default function UnitList() {
   const [searchTerm, setSearchTerm] = useState('')
   const [formData, setFormData] = useState({
     name: '',
-    // description: ''
+    description: ''
   })
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null)
   const [selectedUnits, setSelectedUnits] = useState<string[]>([])
@@ -54,7 +55,7 @@ export default function UnitList() {
         },
         body: JSON.stringify({
           name: formData.name,
-          // description: formData.description
+          description: formData.description
         }),
       })
 
@@ -63,8 +64,7 @@ export default function UnitList() {
       alert('단위가 등록되었습니다.')
       fetchUnits()
       setIsModalOpen(false)
-      // setFormData({ name: '', description: '' })
-      setFormData({ name: '',})
+      setFormData({ name: '', description: '' })
     } catch (error) {
       console.error('Error creating unit:', error)
       alert('단위 등록 중 오류가 발생했습니다.')
@@ -75,7 +75,7 @@ export default function UnitList() {
     setEditingUnit(unit)
     setFormData({
       name: unit.name,
-      // description: unit.description
+      description: unit.description
     })
     setIsEditModalOpen(true)
   }
@@ -83,24 +83,26 @@ export default function UnitList() {
   const handleEditSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault()
     try {
-      const response = await fetch(`http://localhost:8000/units/${editingUnit?.id}`, {
+      if (!editingUnit) return
+
+      const response = await fetch(`http://localhost:8000/units/${editingUnit.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           name: formData.name,
-          // description: formData.description
+          description: formData.description
         }),
       })
 
       if (!response.ok) throw new Error('Failed to update unit')
-      
+
       alert('단위가 수정되었습니다.')
       fetchUnits()
       setIsEditModalOpen(false)
-      setFormData({ name: '',})
       setEditingUnit(null)
+      setFormData({ name: '', description: '' })
     } catch (error) {
       console.error('Error updating unit:', error)
       alert('단위 수정 중 오류가 발생했습니다.')
@@ -117,7 +119,7 @@ export default function UnitList() {
   const handleExcelDownload = () => {
     const excelData = units.map(unit => ({
       '단위': unit.name,
-      // '설명': unit.description
+      '설명': unit.description
     }))
 
     const wb = XLSX.utils.book_new()
@@ -125,7 +127,7 @@ export default function UnitList() {
 
     const columnWidths = [
       { wch: 20 }, // 단위
-      // { wch: 40 }, // 설명
+      { wch: 40 }, // 설명
     ]
     ws['!cols'] = columnWidths
 
@@ -256,7 +258,7 @@ export default function UnitList() {
                     />
                   </th>
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">단위</th>
-                  {/* <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">설명</th> */}
+                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">설명</th>
                   <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">수정</th>
                 </tr>
               </thead>
@@ -272,7 +274,7 @@ export default function UnitList() {
                       />
                     </td>
                     <td className="px-6 py-4 text-center text-black">{unit.name}</td>
-                    {/* <td className="px-6 py-4 text-center text-black">{unit.description}</td> */}
+                    <td className="px-6 py-4 text-center text-black">{unit.description}</td>
                     <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => handleEditClick(unit)}
@@ -308,7 +310,7 @@ export default function UnitList() {
                 required
               />
             </div>
-            {/* <div>
+            <div>
               <label htmlFor="description" className="block text-black font-medium mb-1">설명</label>
               <input
                 type="text"
@@ -317,7 +319,7 @@ export default function UnitList() {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="px-4 py-2 border rounded-lg text-black w-full text-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               />
-            </div> */}
+            </div>
           </div>
           <div className="mt-6 flex justify-end gap-3">
             <button
@@ -342,7 +344,7 @@ export default function UnitList() {
         isOpen={isEditModalOpen}
         onClose={() => {
           setIsEditModalOpen(false)
-          setFormData({ name: '', })
+          setFormData({ name: '', description: '' })
           setEditingUnit(null)
         }}
         title="단위 수정"
@@ -360,7 +362,7 @@ export default function UnitList() {
                 required
               />
             </div>
-            {/* <div>
+            <div>
               <label htmlFor="edit-description" className="block text-black font-medium mb-1">설명</label>
               <input
                 type="text"
@@ -369,14 +371,14 @@ export default function UnitList() {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="px-4 py-2 border rounded-lg text-black w-full text-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               />
-            </div> */}
+            </div>
           </div>
           <div className="mt-6 flex justify-end gap-3">
             <button
               type="button"
               onClick={() => {
                 setIsEditModalOpen(false)
-                setFormData({ name: '',})
+                setFormData({ name: '', description: '' })
                 setEditingUnit(null)
               }}
               className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"

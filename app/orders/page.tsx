@@ -256,7 +256,6 @@ export default function OrderList() {
         fetchOrders();
         setSelectedOrders([]);
         setSelectAll(false);
-        refreshData(); // 다른 페이지에 데이터 변경을 알림
         alert("선택한 주문이 삭제되었습니다.");
       } else {
         const error = await response.json();
@@ -397,12 +396,40 @@ export default function OrderList() {
       }
 
       alert("수정 완료");
-
-      setIsEditModalOpen(false);
       fetchOrders();
+      setIsEditModalOpen(false);
     } catch (error) {
       console.error("Error updating order:", error);
       alert("수정 실패");
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await fetch("http://localhost:8000/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formData,
+          quantity: parseFloat(formData.quantity.replace(/[^\d]/g, "")),
+          price: parseFloat(formData.price.replace(/[^\d]/g, "")),
+          total: parseFloat(formData.total.replace(/[^\d]/g, "")),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create order");
+      }
+
+      alert("주문이 등록되었습니다.");
+      fetchOrders();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error creating order:", error);
+      alert("주문 등록 중 오류가 발생했습니다.");
     }
   };
 
@@ -612,6 +639,7 @@ export default function OrderList() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onOrderComplete={fetchOrders}
+        onSubmit={handleSubmit}
       />
 
       {/* 수정 모달 */}
@@ -823,20 +851,6 @@ export default function OrderList() {
                 type="text"
                 value={formData.client}
                 onChange={handlePhoneNumberChange}
-                // onChange={(e) => {
-                //   let value = e.target.value.replace(/\D/g, "");
-                //   if (value.length <= 11) {
-                //     if (value.length > 7) {
-                //       value = value.replace(
-                //         /(\d{3})(\d{4})(\d{4})/,
-                //         "$1-$2-$3"
-                //       );
-                //     } else if (value.length > 3) {
-                //       value = value.replace(/(\d{3})(\d{1,4})/, "$1-$2");
-                //     }
-                //     setFormData((prev) => ({ ...prev, client: value }));
-                //   }
-                // }}
                 placeholder="010-0000-0000"
                 className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               />

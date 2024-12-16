@@ -56,8 +56,8 @@ export default function ItemList() {
         },
         body: JSON.stringify({
           name: formData.name,
-          description: formData.description,
-          price: parseFloat(formData.price.replace(/,/g, ''))
+          price: parseFloat(formData.price.replace(/,/g, '')),
+          description: formData.description
         }),
       })
 
@@ -77,7 +77,6 @@ export default function ItemList() {
     setEditingItem(item)
     setFormData({
       name: item.name,
-      // price: item.price.toString(),
       price: item.price?.toLocaleString(),  
       description: item.description
     })
@@ -87,25 +86,27 @@ export default function ItemList() {
   const handleEditSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault()
     try {
-      const response = await fetch(`http://localhost:8000/items/${editingItem?.id}`, {
+      if (!editingItem) return
+
+      const response = await fetch(`http://localhost:8000/items/${editingItem.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           name: formData.name,
-          description: formData.description,
-          price: parseFloat(formData.price.replace(/,/g, ''))
+          price: parseFloat(formData.price.replace(/,/g, '')),
+          description: formData.description
         }),
       })
 
       if (!response.ok) throw new Error('Failed to update item')
-      
+
       alert('품목이 수정되었습니다.')
       fetchItems()
       setIsEditModalOpen(false)
-      setFormData({ name: '', price: '', description: '' })
       setEditingItem(null)
+      setFormData({ name: '', price: '', description: '' })
     } catch (error) {
       console.error('Error updating item:', error)
       alert('품목 수정 중 오류가 발생했습니다.')

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, } from 'react'
+import { useState, useEffect } from 'react'
 import { FileDown, Plus, Search, Minus } from 'lucide-react'
 import Modal from '@/components/Modal'
 import * as XLSX from 'xlsx'
@@ -24,10 +24,11 @@ export default function SupplierList() {
     contact: '',
     address: ''
   })
-  // const [editingSupplier, setEditingSupplier] = useState(null)
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null)
   const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([])
   const [selectAll, setSelectAll] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const { lastUpdate } = useData()
 
   useEffect(() => {
@@ -35,22 +36,31 @@ export default function SupplierList() {
   }, [lastUpdate])
 
   const fetchSuppliers = async () => {
+    setIsLoading(true)
+    setError(null)
     try {
+      console.log('Fetching suppliers...')
       const response = await fetch('http://localhost:8000/suppliers')
+      console.log('Response status:', response.status)
       if (!response.ok) throw new Error('Failed to fetch suppliers')
       const data = await response.json()
+      console.log('Received data:', data)
       // 최신 데이터가 위로 오도록 정렬
       const sortedData = [...data].sort((a, b) => b.id - a.id)
       setSuppliers(sortedData)
       setFilteredSuppliers(sortedData)
     } catch (error) {
       console.error('Error fetching suppliers:', error)
+      setError('구입처 목록을 불러오는데 실패했습니다.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault()
     try {
+      console.log('Submitting supplier data:', formData)
       const response = await fetch('http://localhost:8000/suppliers', {
         method: 'POST',
         headers: {
@@ -62,6 +72,7 @@ export default function SupplierList() {
           address: formData.address //비고로 사용
         }),
       })
+      console.log('Response status:', response.status)
 
       if (!response.ok) throw new Error('Failed to create supplier')
       
@@ -75,15 +86,6 @@ export default function SupplierList() {
     }
   }
 
-  // const handleEditClick = (supplier: SetStateAction<null>) => {
-  //   setEditingSupplier(supplier)
-  //   setFormData({
-  //     name: supplier.name,
-  //     contact: supplier.contact,
-  //     address: supplier.address
-  //   })
-  //   setIsEditModalOpen(true)
-  // }
   const handleEditClick = (supplier: Supplier) => {
     setEditingSupplier(supplier)
     setFormData({
@@ -97,9 +99,8 @@ export default function SupplierList() {
   const handleEditSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault()
     try {
-      if (!editingSupplier) {
-        throw new Error('No supplier selected for editing');
-      }
+      if (!editingSupplier) return
+
       const response = await fetch(`http://localhost:8000/suppliers/${editingSupplier.id}`, {
         method: 'PUT',
         headers: {
@@ -130,9 +131,9 @@ export default function SupplierList() {
       (supplier.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (supplier.contact?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (supplier.address?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-    );
-    setFilteredSuppliers(filtered);
-  }, [suppliers, searchTerm]);
+    )
+    setFilteredSuppliers(filtered)
+  }, [suppliers, searchTerm])
 
   const handleExcelDownload = () => {
     const excelData = suppliers.map(supplier => ({
@@ -188,7 +189,7 @@ export default function SupplierList() {
     if (!confirmed) return
 
     try {
-      const supplierIds = selectedSuppliers.map(index => filteredSuppliers[parseInt(index)].id.toString())
+      const supplierIds = selectedSuppliers.map(index => filteredSuppliers[parseInt(index)].id)
       const response = await fetch('http://localhost:8000/suppliers/bulk-delete', {
         method: 'DELETE',
         headers: {
@@ -225,7 +226,7 @@ export default function SupplierList() {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  // onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && setSearchTerm(e.currentTarget.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && setSearchTerm(e.target.value)}
                   placeholder="검색어를 입력하세요"
                   className="px-6 py-3 border rounded-lg text-black w-80 text-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                 />
@@ -266,56 +267,79 @@ export default function SupplierList() {
             </div>
           </div>
 
-          {/* 구입처 목록 테이블 */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white rounded-lg overflow-hidden">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900">
-                    <input
-                      type="checkbox"
-                      checked={selectAll}
-                      onChange={handleSelectAll}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                  </th>
-                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">구입처명</th>
-                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">연락처</th>
-                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">비고</th>
-                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">수정</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredSuppliers.map((supplier, index) => (
-                  <tr 
-                    key={supplier.id} 
-                    className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() => handleSelectSupplier(index.toString())}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-center" onClick={(e) => e.stopPropagation()}>
+          {/* 로딩 상태 표시 */}
+          {isLoading && (
+            <div className="text-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto"></div>
+              <p className="mt-2 text-gray-600">데이터를 불러오는 중...</p>
+            </div>
+          )}
+
+          {/* 에러 메시지 표시 */}
+          {error && (
+            <div className="text-center py-4">
+              <p className="text-red-500">{error}</p>
+              <button
+                onClick={fetchSuppliers}
+                className="mt-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+              >
+                다시 시도
+              </button>
+            </div>
+          )}
+
+          {/* 데이터가 있을 때만 테이블 표시 */}
+          {!isLoading && !error && (
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white rounded-lg overflow-hidden">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="px-6 py-3 text-center text-sm font-bold text-gray-900">
                       <input
                         type="checkbox"
-                        checked={selectedSuppliers.includes(index.toString())}
-                        onChange={() => handleSelectSupplier(index.toString())}
+                        checked={selectAll}
+                        onChange={handleSelectAll}
                         className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">{supplier.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">{supplier.contact}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">{supplier.address}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">
-                      <button
-                        onClick={() => handleEditClick(supplier)}
-                        className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
-                      >
-                        수정
-                      </button>
-                    </td>
+                    </th>
+                    <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">구입처명</th>
+                    <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">연락처</th>
+                    <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">비고</th>
+                    <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">수정</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredSuppliers.map((supplier, index) => (
+                    <tr 
+                      key={supplier.id} 
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => handleSelectSupplier(index.toString())}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-center" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selectedSuppliers.includes(index.toString())}
+                          onChange={() => handleSelectSupplier(index.toString())}
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-black">{supplier.name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-black">{supplier.contact}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-black">{supplier.address}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-black">
+                        <button
+                          onClick={() => handleEditClick(supplier)}
+                          className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+                        >
+                          수정
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
 
