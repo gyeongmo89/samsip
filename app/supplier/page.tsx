@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { FileDown, Plus, Search, Minus } from 'lucide-react'
 import Modal from '@/components/Modal'
 import * as XLSX from 'xlsx'
+import { useData } from '@/contexts/DataContext'
 
 export default function SupplierList() {
   const [suppliers, setSuppliers] = useState([])
@@ -19,10 +20,11 @@ export default function SupplierList() {
   const [editingSupplier, setEditingSupplier] = useState(null)
   const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([])
   const [selectAll, setSelectAll] = useState(false)
+  const { lastUpdate } = useData()
 
   useEffect(() => {
     fetchSuppliers()
-  }, [])
+  }, [lastUpdate])
 
   const fetchSuppliers = async () => {
     try {
@@ -49,7 +51,7 @@ export default function SupplierList() {
         body: JSON.stringify({
           name: formData.name,
           contact: formData.contact,
-          address: formData.address
+          address: formData.address //비고로 사용
         }),
       })
 

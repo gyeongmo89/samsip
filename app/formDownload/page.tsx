@@ -92,11 +92,11 @@ export default function DownloadForms() {
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12">
       <div className="container mx-auto px-4">
         <div className="bg-white rounded-xl shadow-lg p-6">
-          <h1 className="text-2xl font-bold mb-6">양식 다운로드</h1>
+          <h1 className="text-2xl text-gray-800 font-bold mb-6">양식 다운로드</h1>
           
           <div className="space-y-4">
             <div className="p-4 border rounded-lg">
-              <h2 className="text-lg font-semibold mb-2">발주 등록 양식</h2>
+              <h2 className="text-lg text-gray-800 font-semibold mb-2">발주 등록 양식</h2>
               <p className="text-gray-600 mb-4">
                 발주 정보를 일괄 등록하기 위한 엑셀 양식입니다.
                 다운로드 받은 양식에 데이터를 입력한 후, 발주 관리 페이지에서 업로드하세요.
@@ -111,7 +111,7 @@ export default function DownloadForms() {
             </div>
 
             <div className="p-4 border rounded-lg">
-              <h2 className="text-lg font-semibold mb-2">구입처 등록 양식</h2>
+              <h2 className="text-lg font-semibold text-gray-800 mb-2">구입처 등록 양식</h2>
               <p className="text-gray-600 mb-4">
                 구입처 정보를 일괄 등록하기 위한 엑셀 양식입니다.
               </p>
@@ -125,7 +125,7 @@ export default function DownloadForms() {
             </div>
 
             <div className="p-4 border rounded-lg">
-              <h2 className="text-lg font-semibold mb-2">품목 등록 양식</h2>
+              <h2 className="text-lg font-semibold text-gray-800 mb-2">품목 등록 양식</h2>
               <p className="text-gray-600 mb-4">
                 품목 정보를 일괄 등록하기 위한 엑셀 양식입니다.
               </p>

@@ -6,6 +6,7 @@ import Modal from "@/components/Modal";
 import Select from "react-select";
 import { FileDown, FileUp, Minus, Plus, Search } from "lucide-react";
 import * as XLSX from "xlsx";
+import { useData } from '@/contexts/DataContext'
 
 interface Order {
   id: number;
@@ -23,6 +24,7 @@ interface Order {
 }
 
 export default function OrderList() {
+  const { refreshData } = useData()
   const [orders, setOrders] = useState<Order[]>([]);
   const [suppliers, setSuppliers] = useState([]);
   const [items, setItems] = useState([]);
@@ -245,6 +247,7 @@ export default function OrderList() {
         fetchOrders();
         setSelectedOrders([]);
         setSelectAll(false);
+        refreshData(); // 다른 페이지에 데이터 변경을 알림
         alert("선택한 주문이 삭제되었습니다.");
       } else {
         const error = await response.json();

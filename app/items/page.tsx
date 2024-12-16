@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { FileDown, Plus, Search, Minus } from 'lucide-react'
 import Modal from '@/components/Modal'
 import * as XLSX from 'xlsx'
+import { useData } from '@/contexts/DataContext'
 
 export default function ItemList() {
   const [items, setItems] = useState([])
@@ -19,10 +20,11 @@ export default function ItemList() {
   const [editingItem, setEditingItem] = useState(null)
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [selectAll, setSelectAll] = useState(false)
+  const { lastUpdate } = useData()
 
   useEffect(() => {
     fetchItems()
-  }, [])
+  }, [lastUpdate])
 
   const fetchItems = async () => {
     try {
