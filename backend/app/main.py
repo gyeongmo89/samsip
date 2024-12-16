@@ -21,10 +21,15 @@ Base.metadata.create_all(bind=engine)
 # Create FastAPI app
 app = FastAPI()
 
-# Configure CORS
+# CORS 설정
+origins = [
+    "http://localhost:3000",
+    "http://localhost:8000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 개발 환경에서는 모든 origin 허용
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -258,16 +263,62 @@ def read_orders(db: Session = Depends(get_db)):
             .all()
         )
 
-        # Filter out orders with missing relationships
-        valid_orders = [
-            order for order in orders 
-            if order.supplier is not None 
-            and order.item is not None 
-            and order.unit is not None
-        ]
+        # Convert orders to response format with dummy data for deleted relationships
+        order_responses = []
+        for order in orders:
+            supplier_data = {
+                "id": -1,
+                "name": "[삭제됨]",
+                "contact": None,
+                "address": None
+            } if order.supplier is None else {
+                "id": order.supplier.id,
+                "name": order.supplier.name,
+                "contact": order.supplier.contact,
+                "address": order.supplier.address
+            }
 
-        logger.info(f"Retrieved {len(valid_orders)} valid orders out of {len(orders)} total orders")
-        return valid_orders
+            item_data = {
+                "id": -1,
+                "name": "[삭제됨]",
+                "description": None,
+                "price": None
+            } if order.item is None else {
+                "id": order.item.id,
+                "name": order.item.name,
+                "description": order.item.description,
+                "price": order.item.price
+            }
+
+            unit_data = {
+                "id": -1,
+                "name": "[삭제됨]"
+            } if order.unit is None else {
+                "id": order.unit.id,
+                "name": order.unit.name
+            }
+
+            order_dict = {
+                "id": order.id,
+                "date": order.date,
+                "quantity": order.quantity,
+                "supplier_id": order.supplier_id,
+                "item_id": order.item_id,
+                "unit_id": order.unit_id,
+                "price": order.price,
+                "total": order.total,
+                "payment_cycle": order.payment_cycle,
+                "payment_method": order.payment_method,
+                "client": order.client,
+                "notes": order.notes,
+                "supplier": supplier_data,
+                "item": item_data,
+                "unit": unit_data
+            }
+            order_responses.append(order_dict)
+
+        logger.info(f"Retrieved {len(orders)} orders")
+        return order_responses
     except Exception as e:
         logger.error(f"Error retrieving orders: {e}")
         raise HTTPException(status_code=500, detail=str(e))
