@@ -669,7 +669,7 @@ export default function OrderList() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-4">
       {/* <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12"> */}
       {/* <div className="container bg-red-500 mx-auto px-4"> */}
       <div className="container mx-auto px-4 w-full max-w-none">
