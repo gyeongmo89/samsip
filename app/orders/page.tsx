@@ -682,7 +682,7 @@ export default function OrderList() {
                 </button>
                 <button
                   onClick={handleDeleteOrders}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold shadow-lg hover:shadow-xl flex items-center gap-2"
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold shadow-lg hover:shadow-xl flex items-center gap-2"
                 >
                   <Minus className="w-4 h-4" />
                   발주삭제
@@ -855,7 +855,7 @@ export default function OrderList() {
                     <td className="px-2 py-4 whitespace-nowrap text-center">
                       {order.approval_status === "approved" ? (
                         <div className="flex flex-col items-center text-xs text-black">
-                          <span>이지은 확인완료</span>
+                          <span className="font-bold">이지은 확인완료</span>
                           <span>{order.approved_at}</span>
                         </div>
                       ) : order.approval_status === "rejected" ? (
@@ -867,8 +867,8 @@ export default function OrderList() {
                         </button>
                       ) : (
                         <button
-                          onClick={() => handleApprovalClick(order)}
-                          className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                          onClick={() => handleApprovalClick(order)}                          
+                          className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
                         >
                           확인
                         </button>
