@@ -133,7 +133,9 @@ export default function OrderList() {
   };
 
   // 페이지당 항목 수 변경 핸들러
-  const handleItemsPerPageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleItemsPerPageChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     const newItemsPerPage = parseInt(event.target.value);
     setItemsPerPage(newItemsPerPage);
     setCurrentPage(1); // 페이지당 항목 수가 변경되면 첫 페이지로 이동
@@ -444,7 +446,7 @@ export default function OrderList() {
   const handleEditClick = (order: Order) => {
     setEditingOrder(order);
     setFormData({
-      date: order.date ?? '',
+      date: order.date ?? "",
       supplier_name: order.supplier.name,
       item_name: order.item.name,
       unit_name: order.unit.name,
@@ -454,7 +456,7 @@ export default function OrderList() {
       payment_cycle: order.payment_cycle,
       payment_method: order.payment_method,
       client: order.client,
-      notes: order.notes ?? '',
+      notes: order.notes ?? "",
     });
     setIsEditModalOpen(true);
   };
@@ -576,7 +578,7 @@ export default function OrderList() {
           hour: "2-digit",
           minute: "2-digit",
           hour12: false,
-          timeZone: "Asia/Seoul"
+          timeZone: "Asia/Seoul",
         })
         .replace(/\./g, "-")
         .replace(/, /, " ")
@@ -672,9 +674,29 @@ export default function OrderList() {
       {/* <div className="container bg-red-500 mx-auto px-4"> */}
       <div className="container mx-auto px-4 w-full max-w-none">
         <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-center ">
             <h2 className="text-2xl font-bold text-gray-800">발주현황</h2>
-            <div className="flex gap-4">
+          </div>
+          <div className="flex itmems-center justify-between gap-4">
+            {/* 페이지당 항목 수 선택 */}
+            <div className="flex items-center justify-start gap-2 my-4">
+              <label htmlFor="itemsPerPage" className="text-sm text-gray-600">
+                페이지당 항목 수:
+              </label>
+              <select
+                id="itemsPerPage"
+                value={itemsPerPage}
+                onChange={handleItemsPerPageChange}
+                className="p-2 border border-gray-300 rounded-md text-gray-900 text-sm"
+              >
+                <option value={10}>10개씩 보기</option>
+                <option value={20}>20개씩 보기</option>
+                <option value={50}>50개씩 보기</option>
+                <option value={filteredOrders.length}>전체보기</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2">
               {/* 검색 */}
               <div className="flex gap-2">
                 <input
@@ -687,69 +709,48 @@ export default function OrderList() {
                 />
                 <button
                   onClick={handleSearch}
-                  className="bg-purple-500 text-white px-6 py-3 rounded-lg hover:bg-purple-600 transition-colors"
+                  className="bg-purple-500 text-white px-6 py-3 rounded-lg hover:bg-purple-600 transition-colors h-[52px] flex items-center justify-center"
                 >
                   <Search className="w-6 h-6" />
                 </button>
               </div>
 
               {/* 발주등록 버튼 */}
-              <div className="flex gap-2">
+              {/* <div className="flex gap-2"> */}
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold shadow-lg hover:shadow-xl flex items-center gap-2"
+                  className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold shadow-lg hover:shadow-xl flex items-center gap-2"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-6 h-6" />
                   발주등록
                 </button>
                 <button
                   onClick={handleDeleteOrders}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold shadow-lg hover:shadow-xl flex items-center gap-2"
+                  className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold shadow-lg hover:shadow-xl flex items-center gap-2"
                 >
-                  <Minus className="w-4 h-4" />
+                  <Minus className="w-6 h-6" />
                   발주삭제
                 </button>
-              </div>
-
-              {/* 엑셀 다운로드 버튼 */}
-              <button
-                onClick={handleExcelDownload}
-                className="bg-gradient-to-r from-blue-400 to-blue-500 text-white px-6 py-3 rounded-lg hover:from-blue-500 hover:to-blue-600 transition-all flex items-center gap-2 shadow-lg"
-              >
-                <FileDown className="w-6 h-6" />
-                엑셀 다운로드
-              </button>
-              <label className="cursor-pointer">
-                <input
-                  type="file"
-                  accept=".xlsx"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-                <div className="bg-gradient-to-r from-green-400 to-green-500 text-white px-6 py-3 rounded-lg hover:from-green-500 hover:to-green-600 transition-all flex items-center gap-2 shadow-lg">
-                  <FileUp className="w-6 h-6" />
-                  엑셀 업로드
-                </div>
-              </label>
+                <button
+                  onClick={handleExcelDownload}
+                  className="px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-lg hover:from-blue-500 hover:to-blue-600 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl"
+                >
+                  <FileDown className="w-6 h-6" />
+                  엑셀 다운로드
+                </button>
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    accept=".xlsx"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  <div className="px-6 py-3 bg-gradient-to-r from-green-400 to-green-500 text-white rounded-lg hover:from-green-500 hover:to-green-600 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl">
+                    <FileUp className="w-6 h-6" />
+                    엑셀 업로드
+                  </div>
+                </label>
             </div>
-          </div>
-
-          {/* 페이지당 항목 수 선택 */}
-          <div className="flex items-center gap-2 mb-4">
-            <label htmlFor="itemsPerPage" className="text-sm text-gray-600">
-              페이지당 항목 수:
-            </label>
-            <select
-              id="itemsPerPage"
-              value={itemsPerPage}
-              onChange={handleItemsPerPageChange}
-              className="p-2 border border-gray-300 rounded-md text-gray-900 text-sm"
-            >
-              <option value={10}>10개씩 보기</option>
-              <option value={20}>20개씩 보기</option>
-              <option value={50}>50개씩 보기</option>
-              <option value={filteredOrders.length}>전체보기</option>
-            </select>
           </div>
 
           {/* 발주 목록 테이블 */}
@@ -928,7 +929,7 @@ export default function OrderList() {
                         </button>
                       ) : (
                         <button
-                          onClick={() => handleApprovalClick(order)}                          
+                          onClick={() => handleApprovalClick(order)}
                           className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
                         >
                           확인
@@ -957,7 +958,7 @@ export default function OrderList() {
             >
               {"<"}
             </button>
-            
+
             {/* 페이지 번호 */}
             <div className="flex gap-1">
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -971,7 +972,7 @@ export default function OrderList() {
                 } else {
                   pageNum = currentPage - 2 + i;
                 }
-                
+
                 return (
                   <button
                     key={i}
@@ -1002,7 +1003,7 @@ export default function OrderList() {
             >
               {">>"}
             </button>
-            
+
             {/* 전체 페이지 수 표시 */}
             <span className="text-sm text-gray-600 ml-2">
               {currentPage} / {totalPages} 페이지
