@@ -530,6 +530,20 @@ export default function OrderList() {
         throw new Error(error.detail || "Failed to approve order");
       }
 
+      // // 현재 시간을 한국 시간대로 포맷팅
+      // const now = new Date();
+      // const formattedDate = now
+      //   .toLocaleString("ko-KR", {
+      //     year: "2-digit",
+      //     month: "2-digit",
+      //     day: "2-digit",
+      //     hour: "2-digit",
+      //     minute: "2-digit",
+      //     hour12: false,
+      //   })
+      //   .replace(/\./g, "-")
+      //   .replace(",", "");
+
       // 현재 시간을 한국 시간대로 포맷팅
       const now = new Date();
       const formattedDate = now
@@ -540,9 +554,11 @@ export default function OrderList() {
           hour: "2-digit",
           minute: "2-digit",
           hour12: false,
+          timeZone: "Asia/Seoul"
         })
         .replace(/\./g, "-")
-        .replace(",", "");
+        .replace(/, /, " ")
+        .replace(/^(\d{2}-\d{2}-\d{2})\s/, "$1  ");
 
       // 로컬 상태 업데이트
       setOrders((prevOrders) =>
