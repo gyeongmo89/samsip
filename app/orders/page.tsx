@@ -8,6 +8,10 @@ import Modal from "@/components/Modal";
 import Select from "react-select";
 import { FileDown, FileUp, Minus, Plus, Search } from "lucide-react";
 import * as XLSX from "xlsx";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { ko } from "date-fns/locale";
+
 // import { useData } from "@/contexts/DataContext";
 
 interface Order {
@@ -117,9 +121,31 @@ export default function OrderList() {
 
   const [isLoading, setIsLoading] = useState(false);
 
+  // 날짜 범위 상태 추가
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+
   // 페이지네이션 상태 추가
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // 날짜 범위 변경 핸들러
+  const handleDateChange = (dates: [Date | null, Date | null]) => {
+    const [start, end] = dates;
+    setStartDate(start);
+    setEndDate(end);
+    
+    if (start && end) {
+      const filteredByDate = orders.filter((order) => {
+        if (!order.date) return false;
+        const orderDate = new Date(order.date);
+        return orderDate >= start && orderDate <= end;
+      });
+      setFilteredOrders(filteredByDate);
+    } else {
+      setFilteredOrders(orders);
+    }
+  };
 
   // 페이지네이션 계산
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -213,21 +239,47 @@ export default function OrderList() {
     }
   };
 
+  // 검색 핸들러 수정
   const handleSearch = () => {
-    if (!searchTerm) {
-      setFilteredOrders(orders);
-      return;
+    let filtered = orders;
+
+    // 날짜 필터링
+    if (startDate && endDate) {
+      const startOfDay = new Date(startDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(endDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      filtered = filtered.filter((order) => {
+        if (!order.date) return false;
+        const orderDate = new Date(order.date);
+        return orderDate >= startOfDay && orderDate <= endOfDay;
+      });
     }
 
-    const filtered = orders.filter(
-      (order) =>
-        order.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.unit.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // 검색어 필터링
+    if (searchTerm) {
+      filtered = filtered.filter((order) => {
+        const searchFields = [
+          order.supplier.name,
+          order.item.name,
+          order.unit.name,
+          order.client,
+          order.notes,
+        ].map((field) => (field || "").toLowerCase());
+
+        return searchFields.some((field) =>
+          field.includes(searchTerm.toLowerCase())
+        );
+      });
+    }
+
     setFilteredOrders(filtered);
   };
+
+  useEffect(() => {
+    handleSearch();
+  }, [orders, searchTerm, startDate, endDate]);
 
   const handleSort = (key: string) => {
     let direction = "asc";
@@ -668,6 +720,31 @@ export default function OrderList() {
     }
   };
 
+  const handleAddOrder = async (orderData: FormData) => {
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to add order");
+      }
+
+      const newOrder = await response.json();
+      // 새 발주를 배열의 맨 앞에 추가
+      setOrders([newOrder, ...orders]);
+      setFilteredOrders([newOrder, ...filteredOrders]);
+      alert("발주가 등록되었습니다.");
+    } catch (error) {
+      console.error("Error adding order:", error);
+      alert("발주 등록에 실패했습니다.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-4">
       {/* <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12"> */}
@@ -697,6 +774,52 @@ export default function OrderList() {
             </div>
 
             <div className="flex items-center gap-2">
+
+              {/* 날짜 범위 선택 */}
+              {/* <div className="relative">
+                <DatePicker
+                  selectsRange={true}
+                  startDate={startDate}
+                  endDate={endDate}
+                  onChange={handleDateChange}
+                  dateFormat="yyyy-MM-dd"
+                  locale={ko}
+                  isClearable={true}
+                  placeholderText="날짜 범위 선택"
+                  className="p-2 border border-gray-300 rounded-md text-gray-900 text-sm w-48"
+                />
+              </div> */}
+              <div className="relative">
+                <DatePicker
+                  selectsRange={true}
+                  startDate={startDate || undefined}
+                  endDate={endDate || undefined}
+                  onChange={(dates) => {
+                    const [start, end] = dates;
+                    setStartDate(start);
+                    setEndDate(end);
+                    if (start && end) {
+                      const endOfDay = new Date(end);
+                      endOfDay.setHours(23, 59, 59, 999);
+                      const filteredByDate = orders.filter((order) => {
+                        if (!order.date) return false;
+                        const orderDate = new Date(order.date);
+                        orderDate.setHours(0, 0, 0, 0);
+                        return orderDate >= start && orderDate <= endOfDay;
+                      });
+                      setFilteredOrders(filteredByDate);
+                    } else {
+                      setFilteredOrders(orders);
+                    }
+                  }}
+                  dateFormat="yyyy-MM-dd"
+                  locale={ko}
+                  isClearable={true}
+                  placeholderText="날짜 범위 선택"
+                  className="p-2 border border-gray-300 rounded-md text-gray-900 text-sm w-48"
+                />
+              </div>
+
               {/* 검색 */}
               <div className="flex gap-2">
                 <input
@@ -1024,7 +1147,7 @@ export default function OrderList() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onOrderComplete={fetchOrders}
-        onSubmit={handleSubmit}
+        onSubmit={handleAddOrder}
       />
 
       {/* 수정 모달 */}
