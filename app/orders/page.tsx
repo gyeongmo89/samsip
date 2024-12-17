@@ -117,6 +117,28 @@ export default function OrderList() {
 
   const [isLoading, setIsLoading] = useState(false);
 
+  // 페이지네이션 상태 추가
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // 페이지네이션 계산
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredOrders.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+
+  // 페이지 변경 핸들러
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+  };
+
+  // 페이지당 항목 수 변경 핸들러
+  const handleItemsPerPageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newItemsPerPage = parseInt(event.target.value);
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // 페이지당 항목 수가 변경되면 첫 페이지로 이동
+  };
+
   const formatNumber = (value: string | undefined | null) => {
     if (!value) return "";
     const number = value.toString().replace(/[^\d]/g, "");
@@ -712,6 +734,24 @@ export default function OrderList() {
             </div>
           </div>
 
+          {/* 페이지당 항목 수 선택 */}
+          <div className="flex items-center gap-2 mb-4">
+            <label htmlFor="itemsPerPage" className="text-sm text-gray-600">
+              페이지당 항목 수:
+            </label>
+            <select
+              id="itemsPerPage"
+              value={itemsPerPage}
+              onChange={handleItemsPerPageChange}
+              className="p-2 border border-gray-300 rounded-md text-gray-900 text-sm"
+            >
+              <option value={10}>10개씩 보기</option>
+              <option value={20}>20개씩 보기</option>
+              <option value={50}>50개씩 보기</option>
+              <option value={filteredOrders.length}>전체보기</option>
+            </select>
+          </div>
+
           {/* 발주 목록 테이블 */}
           <div className="overflow-x-auto w-full">
             <table className="w-full table-auto">
@@ -775,7 +815,7 @@ export default function OrderList() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredOrders.map((order, index) => (
+                {currentItems.map((order, index) => (
                   <tr
                     key={index}
                     className="hover:bg-gray-50 cursor-pointer"
@@ -878,6 +918,74 @@ export default function OrderList() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* 페이지네이션 */}
+          <div className="flex justify-center items-center gap-2 mt-4">
+            <button
+              onClick={() => handlePageChange(1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 rounded-md bg-gray-100 text-gray-600 disabled:opacity-50"
+            >
+              {"<<"}
+            </button>
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 rounded-md bg-gray-100 text-gray-600 disabled:opacity-50"
+            >
+              {"<"}
+            </button>
+            
+            {/* 페이지 번호 */}
+            <div className="flex gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                
+                return (
+                  <button
+                    key={i}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`px-3 py-1 rounded-md ${
+                      currentPage === pageNum
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 rounded-md bg-gray-100 text-gray-600 disabled:opacity-50"
+            >
+              {">"}
+            </button>
+            <button
+              onClick={() => handlePageChange(totalPages)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 rounded-md bg-gray-100 text-gray-600 disabled:opacity-50"
+            >
+              {">>"}
+            </button>
+            
+            {/* 전체 페이지 수 표시 */}
+            <span className="text-sm text-gray-600 ml-2">
+              {currentPage} / {totalPages} 페이지
+            </span>
           </div>
         </div>
       </div>
