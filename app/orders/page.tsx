@@ -11,20 +11,39 @@ import * as XLSX from "xlsx";
 
 interface Order {
   id: number;
-  date: string;
-  supplier: { id: number; name: string };
-  item: { id: number; name: string };
-  unit: { id: number; name: string };
+  supplier_id: number;
+  item_id: number;
+  unit_id: number;
   quantity: number;
   price: number;
   total: number;
   payment_cycle: string;
   payment_method: string;
   client: string;
-  notes: string;
-  approval_status: string;
-  approved_at: string;
-  rejection_reason: string;
+  notes?: string;
+  date?: string;
+  supplier: Supplier;
+  item: Item;
+  unit: Unit;
+  approval_status?: string;
+  approved_by?: string;
+  approved_at?: string;
+  rejection_reason?: string;
+}
+
+interface Supplier {
+  id: number;
+  name: string;
+}
+
+interface Item {
+  id: number;
+  name: string;
+}
+
+interface Unit {
+  id: number;
+  name: string;
 }
 
 interface FormData {
@@ -89,6 +108,11 @@ export default function OrderList() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [selectedOrderForApproval, setSelectedOrderForApproval] = useState<Order | null>(null);
 
+  const [isRejectionViewModalOpen, setIsRejectionViewModalOpen] = useState(false);
+  const [selectedRejectedOrder, setSelectedRejectedOrder] = useState<Order | null>(null);
+
+  const [isLoading, setIsLoading] = useState(false);
+
   const formatNumber = (value: string | undefined | null) => {
     if (!value) return "";
     const number = value.toString().replace(/[^\d]/g, "");
@@ -146,39 +170,18 @@ export default function OrderList() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch("http://localhost:8000/orders", {
-        headers: {
-          Accept: "application/json",
-        },
-      });
-
+      setIsLoading(true);
+      const response = await fetch("http://localhost:8000/orders/");
       if (!response.ok) {
-        if (response.status === 404) {
-          setOrders([]);
-          setFilteredOrders([]);
-          return;
-        }
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.detail || "Failed to fetch orders");
+        throw new Error("Failed to fetch orders");
       }
-
       const data = await response.json();
-      console.log("Fetched orders:", data); // 디버깅 로그 추가
-
-      // Sort orders by date in descending order
-      const sortedData = [...data].sort((a, b) => {
-        if (!a.date || !b.date) return 0;
-        const dateA = new Date(a.date).getTime();
-        const dateB = new Date(b.date).getTime();
-        return dateB - dateA;
-      });
-
-      setOrders(sortedData);
-      setFilteredOrders(sortedData);
-      console.log("Sorted and set orders:", sortedData); // 디버깅 로그 추가
+      setOrders(data);
     } catch (error) {
       console.error("Error fetching orders:", error);
-      alert("발주 목록을 불러오는데 실패했습니다. 잠시 후 다시 시도해주세요.");
+      alert("주문 목록을 불러오는데 실패했습니다.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -571,6 +574,19 @@ export default function OrderList() {
     setIsPasswordModalOpen(true);
   };
 
+  const handleViewRejection = (order: Order) => {
+    setSelectedRejectedOrder(order);
+    setIsRejectionViewModalOpen(true);
+  };
+
+  const handleReapprovalStart = () => {
+    if (selectedRejectedOrder) {
+      setSelectedOrderForApproval(selectedRejectedOrder);
+      setIsRejectionViewModalOpen(false);
+      setIsPasswordModalOpen(true);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12">
       {/* <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12"> */}
@@ -787,7 +803,7 @@ export default function OrderList() {
                         </div>
                       ) : order.approval_status === 'rejected' ? (
                         <button
-                          onClick={() => alert(order.rejection_reason)}
+                          onClick={() => handleViewRejection(order)}
                           className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
                         >
                           반려
@@ -1171,6 +1187,33 @@ export default function OrderList() {
               className="px-4 py-2 bg-red-500 text-white rounded"
             >
               저장
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 반려 사유 확인 모달 */}
+      <Modal
+        isOpen={isRejectionViewModalOpen}
+        title="반려 사유"
+      >
+        <div className="space-y-4">
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-600 mb-2">반려 사유:</p>
+            <p className="text-black">{selectedRejectedOrder?.rejection_reason}</p>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <button
+              onClick={() => setIsRejectionViewModalOpen(false)}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded"
+            >
+              취소
+            </button>
+            <button
+              onClick={handleReapprovalStart}
+              className="px-4 py-2 bg-blue-500 text-white rounded"
+            >
+              재승인
             </button>
           </div>
         </div>

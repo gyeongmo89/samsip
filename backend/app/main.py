@@ -130,6 +130,10 @@ class OrderResponse(BaseModel):
     supplier: SupplierResponse
     item: ItemResponse
     unit: UnitResponse
+    approval_status: Optional[str] = None
+    approved_by: Optional[str] = None
+    approved_at: Optional[str] = None
+    rejection_reason: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -345,55 +349,9 @@ def read_orders(db: Session = Depends(get_db)):
             )
             .all()
         )
-        order_responses = []
-
-        for order in orders:
-            # 공급처 정보
-            supplier_data = {
-                "id": order.supplier.id if order.supplier else -1,
-                "name": order.supplier.name if order.supplier else "[삭제됨]",
-                "contact": order.supplier.contact if order.supplier else None,
-                "address": order.supplier.address if order.supplier else None,
-            }
-
-            # 품목 정보
-            item_data = {
-                "id": order.item.id if order.item else -1,
-                "name": order.item.name if order.item else "[삭제됨]",
-                "description": order.item.description if order.item else None,
-                "price": order.item.price if order.item else None,
-            }
-
-            # 단위 정보
-            unit_data = {
-                "id": order.unit.id if order.unit else -1,
-                "name": order.unit.name if order.unit else "[삭제됨]",
-                "description": order.unit.description if order.unit else None,
-            }
-
-            # 주문 정보를 딕셔너리로 변환
-            order_dict = {
-                "id": order.id,
-                "date": order.date,
-                "supplier_id": order.supplier_id,
-                "item_id": order.item_id,
-                "unit_id": order.unit_id,
-                "quantity": float(order.quantity),
-                "price": float(order.price),  # 등록 당시의 가격 사용
-                "total": float(order.total),  # 등록 당시의 총액 사용
-                "payment_cycle": order.payment_cycle,
-                "payment_method": order.payment_method,
-                "client": order.client,
-                "notes": order.notes,
-                "supplier": supplier_data,
-                "item": item_data,
-                "unit": unit_data,
-            }
-            order_responses.append(order_dict)
-
-        return order_responses
+        return orders
     except Exception as e:
-        logger.error(f"Error retrieving orders: {e}")
+        logger.error(f"Error reading orders: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
