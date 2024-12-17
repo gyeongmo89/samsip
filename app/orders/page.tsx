@@ -230,7 +230,12 @@ export default function OrderList() {
         throw new Error("Failed to fetch orders");
       }
       const data = await response.json();
-      setOrders(data);
+      // 날짜를 기준으로 내림차순 정렬 (최신순)
+      const sortedData = data.sort((a: Order, b: Order) => {
+        return new Date(b.date || '').getTime() - new Date(a.date || '').getTime();
+      });
+      setOrders(sortedData);
+      setFilteredOrders(sortedData);
     } catch (error) {
       console.error("Error fetching orders:", error);
       alert("주문 목록을 불러오는데 실패했습니다.");
@@ -736,8 +741,8 @@ export default function OrderList() {
 
       const newOrder = await response.json();
       // 새 발주를 배열의 맨 앞에 추가
-      setOrders([newOrder, ...orders]);
-      setFilteredOrders([newOrder, ...filteredOrders]);
+      setOrders((prevOrders) => [newOrder, ...prevOrders]);
+      setFilteredOrders((prevFiltered) => [newOrder, ...prevFiltered]);
       alert("발주가 등록되었습니다.");
     } catch (error) {
       console.error("Error adding order:", error);
