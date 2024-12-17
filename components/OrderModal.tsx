@@ -355,10 +355,10 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit 
             )}
           </div>
 
-          {/* 대금지급방법 */}
+          {/* 결제유형 */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              대금지급방법 <span className="text-red-500">*</span>
+              결제유형 <span className="text-red-500">*</span>
             </label>
             <select
               value={formData.payment_method}

@@ -63,6 +63,12 @@ class Order(Base):
     notes = Column(String, nullable=True)
     date = Column(String, nullable=True)
     is_deleted = Column(Boolean, default=False)  # is_deleted 필드 추가
+    
+    # 승인 관련 필드 추가
+    approval_status = Column(String, nullable=True)  # 'approved' or 'rejected' or None
+    approved_by = Column(String, nullable=True)
+    approved_at = Column(String, nullable=True)
+    rejection_reason = Column(String, nullable=True)
 
     supplier = relationship("Supplier", back_populates="orders")
     item = relationship("Item", back_populates="orders")

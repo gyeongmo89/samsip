@@ -149,6 +149,14 @@ class OrderCreate(BaseModel):
     date: Optional[str] = None
 
 
+class ApprovalRequest(BaseModel):
+    password: str
+
+
+class RejectionRequest(BaseModel):
+    reason: str
+
+
 def get_float_value(value):
     if not value:
         return 0.0
@@ -615,3 +623,38 @@ def update_unit(unit_id: int, unit: UnitCreate, db: Session = Depends(get_db)):
         db.rollback()
         logger.error(f"Error updating unit: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/orders/{order_id}/approve")
+def approve_order(
+    order_id: int, approval: ApprovalRequest, db: Session = Depends(get_db)
+):
+    if approval.password != "admin":
+        raise HTTPException(status_code=401, detail="Invalid password")
+
+    order = db.query(models.Order).filter(models.Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    order.approval_status = "approved"
+    order.approved_by = "이지은"
+    order.approved_at = datetime.now().strftime("%y-%m-%d %H:%M")
+
+    db.commit()
+    return {"message": "Order approved successfully"}
+
+
+@app.post("/orders/{order_id}/reject")
+def reject_order(
+    order_id: int, rejection: RejectionRequest, db: Session = Depends(get_db)
+):
+    order = db.query(models.Order).filter(models.Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    order.approval_status = "rejected"
+    order.rejection_reason = rejection.reason
+    order.approved_at = datetime.now().strftime("%y-%m-%d %H:%M")
+
+    db.commit()
+    return {"message": "Order rejected successfully"}

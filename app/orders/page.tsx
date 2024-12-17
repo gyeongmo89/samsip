@@ -22,6 +22,9 @@ interface Order {
   payment_method: string;
   client: string;
   notes: string;
+  approval_status: string;
+  approved_at: string;
+  rejection_reason: string;
 }
 
 interface FormData {
@@ -78,6 +81,12 @@ export default function OrderList() {
   });
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
+
+  const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
+  const [selectedOrderForApproval, setSelectedOrderForApproval] = useState<Order | null>(null);
+  const [approvalPassword, setApprovalPassword] = useState("");
+  const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
 
   const formatNumber = (value: string | undefined | null) => {
     if (!value) return "";
@@ -318,7 +327,7 @@ export default function OrderList() {
       수량: order.quantity,
       총액: order.total,
       결제주기: order.payment_cycle,
-      대금지급방법: order.payment_method,
+      결제유형: order.payment_method,
       구입연락처: order.client,
       비고: order.notes,
     }));
@@ -335,7 +344,7 @@ export default function OrderList() {
       { wch: 8 }, // 수량
       { wch: 12 }, // 총액
       { wch: 12 }, // 결제주기
-      { wch: 15 }, // 대금지급방법
+      { wch: 15 }, // 결제유형
       { wch: 15 }, // 구입연락처
       { wch: 30 }, // 비고
     ];
@@ -459,6 +468,74 @@ export default function OrderList() {
     }
   };
 
+  const handleApprovalClick = (order: Order) => {
+    setSelectedOrderForApproval(order);
+    setIsApprovalModalOpen(true);
+  };
+
+  const handleApprovalSubmit = async () => {
+    if (!selectedOrderForApproval) return;
+
+    try {
+      const response = await fetch(`http://localhost:8000/orders/${selectedOrderForApproval.id}/approve`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: approvalPassword }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        if (response.status === 401) {
+          alert('비밀번호가 올바르지 않습니다.');
+          return;
+        }
+        throw new Error(error.detail || 'Failed to approve order');
+      }
+
+      alert('승인이 완료되었습니다.');
+      setIsApprovalModalOpen(false);
+      setApprovalPassword("");
+      fetchOrders();
+    } catch (error) {
+      console.error('Error approving order:', error);
+      alert('승인 처리 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleRejectionClick = (order: Order) => {
+    setSelectedOrderForApproval(order);
+    setIsRejectionModalOpen(true);
+  };
+
+  const handleRejectionSubmit = async () => {
+    if (!selectedOrderForApproval || !rejectionReason) return;
+
+    try {
+      const response = await fetch(`http://localhost:8000/orders/${selectedOrderForApproval.id}/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ reason: rejectionReason }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to reject order');
+      }
+
+      alert('반려가 완료되었습니다.');
+      setIsRejectionModalOpen(false);
+      setRejectionReason("");
+      fetchOrders();
+    } catch (error) {
+      console.error('Error rejecting order:', error);
+      alert('반려 처리 중 오류가 발생했습니다.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12">
       {/* <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12"> */}
@@ -573,7 +650,7 @@ export default function OrderList() {
                     결제주기
                   </th>
                   <th className="w-[120px] px-2 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">
-                    대금지급방법
+                    결제유형
                   </th>
                   <th className="w-[120px] px-2 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">
                     구입연락처
@@ -583,6 +660,9 @@ export default function OrderList() {
                   </th>
                   <th className="w-[80px] px-2 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">
                     수정
+                  </th>
+                  <th className="w-[80px] px-2 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">
+                    확인
                   </th>
                 </tr>
               </thead>
@@ -653,6 +733,28 @@ export default function OrderList() {
                       >
                         수정
                       </button>
+                    </td>
+                    <td className="px-2 py-4 whitespace-nowrap text-center">
+                      {order.approval_status === 'approved' ? (
+                        <div className="flex flex-col items-center text-xs">
+                          <span>이지은 확인</span>
+                          <span>{order.approved_at}</span>
+                        </div>
+                      ) : order.approval_status === 'rejected' ? (
+                        <button
+                          onClick={() => alert(order.rejection_reason)}
+                          className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                        >
+                          반려
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleApprovalClick(order)}
+                          className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                        >
+                          확인
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -850,10 +952,10 @@ export default function OrderList() {
               />
             </div>
 
-            {/* 대금지급방법 */}
+            {/* 결제유형 */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                대금지급방법 <span className="text-red-500">*</span>
+                결제유형 <span className="text-red-500">*</span>
               </label>
               <Select
                 value={{
@@ -872,7 +974,7 @@ export default function OrderList() {
                 }))}
                 className="mt-1 text-black"
                 classNamePrefix="select"
-                placeholder="대금지급방법 선택"
+                placeholder="결제유형 선택"
                 required
               />
             </div>
@@ -923,6 +1025,82 @@ export default function OrderList() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* 승인 모달 */}
+      <Modal
+        isOpen={isApprovalModalOpen}
+        title="관리자 인증"
+      >
+        <div className="space-y-4">
+          <p>권한이 필요한 기능입니다. 관리자 비밀번호를 입력하세요.</p>
+          <input
+            type="password"
+            value={approvalPassword}
+            onChange={(e) => setApprovalPassword(e.target.value)}
+            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+            placeholder="비밀번호 입력"
+          />
+          <div className="flex justify-end space-x-2">
+            <button
+              onClick={() => {
+                setIsApprovalModalOpen(false);
+                setApprovalPassword("");
+              }}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded"
+            >
+              취소
+            </button>
+            <button
+              onClick={handleApprovalSubmit}
+              className="px-4 py-2 bg-blue-500 text-white rounded"
+            >
+              확인
+            </button>
+            <button
+              onClick={() => {
+                setIsApprovalModalOpen(false);
+                handleRejectionClick(selectedOrderForApproval!);
+              }}
+              className="px-4 py-2 bg-red-500 text-white rounded"
+            >
+              반려
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 반려 모달 */}
+      <Modal
+        isOpen={isRejectionModalOpen}
+        title="반려 사유 입력"
+      >
+        <div className="space-y-4">
+          <textarea
+            value={rejectionReason}
+            onChange={(e) => setRejectionReason(e.target.value)}
+            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+            rows={4}
+            placeholder="반려 사유를 입력하세요"
+          />
+          <div className="flex justify-end space-x-2">
+            <button
+              onClick={() => {
+                setIsRejectionModalOpen(false);
+                setRejectionReason("");
+              }}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded"
+            >
+              취소
+            </button>
+            <button
+              onClick={handleRejectionSubmit}
+              className="px-4 py-2 bg-red-500 text-white rounded"
+            >
+              저장
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );
