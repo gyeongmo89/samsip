@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -106,10 +107,13 @@ export default function OrderList() {
   const [approvalPassword, setApprovalPassword] = useState("");
   const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
-  const [selectedOrderForApproval, setSelectedOrderForApproval] = useState<Order | null>(null);
+  const [selectedOrderForApproval, setSelectedOrderForApproval] =
+    useState<Order | null>(null);
 
-  const [isRejectionViewModalOpen, setIsRejectionViewModalOpen] = useState(false);
-  const [selectedRejectedOrder, setSelectedRejectedOrder] = useState<Order | null>(null);
+  const [isRejectionViewModalOpen, setIsRejectionViewModalOpen] =
+    useState(false);
+  const [selectedRejectedOrder, setSelectedRejectedOrder] =
+    useState<Order | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -209,9 +213,16 @@ export default function OrderList() {
     setSortConfig({ key, direction });
 
     const sortedOrders = [...filteredOrders].sort((a, b) => {
+      // if (key === "date") {
+      //   const dateA = new Date(a[key]);
+      //   const dateB = new Date(b[key]);
+      //   return direction === "asc"
+      //     ? dateA.getTime() - dateB.getTime()
+      //     : dateB.getTime() - dateA.getTime();
+      // }
       if (key === "date") {
-        const dateA = new Date(a[key]);
-        const dateB = new Date(b[key]);
+        const dateA = new Date(a[key] || "");
+        const dateB = new Date(b[key] || "");
         return direction === "asc"
           ? dateA.getTime() - dateB.getTime()
           : dateB.getTime() - dateA.getTime();
@@ -391,10 +402,27 @@ export default function OrderList() {
     }
   };
 
+  // const handleEditClick = (order: Order) => {
+  //   setEditingOrder(order);
+  //   setFormData({
+  //     date: order.date,
+  //     supplier_name: order.supplier.name,
+  //     item_name: order.item.name,
+  //     unit_name: order.unit.name,
+  //     quantity: order.quantity.toString(),
+  //     price: order.price.toString(),
+  //     total: order.total.toString(),
+  //     payment_cycle: order.payment_cycle,
+  //     payment_method: order.payment_method,
+  //     client: order.client,
+  //     notes: order.notes,
+  //   });
+  //   setIsEditModalOpen(true);
+  // };
   const handleEditClick = (order: Order) => {
     setEditingOrder(order);
     setFormData({
-      date: order.date,
+      date: order.date ?? '',
       supplier_name: order.supplier.name,
       item_name: order.item.name,
       unit_name: order.unit.name,
@@ -404,7 +432,7 @@ export default function OrderList() {
       payment_cycle: order.payment_cycle,
       payment_method: order.payment_method,
       client: order.client,
-      notes: order.notes,
+      notes: order.notes ?? '',
     });
     setIsEditModalOpen(true);
   };
@@ -486,48 +514,56 @@ export default function OrderList() {
     if (!selectedOrderForApproval) return;
 
     try {
-      const response = await fetch(`http://localhost:8000/orders/${selectedOrderForApproval.id}/approve`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ password: "admin" }),
-      });
+      const response = await fetch(
+        `http://localhost:8000/orders/${selectedOrderForApproval.id}/approve`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ password: "admin" }),
+        }
+      );
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || 'Failed to approve order');
+        throw new Error(error.detail || "Failed to approve order");
       }
 
       // 현재 시간을 한국 시간대로 포맷팅
       const now = new Date();
-      const formattedDate = now.toLocaleString('ko-KR', {
-        year: '2-digit',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      }).replace(/\./g, '-').replace(',', '');
+      const formattedDate = now
+        .toLocaleString("ko-KR", {
+          year: "2-digit",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        })
+        .replace(/\./g, "-")
+        .replace(",", "");
 
       // 로컬 상태 업데이트
-      setOrders(prevOrders => prevOrders.map(order => {
-        if (order.id === selectedOrderForApproval.id) {
-          return {
-            ...order,
-            approval_status: 'approved',
-            approved_by: '이지은',
-            approved_at: formattedDate
-          };
-        }
-        return order;
-      }));
+      setOrders((prevOrders) =>
+        prevOrders.map((order) => {
+          if (order.id === selectedOrderForApproval.id) {
+            return {
+              ...order,
+              approval_status: "approved",
+              approved_by: "이지은",
+              approved_at: formattedDate,
+            };
+          }
+          return order;
+        })
+      );
 
       setIsConfirmationModalOpen(false);
       setSelectedOrderForApproval(null);
     } catch (error) {
-      console.error('Error approving order:', error);
-      alert('승인 처리 중 오류가 발생했습니다.');
+      console.error("Error approving order:", error);
+      alert("승인 처리 중 오류가 발생했습니다.");
     }
   };
 
@@ -535,37 +571,42 @@ export default function OrderList() {
     if (!selectedOrderForApproval || !rejectionReason) return;
 
     try {
-      const response = await fetch(`http://localhost:8000/orders/${selectedOrderForApproval.id}/reject`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ reason: rejectionReason }),
-      });
+      const response = await fetch(
+        `http://localhost:8000/orders/${selectedOrderForApproval.id}/reject`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ reason: rejectionReason }),
+        }
+      );
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || 'Failed to reject order');
+        throw new Error(error.detail || "Failed to reject order");
       }
 
       // 로컬 상태 업데이트
-      setOrders(prevOrders => prevOrders.map(order => {
-        if (order.id === selectedOrderForApproval.id) {
-          return {
-            ...order,
-            approval_status: 'rejected',
-            rejection_reason: rejectionReason
-          };
-        }
-        return order;
-      }));
+      setOrders((prevOrders) =>
+        prevOrders.map((order) => {
+          if (order.id === selectedOrderForApproval.id) {
+            return {
+              ...order,
+              approval_status: "rejected",
+              rejection_reason: rejectionReason,
+            };
+          }
+          return order;
+        })
+      );
 
       setIsRejectionModalOpen(false);
       setRejectionReason("");
       setSelectedOrderForApproval(null);
     } catch (error) {
-      console.error('Error rejecting order:', error);
-      alert('반려 처리 중 오류가 발생했습니다.');
+      console.error("Error rejecting order:", error);
+      alert("반려 처리 중 오류가 발생했습니다.");
     }
   };
 
@@ -755,8 +796,8 @@ export default function OrderList() {
                     </td> */}
                     <td className="px-2 py-4 whitespace-nowrap text-center text-black relative group">
                       <span className="tooltip-trigger">
-                        {order.item.name.length > 6 
-                          ? order.item.name.slice(0, 6) + '..'
+                        {order.item.name.length > 6
+                          ? order.item.name.slice(0, 6) + ".."
                           : order.item.name}
                       </span>
                       <span className="absolute z-10 invisible group-hover:visible bg-gray-800 text-white text-sm rounded px-2 py-1 -mt-1 left-1/2 transform -translate-x-1/2">
@@ -796,12 +837,12 @@ export default function OrderList() {
                       </button>
                     </td>
                     <td className="px-2 py-4 whitespace-nowrap text-center">
-                      {order.approval_status === 'approved' ? (
+                      {order.approval_status === "approved" ? (
                         <div className="flex flex-col items-center text-xs text-black">
                           <span>이지은 확인완료</span>
                           <span>{order.approved_at}</span>
                         </div>
-                      ) : order.approval_status === 'rejected' ? (
+                      ) : order.approval_status === "rejected" ? (
                         <button
                           onClick={() => handleViewRejection(order)}
                           className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
@@ -1089,20 +1130,24 @@ export default function OrderList() {
       </Modal>
 
       {/* 비밀번호 입력 모달 */}
-      <Modal
-        isOpen={isPasswordModalOpen}
-        title="관리자 인증"
-      >
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          handlePasswordSubmit();
-        }} className="space-y-4">
-          <p className="text-sm text-gray-600">권한이 필요한 기능입니다. 관리자 비밀번호를 입력하세요.</p>
+      <Modal isOpen={isPasswordModalOpen} title="관리자 인증">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handlePasswordSubmit();
+          }}
+          className="space-y-4"
+        >
+          <p className="text-sm text-gray-600">
+            권한이 필요한 기능입니다. 관리자 비밀번호를 입력하세요.
+          </p>
           <input
             type="password"
             value={approvalPassword}
             onChange={(e) => setApprovalPassword(e.target.value)}
-            className={`mt-1 block w-full p-2 border border-gray-300 rounded-md ${approvalPassword ? 'text-black' : ''}`}
+            className={`mt-1 block w-full p-2 border border-gray-300 rounded-md ${
+              approvalPassword ? "text-black" : ""
+            }`}
             placeholder="비밀번호 입력"
           />
           <div className="flex justify-end space-x-2">
@@ -1127,10 +1172,7 @@ export default function OrderList() {
       </Modal>
 
       {/* 승인/반려 선택 모달 */}
-      <Modal
-        isOpen={isConfirmationModalOpen}
-        title="승인 확인"
-      >
+      <Modal isOpen={isConfirmationModalOpen} title="승인 확인">
         <div className="space-y-4">
           <p className="text-sm text-gray-600">해당 발주를 승인하시겠습니까?</p>
           <div className="flex justify-end space-x-2">
@@ -1160,10 +1202,7 @@ export default function OrderList() {
       </Modal>
 
       {/* 반려 사유 입력 모달 */}
-      <Modal
-        isOpen={isRejectionModalOpen}
-        title="반려 사유 입력"
-      >
+      <Modal isOpen={isRejectionModalOpen} title="반려 사유 입력">
         <div className="space-y-4">
           <textarea
             value={rejectionReason}
@@ -1193,14 +1232,13 @@ export default function OrderList() {
       </Modal>
 
       {/* 반려 사유 확인 모달 */}
-      <Modal
-        isOpen={isRejectionViewModalOpen}
-        title="반려 사유"
-      >
+      <Modal isOpen={isRejectionViewModalOpen} title="반려 사유">
         <div className="space-y-4">
           <div className="bg-gray-50 p-4 rounded-lg">
             <p className="text-sm text-gray-600 mb-2">반려 사유:</p>
-            <p className="text-black">{selectedRejectedOrder?.rejection_reason}</p>
+            <p className="text-black">
+              {selectedRejectedOrder?.rejection_reason}
+            </p>
           </div>
           <div className="flex justify-end space-x-2">
             <button
