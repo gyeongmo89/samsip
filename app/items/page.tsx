@@ -335,7 +335,8 @@ export default function ItemList() {
       </div>
 
       {/* 품목 등록 모달 */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="품목 등록">
+      {/* <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="품목 등록"> */}
+      <Modal isOpen={isModalOpen} title="품목 등록">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-black font-medium mb-2">
@@ -394,11 +395,11 @@ export default function ItemList() {
       {/* 수정 모달 */}
       <Modal
         isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false)
-          setFormData({ name: '', price: '', description: '' })
-          setEditingItem(null)
-        }}
+        // onClose={() => {
+        //   setIsEditModalOpen(false)
+        //   setFormData({ name: '', price: '', description: '' })
+        //   setEditingItem(null)
+        // }}
         title="품목 수정"
       >
         <form onSubmit={handleEditSubmit}>

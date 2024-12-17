@@ -680,7 +680,7 @@ export default function OrderList() {
       {/* 수정 모달 */}
       <Modal
         isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
+        // onClose={() => setIsEditModalOpen(false)}
         title="발주 정보 수정"
       >
         <form onSubmit={handleEditSubmit} className="space-y-4">
