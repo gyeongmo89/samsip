@@ -844,12 +844,21 @@ export default function OrderList() {
                             .slice(0, -1)
                         : ""}
                     </td>
-                    <td className="px-2 py-4 whitespace-nowrap text-center text-black">
-                      {order.supplier.name}
-                    </td>
                     {/* <td className="px-2 py-4 whitespace-nowrap text-center text-black">
-                      {order.item.name}
+                      {order.supplier.name.length > 4
+                        ? order.supplier.name.slice(0, 4) + ".."
+                        : order.supplier.name}
                     </td> */}
+                    <td className="px-2 py-4 whitespace-nowrap text-center text-black relative group">
+                      <span className="tooltip-trigger">
+                        {order.supplier.name.length > 4
+                          ? order.supplier.name.slice(0, 4) + ".."
+                          : order.supplier.name}
+                      </span>
+                      <span className="absolute z-10 invisible group-hover:visible bg-gray-800 text-white text-sm rounded px-2 py-1 -mt-1 left-1/2 transform -translate-x-1/2">
+                        {order.supplier.name}
+                      </span>
+                    </td>
                     <td className="px-2 py-4 whitespace-nowrap text-center text-black relative group">
                       <span className="tooltip-trigger">
                         {order.item.name.length > 6
@@ -881,8 +890,20 @@ export default function OrderList() {
                     <td className="px-2 py-4 whitespace-nowrap text-center text-black">
                       {order.client}
                     </td>
-                    <td className="px-2 py-4 text-center text-black break-words min-w-[200px]">
+                    {/* <td className="px-2 py-4 text-center text-black break-words min-w-[200px]">
                       {order.notes}
+                    </td> */}
+                    <td className="px-2 py-4 text-center text-black break-words min-w-[200px] relative group">
+                      <span className="tooltip-trigger">
+                        {order.notes && order.notes.length > 4
+                          ? order.notes.slice(0, 4) + ".."
+                          : order.notes}
+                      </span>
+                      {order.notes && order.notes.length > 4 && (
+                        <span className="absolute z-10 invisible group-hover:visible bg-gray-800 text-white text-sm rounded px-2 py-1 -mt-1 left-1/2 transform -translate-x-1/2">
+                          {order.notes}
+                        </span>
+                      )}
                     </td>
                     <td className="px-2 py-4 whitespace-nowrap text-center text-black">
                       <button
