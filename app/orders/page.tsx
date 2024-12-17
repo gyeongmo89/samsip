@@ -496,9 +496,32 @@ export default function OrderList() {
         throw new Error(error.detail || 'Failed to approve order');
       }
 
-      alert('승인이 완료되었습니다.');
+      // 현재 시간을 한국 시간대로 포맷팅
+      const now = new Date();
+      const formattedDate = now.toLocaleString('ko-KR', {
+        year: '2-digit',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      }).replace(/\./g, '-').replace(',', '');
+
+      // 로컬 상태 업데이트
+      setOrders(prevOrders => prevOrders.map(order => {
+        if (order.id === selectedOrderForApproval.id) {
+          return {
+            ...order,
+            approval_status: 'approved',
+            approved_by: '이지은',
+            approved_at: formattedDate
+          };
+        }
+        return order;
+      }));
+
       setIsConfirmationModalOpen(false);
-      fetchOrders();
+      setSelectedOrderForApproval(null);
     } catch (error) {
       console.error('Error approving order:', error);
       alert('승인 처리 중 오류가 발생했습니다.');
@@ -522,10 +545,21 @@ export default function OrderList() {
         throw new Error(error.detail || 'Failed to reject order');
       }
 
-      alert('반려가 완료되었습니다.');
+      // 로컬 상태 업데이트
+      setOrders(prevOrders => prevOrders.map(order => {
+        if (order.id === selectedOrderForApproval.id) {
+          return {
+            ...order,
+            approval_status: 'rejected',
+            rejection_reason: rejectionReason
+          };
+        }
+        return order;
+      }));
+
       setIsRejectionModalOpen(false);
       setRejectionReason("");
-      fetchOrders();
+      setSelectedOrderForApproval(null);
     } catch (error) {
       console.error('Error rejecting order:', error);
       alert('반려 처리 중 오류가 발생했습니다.');
@@ -700,8 +734,18 @@ export default function OrderList() {
                     <td className="px-2 py-4 whitespace-nowrap text-center text-black">
                       {order.supplier.name}
                     </td>
-                    <td className="px-2 py-4 whitespace-nowrap text-center text-black">
+                    {/* <td className="px-2 py-4 whitespace-nowrap text-center text-black">
                       {order.item.name}
+                    </td> */}
+                    <td className="px-2 py-4 whitespace-nowrap text-center text-black relative group">
+                      <span className="tooltip-trigger">
+                        {order.item.name.length > 6 
+                          ? order.item.name.slice(0, 6) + '..'
+                          : order.item.name}
+                      </span>
+                      <span className="absolute z-10 invisible group-hover:visible bg-gray-800 text-white text-sm rounded px-2 py-1 -mt-1 left-1/2 transform -translate-x-1/2">
+                        {order.item.name}
+                      </span>
                     </td>
                     <td className="px-2 py-4 whitespace-nowrap text-center text-black">
                       {order.price.toLocaleString()}
@@ -737,14 +781,14 @@ export default function OrderList() {
                     </td>
                     <td className="px-2 py-4 whitespace-nowrap text-center">
                       {order.approval_status === 'approved' ? (
-                        <div className="flex flex-col items-center text-xs">
-                          <span>이지은 확인</span>
+                        <div className="flex flex-col items-center text-xs text-black">
+                          <span>이지은 확인완료</span>
                           <span>{order.approved_at}</span>
                         </div>
                       ) : order.approval_status === 'rejected' ? (
                         <button
                           onClick={() => alert(order.rejection_reason)}
-                          className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                          className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
                         >
                           반려
                         </button>
