@@ -82,11 +82,12 @@ export default function OrderList() {
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
 
-  const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
-  const [selectedOrderForApproval, setSelectedOrderForApproval] = useState<Order | null>(null);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
   const [approvalPassword, setApprovalPassword] = useState("");
   const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [selectedOrderForApproval, setSelectedOrderForApproval] = useState<Order | null>(null);
 
   const formatNumber = (value: string | undefined | null) => {
     if (!value) return "";
@@ -468,9 +469,14 @@ export default function OrderList() {
     }
   };
 
-  const handleApprovalClick = (order: Order) => {
-    setSelectedOrderForApproval(order);
-    setIsApprovalModalOpen(true);
+  const handlePasswordSubmit = () => {
+    if (approvalPassword === "admin") {
+      setIsPasswordModalOpen(false);
+      setIsConfirmationModalOpen(true);
+      setApprovalPassword("");
+    } else {
+      alert("비밀번호가 올바르지 않습니다.");
+    }
   };
 
   const handleApprovalSubmit = async () => {
@@ -482,31 +488,21 @@ export default function OrderList() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ password: approvalPassword }),
+        body: JSON.stringify({ password: "admin" }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        if (response.status === 401) {
-          alert('비밀번호가 올바르지 않습니다.');
-          return;
-        }
         throw new Error(error.detail || 'Failed to approve order');
       }
 
       alert('승인이 완료되었습니다.');
-      setIsApprovalModalOpen(false);
-      setApprovalPassword("");
+      setIsConfirmationModalOpen(false);
       fetchOrders();
     } catch (error) {
       console.error('Error approving order:', error);
       alert('승인 처리 중 오류가 발생했습니다.');
     }
-  };
-
-  const handleRejectionClick = (order: Order) => {
-    setSelectedOrderForApproval(order);
-    setIsRejectionModalOpen(true);
   };
 
   const handleRejectionSubmit = async () => {
@@ -534,6 +530,11 @@ export default function OrderList() {
       console.error('Error rejecting order:', error);
       alert('반려 처리 중 오류가 발생했습니다.');
     }
+  };
+
+  const handleApprovalClick = (order: Order) => {
+    setSelectedOrderForApproval(order);
+    setIsPasswordModalOpen(true);
   };
 
   return (
@@ -1027,26 +1028,54 @@ export default function OrderList() {
         </form>
       </Modal>
 
-      {/* 승인 모달 */}
+      {/* 비밀번호 입력 모달 */}
       <Modal
-        isOpen={isApprovalModalOpen}
+        isOpen={isPasswordModalOpen}
         title="관리자 인증"
       >
-        <div className="space-y-4">
-          <p>권한이 필요한 기능입니다. 관리자 비밀번호를 입력하세요.</p>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          handlePasswordSubmit();
+        }} className="space-y-4">
+          <p className="text-sm text-gray-600">권한이 필요한 기능입니다. 관리자 비밀번호를 입력하세요.</p>
           <input
             type="password"
             value={approvalPassword}
             onChange={(e) => setApprovalPassword(e.target.value)}
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+            className={`mt-1 block w-full p-2 border border-gray-300 rounded-md ${approvalPassword ? 'text-black' : ''}`}
             placeholder="비밀번호 입력"
           />
           <div className="flex justify-end space-x-2">
             <button
+              type="button"
               onClick={() => {
-                setIsApprovalModalOpen(false);
+                setIsPasswordModalOpen(false);
                 setApprovalPassword("");
               }}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded"
+            >
+              취소
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-500 text-white rounded"
+            >
+              확인
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* 승인/반려 선택 모달 */}
+      <Modal
+        isOpen={isConfirmationModalOpen}
+        title="승인 확인"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">해당 발주를 승인하시겠습니까?</p>
+          <div className="flex justify-end space-x-2">
+            <button
+              onClick={() => setIsConfirmationModalOpen(false)}
               className="px-4 py-2 bg-gray-200 text-gray-800 rounded"
             >
               취소
@@ -1055,12 +1084,12 @@ export default function OrderList() {
               onClick={handleApprovalSubmit}
               className="px-4 py-2 bg-blue-500 text-white rounded"
             >
-              확인
+              승인
             </button>
             <button
               onClick={() => {
-                setIsApprovalModalOpen(false);
-                handleRejectionClick(selectedOrderForApproval!);
+                setIsConfirmationModalOpen(false);
+                setIsRejectionModalOpen(true);
               }}
               className="px-4 py-2 bg-red-500 text-white rounded"
             >
@@ -1070,7 +1099,7 @@ export default function OrderList() {
         </div>
       </Modal>
 
-      {/* 반려 모달 */}
+      {/* 반려 사유 입력 모달 */}
       <Modal
         isOpen={isRejectionModalOpen}
         title="반려 사유 입력"
@@ -1079,7 +1108,7 @@ export default function OrderList() {
           <textarea
             value={rejectionReason}
             onChange={(e) => setRejectionReason(e.target.value)}
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+            className="mt-1 block w-full p-2 border border-gray-300 rounded-md text-black"
             rows={4}
             placeholder="반려 사유를 입력하세요"
           />
