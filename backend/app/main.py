@@ -495,7 +495,6 @@ async def upload_orders(file: UploadFile = File(...), db: Session = Depends(get_
                 order_date = datetime.strptime(str(row[0]), "%Y-%m-%d").date()
             except ValueError:
                 order_date = datetime.now().date()
-                order_date = datetime.now().date()
 
             # 구입처 찾기 또는 생성
             supplier = (

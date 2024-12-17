@@ -188,7 +188,8 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit 
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="발주 등록">
+    // <Modal isOpen={isOpen} onClose={onClose} title="발주 등록">
+    <Modal isOpen={isOpen} title="발주 등록">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           {/* 구입처 */}

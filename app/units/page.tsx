@@ -314,10 +314,10 @@ export default function UnitList() {
       {/* 등록 모달 */}
       <Modal
         isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false)
-          setFormData({ name: '', description: '' })
-        }}
+        // onClose={() => {
+        //   setIsModalOpen(false)
+        //   setFormData({ name: '', description: '' })
+        // }}
         title="단위 등록"
       >
         <form onSubmit={handleSubmit}>
@@ -371,11 +371,11 @@ export default function UnitList() {
       {/* 수정 모달 */}
       <Modal
         isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false)
-          setFormData({ name: '', description: '' })
-          setEditingUnit(null)
-        }}
+        // onClose={() => {
+        //   setIsEditModalOpen(false)
+        //   setFormData({ name: '', description: '' })
+        //   setEditingUnit(null)
+        // }}
         title="단위 수정"
       >
         <form onSubmit={handleEditSubmit}>

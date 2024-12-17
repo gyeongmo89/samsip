@@ -384,7 +384,7 @@ export default function SupplierList() {
       {/* 등록 모달 */}
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        // onClose={() => setIsModalOpen(false)}
         title="구입처 등록"
       >
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -458,11 +458,11 @@ export default function SupplierList() {
       {/* 수정 모달 */}
       <Modal
         isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setFormData({ name: "", contact: "", address: "" });
-          setEditingSupplier(null);
-        }}
+        // onClose={() => {
+        //   setIsEditModalOpen(false);
+        //   setFormData({ name: "", contact: "", address: "" });
+        //   setEditingSupplier(null);
+        // }}
         title="구입처 수정"
       >
         <form onSubmit={handleEditSubmit}>
