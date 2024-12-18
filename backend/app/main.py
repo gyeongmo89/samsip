@@ -188,7 +188,8 @@ def create_supplier(supplier: SupplierBase, db: Session = Depends(get_db)):
             db.query(models.Supplier)
             .filter(
                 models.Supplier.name == supplier.name,
-                models.Supplier.is_deleted == False,
+                # models.Supplier.is_deleted == False,
+                models.Supplier.is_deleted is False,
             )
             .first()
         )
@@ -243,7 +244,8 @@ def create_item(item: ItemCreate, db: Session = Depends(get_db)):
             db.query(models.Item)
             .filter(
                 models.Item.name == item.name,
-                models.Item.is_deleted == False,
+                # models.Item.is_deleted == False,
+                models.Item.is_deleted is False,
             )
             .first()
         )
@@ -297,7 +299,8 @@ def create_unit(unit: UnitCreate, db: Session = Depends(get_db)):
             db.query(models.Unit)
             .filter(
                 models.Unit.name == unit.name,
-                models.Unit.is_deleted == False,
+                # models.Unit.is_deleted == False,
+                models.Unit.is_deleted is False,
             )
             .first()
         )
