@@ -5,58 +5,19 @@ import { ResponsiveLine } from '@nivo/line'
 import { ResponsivePie } from '@nivo/pie'
 import { ResponsiveBar } from '@nivo/bar'
 import { ResponsiveCalendar } from '@nivo/calendar'
+import { ResponsiveRadar } from '@nivo/radar'
 
-// 더미 데이터 생성 함수들
-const generateMonthlyData = () => {
-  const months = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월']
-  return [
-    {
-      id: '총주문금액',
-      data: months.map(month => ({
-        x: month,
-        y: Math.floor(Math.random() * 1000000) + 500000
-      }))
-    },
-    {
-      id: '주문건수',
-      data: months.map(month => ({
-        x: month,
-        y: Math.floor(Math.random() * 50) + 20
-      }))
-    }
-  ]
-}
-
-const generateSupplierData = () => {
-  const suppliers = ['A상사', 'B물산', 'C식품', 'D유통', 'E상회']
-  return suppliers.map(supplier => ({
-    id: supplier,
-    label: supplier,
-    value: Math.floor(Math.random() * 1000000) + 100000
-  }))
-}
-
-const generateCategoryData = () => {
-  const categories = ['식자재', '음료', '소모품', '기타']
-  return categories.map(category => ({
-    category,
-    '주문건수': Math.floor(Math.random() * 100) + 20,
-    '주문금액': Math.floor(Math.random() * 1000000) + 100000
-  }))
-}
-
-const generateCalendarData = () => {
-  const data = []
-  const today = new Date()
-  const startDate = new Date(today.getFullYear(), today.getMonth() - 2, 1)
-  
-  for (let date = new Date(startDate); date <= today; date.setDate(date.getDate() + 1)) {
-    data.push({
-      day: date.toISOString().slice(0, 10),
-      value: Math.floor(Math.random() * 100)
-    })
+interface Order {
+  id: number
+  supplier_id: number
+  quantity: number
+  price: number
+  total: number
+  date?: string
+  supplier: {
+    id: number
+    name: string
   }
-  return data
 }
 
 const theme = {
@@ -86,27 +47,118 @@ const theme = {
 }
 
 export default function Dashboard() {
-  const [monthlyData, setMonthlyData] = useState(generateMonthlyData())
-  const [supplierData, setSupplierData] = useState(generateSupplierData())
-  const [categoryData, setCategoryData] = useState(generateCategoryData())
-  const [calendarData, setCalendarData] = useState(generateCalendarData())
+  const [monthlyData, setMonthlyData] = useState<any[]>([])
+  const [supplierData, setSupplierData] = useState<any[]>([])
+  const [categoryData, setCategoryData] = useState<any[]>([])
+  const [calendarData, setCalendarData] = useState<any[]>([])
+  const [supplierStats, setSupplierStats] = useState<any>({})
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setMonthlyData(generateMonthlyData())
-      setSupplierData(generateSupplierData())
-      setCategoryData(generateCategoryData())
-      setCalendarData(generateCalendarData())
-    }, 5000)
+    setIsClient(true)
+  }, [])
 
-    return () => clearInterval(interval)
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/orders/')
+        const orders: Order[] = await response.json()
+
+        // Process monthly data
+        const monthlyStats = orders.reduce((acc: any, order) => {
+          if (!order.date) return acc
+          const orderDate = new Date(order.date)
+          const month = orderDate.toLocaleDateString('ko-KR', { month: 'long', timeZone: 'Asia/Seoul' })
+          if (!acc[month]) {
+            acc[month] = { 주문건수: 0, 주문금액: 0 }
+          }
+          acc[month].주문건수 += 1
+          acc[month].주문금액 += order.total
+          return acc
+        }, {})
+
+        const monthlyDataFormatted = [
+          {
+            id: '주문건수',
+            data: Object.entries(monthlyStats).map(([month, stats]: [string, any]) => ({
+              x: month,
+              y: stats.주문건수
+            }))
+          },
+          {
+            id: '주문금액',
+            data: Object.entries(monthlyStats).map(([month, stats]: [string, any]) => ({
+              x: month,
+              y: Math.round(stats.주문금액 / 10000) // Convert to 만원 단위
+            }))
+          }
+        ]
+
+        // Process supplier data
+        const supplierStats = orders.reduce((acc: any, order) => {
+          const supplierName = order.supplier.name
+          if (!acc[supplierName]) {
+            acc[supplierName] = 0
+          }
+          acc[supplierName] += order.total
+          return acc
+        }, {})
+
+        const supplierDataFormatted = Object.entries(supplierStats).map(([supplier, total]) => ({
+          id: supplier,
+          label: supplier,
+          value: Math.round(Number(total) / 10000) // Convert to 만원 단위
+        }))
+
+        // Process category data
+        const categoryStats = orders.reduce((acc: any, order) => {
+          const category = '식자재' // Replace with actual category
+          if (!acc[category]) {
+            acc[category] = { 주문건수: 0, 주문금액: 0 }
+          }
+          acc[category].주문건수 += 1
+          acc[category].주문금액 += order.total
+          return acc
+        }, {})
+
+        const categoryDataFormatted = Object.entries(categoryStats).map(([category, stats]: [string, any]) => ({
+          category,
+          주문건수: stats.주문건수,
+          주문금액: Math.round(stats.주문금액 / 10000) // Convert to 만원 단위
+        }))
+
+        // Process calendar data
+        const calendarStats = orders.reduce((acc: any, order) => {
+          if (!order.date) return acc
+          const date = new Date(order.date).toISOString().slice(0, 10)
+          if (!acc[date]) {
+            acc[date] = 0
+          }
+          acc[date] += order.total
+          return acc
+        }, {})
+
+        const calendarDataFormatted = Object.entries(calendarStats).map(([date, total]) => ({
+          day: date,
+          value: Math.round(Number(total) / 10000) // Convert to 만원 단위
+        }))
+
+        setMonthlyData(monthlyDataFormatted)
+        setSupplierData(supplierDataFormatted)
+        setCategoryData(categoryDataFormatted)
+        setCalendarData(calendarDataFormatted)
+        setSupplierStats(supplierStats)
+      } catch (error) {
+        console.error('Error fetching orders:', error)
+      }
+    }
+
+    fetchOrders()
   }, [])
 
   return (
     <div className="grid grid-cols-1 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 md:grid-cols-2 gap-6 animate-fadeIn">
-      {/* <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-4"></div> */}
       {/* 월별 주문 추이 */}
-      {/* <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6"> */}
       <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">월별 주문 추이</h3>
         <div className="h-[300px]">
@@ -148,16 +200,26 @@ export default function Dashboard() {
                 symbolSize: 12,
                 symbolShape: 'circle',
                 symbolBorderColor: 'rgba(0, 0, 0, .5)',
+                itemTextColor: '#999',
+                effects: [
+                  {
+                    on: 'hover',
+                    style: {
+                      itemTextColor: '#000'
+                    }
+                  }
+                ]
               }
             ]}
             theme={theme}
+            animate={true}
           />
         </div>
       </div>
 
-      {/* 거래처별 주문 금액 */}
+      {/* 구입처 주문 금액 */}
       <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">거래처별 주문 금액</h3>
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">구입처별 주문 금액</h3>
         <div className="h-[300px]">
           <ResponsivePie
             data={supplierData}
@@ -166,6 +228,7 @@ export default function Dashboard() {
             padAngle={0.7}
             cornerRadius={3}
             activeOuterRadiusOffset={8}
+            colors={{ scheme: 'nivo' }}
             borderWidth={1}
             borderColor={{ from: 'color', modifiers: [['darker', 0.2]] }}
             arcLinkLabelsSkipAngle={10}
@@ -174,15 +237,11 @@ export default function Dashboard() {
             arcLinkLabelsColor={{ from: 'color' }}
             arcLabelsSkipAngle={10}
             arcLabelsTextColor={{ from: 'color', modifiers: [['darker', 2]] }}
-            theme={theme}
             legends={[
               {
                 anchor: 'bottom',
                 direction: 'row',
-                justify: false,
-                translateX: 0,
                 translateY: 56,
-                itemsSpacing: 0,
                 itemWidth: 100,
                 itemHeight: 18,
                 itemTextColor: '#999',
@@ -190,6 +249,14 @@ export default function Dashboard() {
                 itemOpacity: 1,
                 symbolSize: 18,
                 symbolShape: 'circle',
+                effects: [
+                  {
+                    on: 'hover',
+                    style: {
+                      itemTextColor: '#000'
+                    }
+                  }
+                ]
               }
             ]}
           />
@@ -240,6 +307,15 @@ export default function Dashboard() {
                 itemDirection: 'left-to-right',
                 itemOpacity: 0.85,
                 symbolSize: 20,
+                itemTextColor: '#999',
+                effects: [
+                  {
+                    on: 'hover',
+                    style: {
+                      itemTextColor: '#000'
+                    }
+                  }
+                ]
               }
             ]}
             theme={theme}
@@ -248,35 +324,73 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 일별 주문 현황 캘린더 */}
+      {/* 지난달 주문 현황 비교 */}
       <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">일별 주문 현황</h3>
-        <div className="h-[300px]">
-          <ResponsiveCalendar
-            data={calendarData}
-            from={calendarData[0]?.day}
-            to={calendarData[calendarData.length - 1]?.day}
-            emptyColor="#eeeeee"
-            colors={['#61cdbb', '#97e3d5', '#e8c1a0', '#f47560']}
-            margin={{ top: 40, right: 40, bottom: 40, left: 40 }}
-            yearSpacing={40}
-            monthBorderColor="#ffffff"
-            dayBorderWidth={2}
-            dayBorderColor="#ffffff"
-            legends={[
-              {
-                anchor: 'bottom-right',
-                direction: 'row',
-                translateY: 36,
-                itemCount: 4,
-                itemWidth: 42,
-                itemHeight: 36,
-                itemsSpacing: 14,
-                itemDirection: 'right-to-left'
-              }
-            ]}
-            theme={theme}
-          />
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">지난달 주문 현황 비교</h3>
+        <div className="h-[400px]">
+          {isClient && (
+            <ResponsiveRadar
+              data={[
+                { 
+                  metric: '주문건수', 
+                  이번달: monthlyData[0]?.data.slice(-1)[0]?.y || 0, 
+                  지난달: monthlyData[0]?.data.slice(-2)[0]?.y || 0 
+                },
+                { 
+                  metric: '주문금액(만원)', 
+                  이번달: Math.round((monthlyData[1]?.data.slice(-1)[0]?.y || 0)), 
+                  지난달: Math.round((monthlyData[1]?.data.slice(-2)[0]?.y || 0))
+                },
+                { 
+                  metric: '공급업체수', 
+                  이번달: Object.keys(supplierStats || {}).length || 0, 
+                  지난달: Object.keys(supplierStats || {}).length || 0 
+                },
+              ]}
+              keys={['이번달', '지난달']}
+              indexBy="metric"
+              valueFormat=">-.0f"
+              margin={{ top: 70, right: 80, bottom: 40, left: 80 }}
+              borderColor={{ from: 'color' }}
+              gridLabelOffset={36}
+              dotSize={8}
+              dotColor={{ theme: 'background' }}
+              dotBorderWidth={2}
+              colors={['#61cdbb', '#f47560']}
+              theme={{
+                tooltip: {
+                  container: {
+                    background: '#333',
+                    color: '#fff',
+                    fontSize: '12px',
+                    borderRadius: '4px',
+                    padding: '8px 12px',
+                  },
+                },
+              }}
+              legends={[
+                {
+                  anchor: 'top-left',
+                  direction: 'row',
+                  translateX: -50,
+                  translateY: -40,
+                  itemWidth: 85,
+                  itemHeight: 20,
+                  itemTextColor: '#666',
+                  symbolSize: 12,
+                  symbolShape: 'circle',
+                  effects: [
+                    {
+                      on: 'hover',
+                      style: {
+                        itemTextColor: '#000'
+                      }
+                    }
+                  ]
+                }
+              ]}
+            />
+          )}
         </div>
       </div>
     </div>
