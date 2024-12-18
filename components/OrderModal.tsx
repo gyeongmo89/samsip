@@ -207,7 +207,9 @@ export default function OrderModal({
     const selectedItem = items.find((item) => item.id === parseInt(itemId));
     if (selectedItem) {
       // 비고란에 "부가세별도"가 포함되어 있는지 확인
-      const isVatExcluded = selectedItem.description?.includes("부가세별도");
+      // const isVatExcluded = selectedItem.description?.includes("부가세별도");
+      const isVatExcluded = /부가세\s?별도/.test(selectedItem.description || "");
+
       // VAT 토글 상태 설정 (부가세별도면 false, 아니면 true)
       setIsVatIncluded(!isVatExcluded);
 
@@ -267,12 +269,15 @@ export default function OrderModal({
             <label className="block text-sm font-medium text-gray-700">
               구입처 <span className="text-red-500">*</span>
             </label>
-            <select
-              value={formData.supplier_id}
-              onChange={(e) => {
-                const selectedSupplierId = e.target.value;
+            <Select
+              value={formData.supplier_id ? {
+                value: formData.supplier_id,
+                label: suppliers.find(s => s.id === parseInt(formData.supplier_id))?.name || ""
+              } : null}
+              onChange={(option) => {
+                const selectedSupplierId = option?.value;
                 const supplier = suppliers.find(
-                  (s) => s.id === parseInt(selectedSupplierId)
+                  (s) => s.id === parseInt(selectedSupplierId || "")
                 );
                 if (supplier) {
                   setFormData((prev) => ({
@@ -283,20 +288,20 @@ export default function OrderModal({
                 } else {
                   setFormData((prev) => ({
                     ...prev,
-                    supplier_id: selectedSupplierId,
+                    supplier_id: selectedSupplierId || "",
                   }));
                 }
               }}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+              options={suppliers.map(supplier => ({
+                value: supplier.id.toString(),
+                label: supplier.name
+              }))}
+              className="mt-1 text-black"
+              classNamePrefix="select"
+              placeholder="구입처 선택"
+              isSearchable={true}
               required
-            >
-              <option value="">선택해주세요</option>
-              {suppliers.map((supplier) => (
-                <option key={supplier.id} value={supplier.id}>
-                  {supplier.name}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           {/* 품목 */}
@@ -304,19 +309,22 @@ export default function OrderModal({
             <label className="block text-sm font-medium text-gray-700">
               품목 <span className="text-red-500">*</span>
             </label>
-            <select
-              value={formData.item_id}
-              onChange={(e) => handleItemSelect(e.target.value)}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+            <Select
+              value={formData.item_id ? {
+                value: formData.item_id,
+                label: items.find(i => i.id === parseInt(formData.item_id))?.name || ""
+              } : null}
+              onChange={(option) => handleItemSelect(option?.value || "")}
+              options={items.map(item => ({
+                value: item.id.toString(),
+                label: item.name
+              }))}
+              className="mt-1 text-black"
+              classNamePrefix="select"
+              placeholder="품목 선택"
+              isSearchable={true}
               required
-            >
-              <option value="">선택해주세요</option>
-              {items.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           {/* 단가 */}
