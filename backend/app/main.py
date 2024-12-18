@@ -188,7 +188,7 @@ def create_supplier(supplier: SupplierBase, db: Session = Depends(get_db)):
             db.query(models.Supplier)
             .filter(
                 models.Supplier.name == supplier.name,
-                models.Supplier.is_deleted is False,
+                models.Supplier.is_deleted == False,
             )
             .first()
         )
@@ -205,10 +205,12 @@ def create_supplier(supplier: SupplierBase, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(db_supplier)
         return db_supplier
-    except HTTPException as e:
-        raise e
     except Exception as e:
         db.rollback()
+        if isinstance(e, HTTPException):
+            raise e
+        if "UNIQUE constraint failed" in str(e):
+            raise HTTPException(status_code=400, detail="already_exists")
         logger.error(f"Error creating supplier: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -239,32 +241,31 @@ def create_item(item: ItemCreate, db: Session = Depends(get_db)):
         # Check if item with same name already exists
         existing_item = (
             db.query(models.Item)
-            .filter(models.Item.name == item.name, models.Item.is_deleted is False)
+            .filter(
+                models.Item.name == item.name,
+                models.Item.is_deleted == False,
+            )
             .first()
         )
         if existing_item:
             raise HTTPException(status_code=400, detail="already_exists")
 
-        # Convert price to float if it exists
-        item_data = item.dict()
-        if item_data.get("price") is not None:
-            try:
-                price = float(item_data["price"])
-                if price < 0:
-                    raise HTTPException(status_code=400, detail="price_invalid")
-                item_data["price"] = price
-            except ValueError:
-                raise HTTPException(status_code=400, detail="price_invalid")
-
-        db_item = models.Item(**item_data, is_deleted=False)
+        db_item = models.Item(
+            name=item.name,
+            description=item.description,
+            price=item.price,
+            is_deleted=False,
+        )
         db.add(db_item)
         db.commit()
         db.refresh(db_item)
         return db_item
-    except HTTPException as e:
-        raise e
     except Exception as e:
         db.rollback()
+        if isinstance(e, HTTPException):
+            raise e
+        if "UNIQUE constraint failed" in str(e):
+            raise HTTPException(status_code=400, detail="already_exists")
         logger.error(f"Error creating item: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -294,26 +295,30 @@ def create_unit(unit: UnitCreate, db: Session = Depends(get_db)):
         # Check if unit with same name already exists
         existing_unit = (
             db.query(models.Unit)
-            .filter(models.Unit.name == unit.name, models.Unit.is_deleted is False)
+            .filter(
+                models.Unit.name == unit.name,
+                models.Unit.is_deleted == False,
+            )
             .first()
         )
         if existing_unit:
             raise HTTPException(status_code=400, detail="already_exists")
 
-        # Convert None to empty string for description
-        unit_data = unit.dict()
-        if unit_data.get("description") is None:
-            unit_data["description"] = ""
-
-        db_unit = models.Unit(**unit_data)
+        db_unit = models.Unit(
+            name=unit.name,
+            description=unit.description,
+            is_deleted=False,
+        )
         db.add(db_unit)
         db.commit()
         db.refresh(db_unit)
         return db_unit
-    except HTTPException as e:
-        raise e
     except Exception as e:
         db.rollback()
+        if isinstance(e, HTTPException):
+            raise e
+        if "UNIQUE constraint failed" in str(e):
+            raise HTTPException(status_code=400, detail="already_exists")
         logger.error(f"Error creating unit: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -64,11 +64,10 @@ export default function ItemList() {
         }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
+        const data = await response.json();
         if (data.detail === 'already_exists') {
-          alert('이미 등록된 품목입니다.');
+          alert('이미 등록된 정보입니다.');
           return;
         }
         throw new Error(data.detail || 'Failed to create item');
@@ -80,7 +79,11 @@ export default function ItemList() {
       setFormData({ name: '', description: '', price: '' });
     } catch (error) {
       console.error('Error creating item:', error);
-      alert('품목 등록 중 오류가 발생했습니다.');
+      if (error instanceof Error && error.message === 'already_exists') {
+        alert('이미 등록된 정보입니다.');
+      } else {
+        alert('품목 등록 중 오류가 발생했습니다.');
+      }
     }
   };
 

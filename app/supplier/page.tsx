@@ -68,11 +68,10 @@ export default function SupplierList() {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
+        const data = await response.json();
         if (data.detail === 'already_exists') {
-          alert('이미 등록된 구입처입니다.');
+          alert('이미 등록된 정보입니다.');
           return;
         }
         throw new Error(data.detail || 'Failed to create supplier');
@@ -84,7 +83,11 @@ export default function SupplierList() {
       setFormData({ name: '', contact: '', address: '' });
     } catch (error) {
       console.error('Error creating supplier:', error);
-      alert('구입처 등록 중 오류가 발생했습니다.');
+      if (error instanceof Error && error.message === 'already_exists') {
+        alert('이미 등록된 정보입니다.');
+      } else {
+        alert('구입처 등록 중 오류가 발생했습니다.');
+      }
     }
   };
 
