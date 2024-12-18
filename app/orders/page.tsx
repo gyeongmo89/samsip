@@ -135,7 +135,7 @@ export default function OrderList() {
     const [start, end] = dates;
     setStartDate(start);
     setEndDate(end);
-    
+
     if (start && end) {
       const filteredByDate = orders.filter((order) => {
         if (!order.date) return false;
@@ -233,13 +233,15 @@ export default function OrderList() {
       const data = await response.json();
       // 날짜를 기준으로 내림차순 정렬 (최신순)
       const sortedData = data.sort((a: Order, b: Order) => {
-        return new Date(b.date || '').getTime() - new Date(a.date || '').getTime();
+        return (
+          new Date(b.date || "").getTime() - new Date(a.date || "").getTime()
+        );
       });
       const processedOrders = sortedData.map((order: Order) => ({
         ...order,
         supplier: order.supplier || { id: 0, name: "삭제됨" },
         item: order.item || { id: 0, name: "삭제됨" },
-        unit: order.unit || { id: 0, name: "삭제됨" }
+        unit: order.unit || { id: 0, name: "삭제됨" },
       }));
       setOrders(processedOrders);
       setFilteredOrders(processedOrders);
@@ -764,7 +766,51 @@ export default function OrderList() {
       <div className="container mx-auto px-4 w-full max-w-none">
         <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
           <div className="flex justify-between items-center ">
-            <h2 className="text-2xl font-bold text-gray-800">발주현황</h2>
+            <div className="flex justify-between items-center w-full">
+              <h2 className="text-2xl font-bold text-gray-800">발주현황</h2>
+              <div className="flex gap-2 font-semibold text-sm">
+                <button
+                  className="px-3 py-1 bg-white text-blue-500 border border-blue-500 rounded hover:bg-blue-100 transition-colors"
+                  onClick={() => setFilteredOrders(orders)}
+                >
+                  전체발주: {orders.length}건
+                </button>
+                <button
+                  className="px-3 py-1 bg-white text-green-500 border border-green-500 rounded hover:bg-green-100 transition-colors"
+                  onClick={() =>
+                    setFilteredOrders(
+                      orders.filter(
+                        (order) => order.approval_status === "approved"
+                      )
+                    )
+                  }
+                >
+                  확인완료: {orders.filter((order) => order.approval_status === "approved").length}건
+                </button>
+                <button
+                  className="px-3 py-1 bg-white text-yellow-500 border border-yellow-500 rounded hover:bg-yellow-100 transition-colors"
+                  onClick={() =>
+                    setFilteredOrders(
+                      orders.filter((order) => !order.approval_status)
+                    )
+                  }
+                >
+                  미확인: {orders.filter((order) => !order.approval_status).length}건
+                </button>
+                <button
+                  className="px-3 py-1 bg-white text-red-500 border border-red-500 rounded hover:bg-red-100 transition-colors"
+                  onClick={() =>
+                    setFilteredOrders(
+                      orders.filter(
+                        (order) => order.approval_status === "rejected"
+                      )
+                    )
+                  }
+                >
+                  반려: {orders.filter((order) => order.approval_status === "rejected").length}건
+                </button>
+              </div>
+            </div>
           </div>
           <div className="flex itmems-center justify-between gap-4">
             {/* 페이지당 항목 수 선택 */}
@@ -786,7 +832,6 @@ export default function OrderList() {
             </div>
 
             <div className="flex items-center gap-2">
-
               {/* 날짜 범위 선택 */}
               {/* <div className="relative">
                 <DatePicker
@@ -801,7 +846,7 @@ export default function OrderList() {
                   className="p-2 border border-gray-300 rounded-md text-gray-900 text-sm w-48"
                 />
               </div> */}
-              <div className="relative">
+              <div className="relative flex gap-2">
                 <DatePicker
                   selectsRange={true}
                   startDate={startDate || undefined}
@@ -828,7 +873,7 @@ export default function OrderList() {
                   locale={ko}
                   isClearable={true}
                   placeholderText="날짜 범위 선택"
-                  className="p-2 border border-gray-300 rounded-md text-gray-900 text-sm w-48"
+                  className="px-6 py-3 border rounded-lg text-black text-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 h-[52px]"
                 />
               </div>
 
@@ -852,39 +897,39 @@ export default function OrderList() {
 
               {/* 발주등록 버튼 */}
               {/* <div className="flex gap-2"> */}
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold shadow-lg hover:shadow-xl flex items-center gap-2"
-                >
-                  <Plus className="w-6 h-6" />
-                  발주등록
-                </button>
-                <button
-                  onClick={handleDeleteOrders}
-                  className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold shadow-lg hover:shadow-xl flex items-center gap-2"
-                >
-                  <Minus className="w-6 h-6" />
-                  발주삭제
-                </button>
-                <button
-                  onClick={handleExcelDownload}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-lg hover:from-blue-500 hover:to-blue-600 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl"
-                >
-                  <FileDown className="w-6 h-6" />
-                  엑셀 다운로드
-                </button>
-                <label className="cursor-pointer">
-                  <input
-                    type="file"
-                    accept=".xlsx"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                  <div className="px-6 py-3 bg-gradient-to-r from-green-400 to-green-500 text-white rounded-lg hover:from-green-500 hover:to-green-600 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl">
-                    <FileUp className="w-6 h-6" />
-                    엑셀 업로드
-                  </div>
-                </label>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold shadow-lg hover:shadow-xl flex items-center gap-2"
+              >
+                <Plus className="w-6 h-6" />
+                발주등록
+              </button>
+              <button
+                onClick={handleDeleteOrders}
+                className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold shadow-lg hover:shadow-xl flex items-center gap-2"
+              >
+                <Minus className="w-6 h-6" />
+                발주삭제
+              </button>
+              <button
+                onClick={handleExcelDownload}
+                className="px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-lg hover:from-blue-500 hover:to-blue-600 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl"
+              >
+                <FileDown className="w-6 h-6" />
+                엑셀 다운로드
+              </button>
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  accept=".xlsx"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <div className="px-6 py-3 bg-gradient-to-r from-green-400 to-green-500 text-white rounded-lg hover:from-green-500 hover:to-green-600 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl">
+                  <FileUp className="w-6 h-6" />
+                  엑셀 업로드
+                </div>
+              </label>
             </div>
           </div>
 
@@ -1058,7 +1103,8 @@ export default function OrderList() {
                       ) : order.approval_status === "rejected" ? (
                         <button
                           onClick={() => handleViewRejection(order)}
-                          className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+                          // className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+                          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                         >
                           반려
                         </button>
