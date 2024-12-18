@@ -248,6 +248,20 @@ export default function OrderModal({
     <Modal isOpen={isOpen} title="발주 등록">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
+          {/* 발주일 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              발주일 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              value={formData.date}
+              onChange={(e) => handleInputChange("date", e.target.value)}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+              required
+            />
+          </div>
+
           {/* 구입처 */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
@@ -305,40 +319,6 @@ export default function OrderModal({
             </select>
           </div>
 
-          {/* 단위 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              단위 <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={formData.unit_id}
-              onChange={(e) => handleInputChange("unit_id", e.target.value)}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
-              required
-            >
-              <option value="">선택해주세요</option>
-              {units.map((unit) => (
-                <option key={unit.id} value={unit.id}>
-                  {unit.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* 수량 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              수량 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formatNumber(formData.quantity) || ""}
-              onChange={(e) => handleInputChange("quantity", e.target.value)}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
-              required
-            />
-          </div>
-
           {/* 단가 */}
           <div>
             <div className="flex items-center justify-between">
@@ -374,6 +354,42 @@ export default function OrderModal({
               required
             />
           </div>
+
+          {/* 단위 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              단위 <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.unit_id}
+              onChange={(e) => handleInputChange("unit_id", e.target.value)}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+              required
+            >
+              <option value="">선택해주세요</option>
+              {units.map((unit) => (
+                <option key={unit.id} value={unit.id}>
+                  {unit.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 수량 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              수량 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formatNumber(formData.quantity) || ""}
+              onChange={(e) => handleInputChange("quantity", e.target.value)}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+              required
+            />
+          </div>
+
+          
 
           {/* 총액 */}
           <div>
@@ -461,19 +477,7 @@ export default function OrderModal({
             </select>
           </div>
 
-          {/* 발주일 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              발주일 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              value={formData.date}
-              onChange={(e) => handleInputChange("date", e.target.value)}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
-              required
-            />
-          </div>
+          
 
           {/* 구입 연락처 */}
           <div>
