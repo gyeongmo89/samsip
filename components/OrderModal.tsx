@@ -1,20 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-'use client'
+"use client";
 
-import { useState, useEffect, ReactNode } from 'react'
-import Modal from './Modal'
-import Select from 'react-select'
+import { useState, useEffect, ReactNode } from "react";
+import Modal from "./Modal";
+import Select from "react-select";
 
 interface OrderModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onOrderComplete: () => void
-  onSubmit?: (formData: any) => Promise<void>
+  isOpen: boolean;
+  onClose: () => void;
+  onOrderComplete: () => void;
+  onSubmit?: (formData: any) => Promise<void>;
 }
 
 interface Supplier {
-  [x: string]: ReactNode
+  [x: string]: ReactNode;
   // [x: string]: ReactNode
   id: number;
   contact?: string;
@@ -33,160 +33,167 @@ interface Unit {
 }
 
 const defaultFormData = {
-  supplier_id: '',
-  item_id: '',
-  unit_id: '',
-  quantity: '',
-  price: '',
-  total: '',
-  payment_cycle: '',
-  payment_method: '계좌이체',
-  client: '',
-  notes: '',
-  date: new Date().toISOString().split('T')[0],
-  custom_payment_cycle: ''
-}
+  supplier_id: "",
+  item_id: "",
+  unit_id: "",
+  quantity: "",
+  price: "",
+  total: "",
+  payment_cycle: "",
+  payment_method: "계좌이체",
+  client: "",
+  notes: "",
+  date: new Date().toISOString().split("T")[0],
+  custom_payment_cycle: "",
+};
 
-export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit }: OrderModalProps) {
-  const [suppliers, setSuppliers] = useState<Supplier[]>([])
-  const [items, setItems] = useState<Item[]>([])
-  const [units, setUnits] = useState<Unit[]>([])
-  const [formData, setFormData] = useState(defaultFormData)
-  const [showDaySelect, setShowDaySelect] = useState(false)
+export default function OrderModal({
+  isOpen,
+  onClose,
+  onOrderComplete,
+  onSubmit,
+}: OrderModalProps) {
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [formData, setFormData] = useState(defaultFormData);
+  const [showDaySelect, setShowDaySelect] = useState(false);
   const [isVatIncluded, setIsVatIncluded] = useState(false);
 
-  const paymentMethods = ['계좌이체', '현금', '카드결제']
-  const paymentCycles = ['미정', '매월초', '매월중순', '매월말', '기타입력']
+  const paymentMethods = ["계좌이체", "현금", "카드결제"];
+  const paymentCycles = ["미정", "매월초", "매월중순", "매월말", "기타입력"];
 
   const formatNumber = (value: string | undefined | null) => {
-    if (!value) return ''
-    const number = value.toString().replace(/[^\d]/g, '')
-    return number.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-  }
+    if (!value) return "";
+    const number = value.toString().replace(/[^\d]/g, "");
+    return number.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
 
   const handleInputChange = (field: string, value: string) => {
-    if (['quantity', 'price', 'total'].includes(field)) {
-      const numericValue = value.replace(/[^\d]/g, '')
-      setFormData(prev => ({ ...prev, [field]: numericValue || '' }))
+    if (["quantity", "price", "total"].includes(field)) {
+      const numericValue = value.replace(/[^\d]/g, "");
+      setFormData((prev) => ({ ...prev, [field]: numericValue || "" }));
     } else {
-      setFormData(prev => ({ ...prev, [field]: value }))
+      setFormData((prev) => ({ ...prev, [field]: value }));
     }
-  }
+  };
 
   useEffect(() => {
     if (isOpen) {
-      setFormData(defaultFormData)
-      setShowDaySelect(false)
-      localStorage.removeItem('lastOrder')
+      setFormData(defaultFormData);
+      setShowDaySelect(false);
+      localStorage.removeItem("lastOrder");
     }
-  }, [isOpen])
+  }, [isOpen]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [suppliersRes, itemsRes, unitsRes] = await Promise.all([
-          fetch('http://localhost:8000/suppliers'),
-          fetch('http://localhost:8000/items'),
-          fetch('http://localhost:8000/units')
+          fetch("http://localhost:8000/suppliers"),
+          fetch("http://localhost:8000/items"),
+          fetch("http://localhost:8000/units"),
         ]);
 
         if (!suppliersRes.ok || !itemsRes.ok || !unitsRes.ok) {
-          throw new Error('Failed to fetch data');
+          throw new Error("Failed to fetch data");
         }
 
         const [suppliersData, itemsData, unitsData] = await Promise.all([
           suppliersRes.json(),
           itemsRes.json(),
-          unitsRes.json()
+          unitsRes.json(),
         ]);
 
         setSuppliers(suppliersData);
         setItems(itemsData);
         setUnits(unitsData);
-
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       }
     };
 
     fetchData();
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
-      const lastOrder = JSON.parse(localStorage.getItem('lastOrder') || '{}')
+      const lastOrder = JSON.parse(localStorage.getItem("lastOrder") || "{}");
       if (Object.keys(lastOrder).length > 0) {
-        setFormData(lastOrder)
+        setFormData(lastOrder);
       }
     }
-  }, [isOpen])
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
-      const response = await fetch('http://localhost:8000/orders/', {
-        method: 'POST',
+      const response = await fetch("http://localhost:8000/orders/", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           supplier_id: parseInt(formData.supplier_id),
           item_id: parseInt(formData.item_id),
           unit_id: parseInt(formData.unit_id),
-          quantity: parseFloat(formData.quantity.replace(/,/g, '')),
-          price: parseFloat(formData.price.replace(/,/g, '')),
-          total: parseFloat(formData.total.replace(/,/g, '')),
-          payment_cycle: formData.payment_cycle === '기타입력' ? formData.custom_payment_cycle : formData.payment_cycle,
+          quantity: parseFloat(formData.quantity.replace(/,/g, "")),
+          price: parseFloat(formData.price.replace(/,/g, "")),
+          total: parseFloat(formData.total.replace(/,/g, "")),
+          payment_cycle:
+            formData.payment_cycle === "기타입력"
+              ? formData.custom_payment_cycle
+              : formData.payment_cycle,
           payment_method: formData.payment_method,
           client: formData.client,
           notes: formData.notes,
-          date: formData.date
+          date: formData.date,
         }),
-      })
+      });
 
-      if (!response.ok) throw new Error('Failed to create order')
-      
-      alert('발주가 등록되었습니다.')
-      onClose()
-      window.location.reload()
+      if (!response.ok) throw new Error("Failed to create order");
+
+      alert("발주가 등록되었습니다.");
+      onClose();
+      window.location.reload();
     } catch (error) {
-      console.error('Error creating order:', error)
-      alert('발주 등록 중 오류가 발생했습니다.')
+      console.error("Error creating order:", error);
+      alert("발주 등록 중 오류가 발생했습니다.");
     }
-  }
+  };
 
   useEffect(() => {
     if (formData.price && formData.quantity) {
-      const price = parseInt(formData.price.replace(/[^\d]/g, '') || '0')
-      const quantity = parseInt(formData.quantity.replace(/[^\d]/g, '') || '0')
-      const calculatedTotal = price * quantity
-      setFormData(prev => ({ ...prev, total: calculatedTotal.toString() }))
+      const price = parseInt(formData.price.replace(/[^\d]/g, "") || "0");
+      const quantity = parseInt(formData.quantity.replace(/[^\d]/g, "") || "0");
+      const calculatedTotal = price * quantity;
+      setFormData((prev) => ({ ...prev, total: calculatedTotal.toString() }));
     } else {
-      setFormData(prev => ({ ...prev, total: '' }))
+      setFormData((prev) => ({ ...prev, total: "" }));
     }
-  }, [formData.price, formData.quantity])
+  }, [formData.price, formData.quantity]);
 
   const handlePaymentCycleChange = (value: string) => {
-    if (value === '기타입력') {
-      setShowDaySelect(true)
-      setFormData(prev => ({ ...prev, payment_cycle: '1' }))
+    if (value === "기타입력") {
+      setShowDaySelect(true);
+      setFormData((prev) => ({ ...prev, payment_cycle: "1" }));
     } else {
-      setShowDaySelect(false)
-      setFormData(prev => ({ ...prev, payment_cycle: value }))
+      setShowDaySelect(false);
+      setFormData((prev) => ({ ...prev, payment_cycle: value }));
     }
-  }
+  };
 
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, '')
+    let value = e.target.value.replace(/\D/g, "");
     if (value.length <= 11) {
       if (value.length > 7) {
-        value = value.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3')
+        value = value.replace(/(\d{3})(\d{4})(\d{4})/, "$1-$2-$3");
       } else if (value.length > 3) {
-        value = value.replace(/(\d{3})(\d{1,4})/, '$1-$2')
+        value = value.replace(/(\d{3})(\d{1,4})/, "$1-$2");
       }
-      setFormData(prev => ({ ...prev, client: value }))
+      setFormData((prev) => ({ ...prev, client: value }));
     }
-  }
+  };
 
   // VAT 포함 가격 계산 함수
   const calculateVatPrice = (price: number) => {
@@ -202,12 +209,12 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit 
   const handleVatToggle = () => {
     setIsVatIncluded(!isVatIncluded);
     if (formData.price) {
-      const currentPrice = parseFloat(formData.price.replace(/,/g, ''));
-      const newPrice = !isVatIncluded 
+      const currentPrice = parseFloat(formData.price.replace(/,/g, ""));
+      const newPrice = !isVatIncluded
         ? calculateVatPrice(currentPrice)
         : calculateNonVatPrice(currentPrice);
-      
-      handleInputChange('price', newPrice.toLocaleString());
+
+      handleInputChange("price", newPrice.toLocaleString());
     }
   };
 
@@ -223,16 +230,21 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit 
             <select
               value={formData.supplier_id}
               onChange={(e) => {
-                const selectedSupplierId = e.target.value
-                const supplier = suppliers.find(s => s.id === parseInt(selectedSupplierId))
+                const selectedSupplierId = e.target.value;
+                const supplier = suppliers.find(
+                  (s) => s.id === parseInt(selectedSupplierId)
+                );
                 if (supplier) {
-                  setFormData(prev => ({ 
-                    ...prev, 
+                  setFormData((prev) => ({
+                    ...prev,
                     supplier_id: selectedSupplierId,
-                    client: supplier.contact || '' 
-                  }))
+                    client: supplier.contact || "",
+                  }));
                 } else {
-                  setFormData(prev => ({ ...prev, supplier_id: selectedSupplierId }))
+                  setFormData((prev) => ({
+                    ...prev,
+                    supplier_id: selectedSupplierId,
+                  }));
                 }
               }}
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
@@ -255,14 +267,16 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit 
             <select
               value={formData.item_id}
               onChange={(e) => {
-                const selectedItemId = e.target.value
-                const item = items.find(i => i.id === parseInt(selectedItemId))
+                const selectedItemId = e.target.value;
+                const item = items.find(
+                  (i) => i.id === parseInt(selectedItemId)
+                );
                 if (item) {
-                  setFormData(prev => ({
+                  setFormData((prev) => ({
                     ...prev,
                     item_id: selectedItemId,
-                    price: item.price ? item.price.toString() : ''
-                  }))
+                    price: item.price ? item.price.toString() : "",
+                  }));
                 }
               }}
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
@@ -284,7 +298,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit 
             </label>
             <select
               value={formData.unit_id}
-              onChange={(e) => handleInputChange('unit_id', e.target.value)}
+              onChange={(e) => handleInputChange("unit_id", e.target.value)}
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               required
             >
@@ -304,8 +318,8 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit 
             </label>
             <input
               type="text"
-              value={formatNumber(formData.quantity) || ''}
-              onChange={(e) => handleInputChange('quantity', e.target.value)}
+              value={formatNumber(formData.quantity) || ""}
+              onChange={(e) => handleInputChange("quantity", e.target.value)}
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               required
             />
@@ -315,33 +329,34 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit 
           <div>
             <div className="flex items-center justify-between">
               <label className="block text-sm font-medium text-gray-700">
-                단가{isVatIncluded ? '(VAT 포함)' : '(VAT 별도)'} <span className="text-red-500">*</span>
+                단가{isVatIncluded ? "(VAT 포함)" : "(VAT 별도)"}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <div className="flex items-center">
                 <button
                   type="button"
                   onClick={handleVatToggle}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                    isVatIncluded ? 'bg-indigo-600' : 'bg-gray-200'
+                    isVatIncluded ? "bg-indigo-600" : "bg-gray-200"
                   }`}
                 >
                   <span
                     className={`${
-                      isVatIncluded ? 'translate-x-6' : 'translate-x-1'
+                      isVatIncluded ? "translate-x-6" : "translate-x-1"
                     } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
                   />
                 </button>
                 <span className="ml-2 text-sm text-gray-500">
-                  {isVatIncluded ? 'VAT 포함' : 'VAT 별도'}
+                  {isVatIncluded ? "VAT 포함" : "VAT 별도"}
                 </span>
               </div>
             </div>
             <input
               type="text"
               name="price"
-              value={formData.price}
-              onChange={(e) => handleInputChange('price', e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              value={formatNumber(formData.price) || ""}
+              onChange={(e) => handleInputChange("price", e.target.value)}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               required
             />
           </div>
@@ -349,12 +364,13 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit 
           {/* 총액 */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              총액{isVatIncluded ? '(VAT 포함)' : '(VAT 별도)'} <span className="text-red-500">*</span>
+              총액{isVatIncluded ? "(VAT 포함)" : "(VAT 별도)"}{" "}
+              <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
-              value={formatNumber(formData.total) || ''}
-              onChange={(e) => handleInputChange('total', e.target.value)}
+              value={formatNumber(formData.total) || ""}
+              onChange={(e) => handleInputChange("total", e.target.value)}
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               required
               readOnly
@@ -367,8 +383,13 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit 
               결제주기 <span className="text-red-500">*</span>
             </label>
             <select
-              value={formData.payment_cycle === '' ? '미정' : 
-                     showDaySelect ? '기타입력' : formData.payment_cycle}
+              value={
+                formData.payment_cycle === ""
+                  ? "미정"
+                  : showDaySelect
+                  ? "기타입력"
+                  : formData.payment_cycle
+              }
               onChange={(e) => handlePaymentCycleChange(e.target.value)}
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               required
@@ -381,15 +402,21 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit 
             </select>
             {showDaySelect && (
               <Select
-                value={{ value: formData.payment_cycle, label: `${formData.payment_cycle}일` }}
+                value={{
+                  value: formData.payment_cycle,
+                  label: `${formData.payment_cycle}일`,
+                }}
                 onChange={(option) => {
                   if (option) {
-                    setFormData(prev => ({ ...prev, payment_cycle: option.value }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      payment_cycle: option.value,
+                    }));
                   }
                 }}
                 options={Array.from({ length: 31 }, (_, i) => ({
                   value: (i + 1).toString(),
-                  label: `${i + 1}일`
+                  label: `${i + 1}일`,
                 }))}
                 className="mt-2 text-black"
                 classNamePrefix="select"
@@ -406,7 +433,9 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit 
             </label>
             <select
               value={formData.payment_method}
-              onChange={(e) => handleInputChange('payment_method', e.target.value)}
+              onChange={(e) =>
+                handleInputChange("payment_method", e.target.value)
+              }
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               required
             >
@@ -426,7 +455,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit 
             <input
               type="date"
               value={formData.date}
-              onChange={(e) => handleInputChange('date', e.target.value)}
+              onChange={(e) => handleInputChange("date", e.target.value)}
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               required
             />
@@ -443,7 +472,6 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit 
               onChange={handlePhoneNumberChange}
               placeholder="010-0000-0000"
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
-              
             />
           </div>
 
@@ -454,7 +482,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit 
             </label>
             <textarea
               value={formData.notes}
-              onChange={(e) => handleInputChange('notes', e.target.value)}
+              onChange={(e) => handleInputChange("notes", e.target.value)}
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               rows={3}
             />
@@ -478,5 +506,5 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit 
         </div>
       </form>
     </Modal>
-  )
+  );
 }
