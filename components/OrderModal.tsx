@@ -25,6 +25,7 @@ interface Item {
   id: number;
   name: string;
   price?: number;
+  description?: string;
 }
 
 interface Unit {
@@ -196,25 +197,50 @@ export default function OrderModal({
   };
 
   // VAT 포함 가격 계산 함수
-  const calculateVatPrice = (price: number) => {
-    return isVatIncluded ? Math.round(price * 1.1) : price;
+  const calculateVatPrice = (basePrice: number, includeVat: boolean) => {
+    return includeVat ? Math.round(basePrice * 1.1) : basePrice;
   };
 
-  // VAT 제외 가격 계산 함수
-  const calculateNonVatPrice = (price: number) => {
-    return isVatIncluded ? Math.round(price / 1.1) : price;
+  // 품목 선택 시 처리하는 함수
+  const handleItemSelect = (itemId: string) => {
+    const selectedItem = items.find((item) => item.id === parseInt(itemId));
+    if (selectedItem) {
+      const isVatExcluded = selectedItem.description?.includes("부가세 별도");
+      setIsVatIncluded(!isVatExcluded);
+
+      const basePrice = selectedItem.price || 0;
+      const finalPrice = !isVatExcluded
+        ? calculateVatPrice(basePrice, true)
+        : basePrice;
+
+      setFormData((prev) => ({
+        ...prev,
+        item_id: itemId,
+        price: finalPrice.toString(),
+      }));
+    }
   };
 
-  // VAT 토글 처리
+  // VAT 토글 변경 시 처리하는 함수
   const handleVatToggle = () => {
-    setIsVatIncluded(!isVatIncluded);
-    if (formData.price) {
-      const currentPrice = parseFloat(formData.price.replace(/,/g, ""));
-      const newPrice = !isVatIncluded
-        ? calculateVatPrice(currentPrice)
-        : calculateNonVatPrice(currentPrice);
+    const selectedItem = items.find(
+      (item) => item.id === parseInt(formData.item_id)
+    );
+    if (selectedItem) {
+      const basePrice = selectedItem.price || 0;
+      const currentPrice = parseInt(formData.price.replace(/,/g, "") || "0");
 
-      handleInputChange("price", newPrice.toLocaleString());
+      // VAT 포함 -> 제외
+      if (isVatIncluded) {
+        const newPrice = Math.round(currentPrice / 1.1);
+        setFormData((prev) => ({ ...prev, price: newPrice.toString() }));
+      }
+      // VAT 제외 -> 포함
+      else {
+        const newPrice = calculateVatPrice(basePrice, true);
+        setFormData((prev) => ({ ...prev, price: newPrice.toString() }));
+      }
+      setIsVatIncluded(!isVatIncluded);
     }
   };
 
@@ -266,19 +292,7 @@ export default function OrderModal({
             </label>
             <select
               value={formData.item_id}
-              onChange={(e) => {
-                const selectedItemId = e.target.value;
-                const item = items.find(
-                  (i) => i.id === parseInt(selectedItemId)
-                );
-                if (item) {
-                  setFormData((prev) => ({
-                    ...prev,
-                    item_id: selectedItemId,
-                    price: item.price ? item.price.toString() : "",
-                  }));
-                }
-              }}
+              onChange={(e) => handleItemSelect(e.target.value)}
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
               required
             >
@@ -336,7 +350,7 @@ export default function OrderModal({
                 <button
                   type="button"
                   onClick={handleVatToggle}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
                     isVatIncluded ? "bg-indigo-600" : "bg-gray-200"
                   }`}
                 >

@@ -25,6 +25,7 @@ class Item(Base):
     name = Column(String, unique=True, index=True)
     description = Column(String, nullable=True)
     price = Column(Float, nullable=True)
+    vat_excluded = Column(Boolean, default=False)
     is_deleted = Column(Boolean, default=False)
 
     orders = relationship("Order", back_populates="item")

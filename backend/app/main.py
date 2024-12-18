@@ -71,6 +71,7 @@ class ItemBase(BaseModel):
     name: str
     description: Optional[str] = None
     price: Optional[float] = None
+    vat_excluded: Optional[bool] = None
 
 
 class ItemCreate(ItemBase):
@@ -474,7 +475,14 @@ async def upload_orders(file: UploadFile = File(...), db: Session = Depends(get_
             # 품목 찾기 또는 생성
             item = db.query(models.Item).filter(models.Item.name == row[2]).first()
             if not item:
-                item = models.Item(name=row[2], price=get_float_value(row[3]))
+                notes = str(row[10] or "")
+                vat_excluded = "부가세별도" in notes
+                item = models.Item(
+                    name=row[2],
+                    price=get_float_value(row[3]),
+                    vat_excluded=vat_excluded,
+                    description="부가세별도" if vat_excluded else None,
+                )
                 db.add(item)
                 db.flush()
 
