@@ -53,9 +53,18 @@ export default function Dashboard() {
   const [calendarData, setCalendarData] = useState<any[]>([])
   const [supplierStats, setSupplierStats] = useState<any>({})
   const [isClient, setIsClient] = useState(false)
+  const [currentMonth, setCurrentMonth] = useState('')
+  const [lastMonth, setLastMonth] = useState('')
 
   useEffect(() => {
     setIsClient(true)
+  }, [])
+
+  useEffect(() => {
+    const now = new Date()
+    setCurrentMonth(now.toLocaleDateString('ko-KR', { month: 'long', timeZone: 'Asia/Seoul' }))
+    setLastMonth(new Date(now.getFullYear(), now.getMonth() - 1)
+      .toLocaleDateString('ko-KR', { month: 'long', timeZone: 'Asia/Seoul' }))
   }, [])
 
   useEffect(() => {
@@ -70,10 +79,11 @@ export default function Dashboard() {
           const orderDate = new Date(order.date)
           const month = orderDate.toLocaleDateString('ko-KR', { month: 'long', timeZone: 'Asia/Seoul' })
           if (!acc[month]) {
-            acc[month] = { 주문건수: 0, 주문금액: 0 }
+            acc[month] = { 주문건수: 0, 주문금액: 0, suppliers: new Set() }
           }
           acc[month].주문건수 += 1
           acc[month].주문금액 += order.total
+          acc[month].suppliers.add(order.supplier.name)
           return acc
         }, {})
 
@@ -89,7 +99,7 @@ export default function Dashboard() {
             id: '주문금액',
             data: Object.entries(monthlyStats).map(([month, stats]: [string, any]) => ({
               x: month,
-              y: Math.round(stats.주문금액 / 10000) // Convert to 만원 단위
+              y: Math.round(stats.주문금액 / 10000)
             }))
           }
         ]
@@ -147,14 +157,21 @@ export default function Dashboard() {
         setSupplierData(supplierDataFormatted)
         setCategoryData(categoryDataFormatted)
         setCalendarData(calendarDataFormatted)
-        setSupplierStats(supplierStats)
+
+        // Set supplier stats for current and last month
+        const currentMonthStats = monthlyStats[currentMonth]
+        const lastMonthStats = monthlyStats[lastMonth]
+        setSupplierStats({
+          [currentMonth]: currentMonthStats?.suppliers.size || 0,
+          [lastMonth]: lastMonthStats?.suppliers.size || 0
+        })
       } catch (error) {
         console.error('Error fetching orders:', error)
       }
     }
 
     fetchOrders()
-  }, [])
+  }, [currentMonth, lastMonth])
 
   return (
     <div className="grid grid-cols-1 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 md:grid-cols-2 gap-6 animate-fadeIn">
@@ -326,32 +343,35 @@ export default function Dashboard() {
 
       {/* 지난달 주문 현황 비교 */}
       <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">지난달 주문 현황 비교</h3>
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          지난달 주문 현황 비교
+          <span className="text-sm font-normal text-gray-500 ml-2">(단위: 건, 만원, 개)</span>
+        </h3>
         <div className="h-[400px]">
           {isClient && (
             <ResponsiveRadar
               data={[
                 { 
                   metric: '주문건수', 
-                  이번달: monthlyData[0]?.data.slice(-1)[0]?.y || 0, 
-                  지난달: monthlyData[0]?.data.slice(-2)[0]?.y || 0 
+                  이번달: monthlyData[0]?.data.find((d: { x: string }) => d.x === currentMonth)?.y || 0,
+                  지난달: monthlyData[0]?.data.find((d: { x: string }) => d.x === lastMonth)?.y || 0
                 },
                 { 
-                  metric: '주문금액(만원)', 
-                  이번달: Math.round((monthlyData[1]?.data.slice(-1)[0]?.y || 0)), 
-                  지난달: Math.round((monthlyData[1]?.data.slice(-2)[0]?.y || 0))
+                  metric: '주문금액', 
+                  이번달: monthlyData[1]?.data.find((d: { x: string }) => d.x === currentMonth)?.y || 0,
+                  지난달: monthlyData[1]?.data.find((d: { x: string }) => d.x === lastMonth)?.y || 0
                 },
                 { 
                   metric: '공급업체수', 
-                  이번달: Object.keys(supplierStats || {}).length || 0, 
-                  지난달: Object.keys(supplierStats || {}).length || 0 
+                  이번달: supplierStats[currentMonth] || 0,
+                  지난달: supplierStats[lastMonth] || 0
                 },
               ]}
               keys={['이번달', '지난달']}
               indexBy="metric"
-              valueFormat=">-.0f"
+              valueFormat={(value) => value.toLocaleString('ko-KR')}
               margin={{ top: 70, right: 80, bottom: 40, left: 80 }}
-              borderColor={{ from: 'color' }}
+              borderColor={{ from: 'color', modifiers: [] }}
               gridLabelOffset={36}
               dotSize={8}
               dotColor={{ theme: 'background' }}
@@ -365,6 +385,18 @@ export default function Dashboard() {
                     fontSize: '12px',
                     borderRadius: '4px',
                     padding: '8px 12px',
+                  },
+                },
+                text: {
+                  fontSize: 11,
+                  fill: '#333333',
+                },
+                axis: {
+                  ticks: {
+                    text: {
+                      fontSize: 10,
+                      fill: '#666666',
+                    },
                   },
                 },
               }}
