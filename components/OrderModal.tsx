@@ -53,6 +53,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit 
   const [units, setUnits] = useState<Unit[]>([])
   const [formData, setFormData] = useState(defaultFormData)
   const [showDaySelect, setShowDaySelect] = useState(false)
+  const [isVatIncluded, setIsVatIncluded] = useState(false);
 
   const paymentMethods = ['계좌이체', '현금', '카드결제']
   const paymentCycles = ['미정', '매월초', '매월중순', '매월말', '기타입력']
@@ -187,8 +188,30 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit 
     }
   }
 
+  // VAT 포함 가격 계산 함수
+  const calculateVatPrice = (price: number) => {
+    return isVatIncluded ? Math.round(price * 1.1) : price;
+  };
+
+  // VAT 제외 가격 계산 함수
+  const calculateNonVatPrice = (price: number) => {
+    return isVatIncluded ? Math.round(price / 1.1) : price;
+  };
+
+  // VAT 토글 처리
+  const handleVatToggle = () => {
+    setIsVatIncluded(!isVatIncluded);
+    if (formData.price) {
+      const currentPrice = parseFloat(formData.price.replace(/,/g, ''));
+      const newPrice = !isVatIncluded 
+        ? calculateVatPrice(currentPrice)
+        : calculateNonVatPrice(currentPrice);
+      
+      handleInputChange('price', newPrice.toLocaleString());
+    }
+  };
+
   return (
-    // <Modal isOpen={isOpen} onClose={onClose} title="발주 등록">
     <Modal isOpen={isOpen} title="발주 등록">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
@@ -290,14 +313,35 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit 
 
           {/* 단가 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              단가 <span className="text-red-500">*</span>
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="block text-sm font-medium text-gray-700">
+                단가{isVatIncluded ? '(VAT 포함)' : '(VAT 별도)'} <span className="text-red-500">*</span>
+              </label>
+              <div className="flex items-center">
+                <button
+                  type="button"
+                  onClick={handleVatToggle}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                    isVatIncluded ? 'bg-indigo-600' : 'bg-gray-200'
+                  }`}
+                >
+                  <span
+                    className={`${
+                      isVatIncluded ? 'translate-x-6' : 'translate-x-1'
+                    } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                  />
+                </button>
+                <span className="ml-2 text-sm text-gray-500">
+                  {isVatIncluded ? 'VAT 포함' : 'VAT 별도'}
+                </span>
+              </div>
+            </div>
             <input
               type="text"
-              value={formatNumber(formData.price) || ''}
+              name="price"
+              value={formData.price}
               onChange={(e) => handleInputChange('price', e.target.value)}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               required
             />
           </div>
@@ -305,7 +349,7 @@ export default function OrderModal({ isOpen, onClose, onOrderComplete, onSubmit 
           {/* 총액 */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              총액 <span className="text-red-500">*</span>
+              총액{isVatIncluded ? '(VAT 포함)' : '(VAT 별도)'} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
