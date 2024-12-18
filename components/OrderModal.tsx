@@ -59,7 +59,7 @@ export default function OrderModal({
   const [units, setUnits] = useState<Unit[]>([]);
   const [formData, setFormData] = useState(defaultFormData);
   const [showDaySelect, setShowDaySelect] = useState(false);
-  const [isVatIncluded, setIsVatIncluded] = useState(false);
+  const [isVatIncluded, setIsVatIncluded] = useState(true);
 
   const paymentMethods = ["계좌이체", "현금", "카드결제"];
   const paymentCycles = ["미정", "매월초", "매월중순", "매월말", "기타입력"];
@@ -83,6 +83,7 @@ export default function OrderModal({
     if (isOpen) {
       setFormData(defaultFormData);
       setShowDaySelect(false);
+      setIsVatIncluded(true);
       localStorage.removeItem("lastOrder");
     }
   }, [isOpen]);
@@ -205,18 +206,17 @@ export default function OrderModal({
   const handleItemSelect = (itemId: string) => {
     const selectedItem = items.find((item) => item.id === parseInt(itemId));
     if (selectedItem) {
-      const isVatExcluded = selectedItem.description?.includes("부가세 별도");
+      // 비고란에 "부가세별도"가 포함되어 있는지 확인
+      const isVatExcluded = selectedItem.description?.includes("부가세별도");
+      // VAT 토글 상태 설정 (부가세별도면 false, 아니면 true)
       setIsVatIncluded(!isVatExcluded);
 
+      // 선택된 품목의 가격 설정
       const basePrice = selectedItem.price || 0;
-      const finalPrice = !isVatExcluded
-        ? calculateVatPrice(basePrice, true)
-        : basePrice;
-
       setFormData((prev) => ({
         ...prev,
         item_id: itemId,
-        price: finalPrice.toString(),
+        price: basePrice.toString(),
       }));
     }
   };
