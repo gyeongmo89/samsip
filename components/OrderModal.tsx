@@ -4,7 +4,7 @@
 
 import { useState, useEffect, ReactNode } from "react";
 import Modal from "./Modal";
-import Select from "react-select";
+import Select, { SingleValue, ActionMeta } from "react-select";
 
 interface OrderModalProps {
   isOpen: boolean;
@@ -15,8 +15,8 @@ interface OrderModalProps {
 
 interface Supplier {
   [x: string]: ReactNode;
-  // [x: string]: ReactNode
   id: number;
+  name: string;
   contact?: string;
   // Add other supplier properties as needed
 }
@@ -272,29 +272,29 @@ export default function OrderModal({
             <Select
               value={formData.supplier_id ? {
                 value: formData.supplier_id,
-                label: suppliers.find(s => s.id === parseInt(formData.supplier_id))?.name || ""
+                label: String(suppliers.find(s => s.id === parseInt(formData.supplier_id))?.name || "")
               } : null}
-              onChange={(option) => {
-                const selectedSupplierId = option?.value;
-                const supplier = suppliers.find(
-                  (s) => s.id === parseInt(selectedSupplierId || "")
-                );
-                if (supplier) {
+              onChange={(option: SingleValue<{ value: string; label: string }>, actionMeta: ActionMeta<{ value: string; label: string }>) => {
+                if (option) {
+                  const supplier = suppliers.find(
+                    (s) => s.id === parseInt(option.value)
+                  );
                   setFormData((prev) => ({
                     ...prev,
-                    supplier_id: selectedSupplierId,
-                    client: supplier.contact || "",
+                    supplier_id: option.value,
+                    client: supplier?.contact || "",
                   }));
                 } else {
                   setFormData((prev) => ({
                     ...prev,
-                    supplier_id: selectedSupplierId || "",
+                    supplier_id: "",
+                    client: "",
                   }));
                 }
               }}
               options={suppliers.map(supplier => ({
                 value: supplier.id.toString(),
-                label: supplier.name
+                label: supplier.name.toString()
               }))}
               className="mt-1 text-black"
               classNamePrefix="select"
@@ -312,9 +312,9 @@ export default function OrderModal({
             <Select
               value={formData.item_id ? {
                 value: formData.item_id,
-                label: items.find(i => i.id === parseInt(formData.item_id))?.name || ""
+                label: String(items.find(i => i.id === parseInt(formData.item_id))?.name || "")
               } : null}
-              onChange={(option) => handleItemSelect(option?.value || "")}
+              onChange={(option: SingleValue<{ value: string; label: string }>, actionMeta: ActionMeta<{ value: string; label: string }>) => handleItemSelect(option?.value || "")}
               options={items.map(item => ({
                 value: item.id.toString(),
                 label: item.name
@@ -444,7 +444,7 @@ export default function OrderModal({
                   value: formData.payment_cycle,
                   label: `${formData.payment_cycle}일`,
                 }}
-                onChange={(option) => {
+                onChange={(option: SingleValue<{ value: string; label: string }>, actionMeta: ActionMeta<{ value: string; label: string }>) => {
                   if (option) {
                     setFormData((prev) => ({
                       ...prev,
