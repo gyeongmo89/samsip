@@ -889,7 +889,7 @@ export default function OrderList() {
                 />
                 <button
                   onClick={handleSearch}
-                  className="bg-purple-500 text-white px-6 py-3 rounded-lg hover:bg-purple-600 transition-colors h-[52px] flex items-center justify-center"
+                  className="bg-purple-500 text-white px-6 py-3 rounded-lg hover:bg-purple-600 transition-colors"
                 >
                   <Search className="w-6 h-6" />
                 </button>
@@ -1089,7 +1089,12 @@ export default function OrderList() {
                     <td className="px-2 py-4 whitespace-nowrap text-center text-black">
                       <button
                         onClick={() => handleEditClick(order)}
-                        className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+                        className={`px-4 py-2 text-white rounded-lg transition-colors ${
+                          order.approval_status === "approved"
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-yellow-500 hover:bg-yellow-600"
+                        }`}
+                        disabled={order.approval_status === "approved"}
                       >
                         수정
                       </button>
