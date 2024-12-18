@@ -103,8 +103,10 @@ export default function Dashboard() {
   }, [])
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fadeIn">
+    <div className="grid grid-cols-1 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 md:grid-cols-2 gap-6 animate-fadeIn">
+      {/* <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-4"></div> */}
       {/* 월별 주문 추이 */}
+      {/* <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6"> */}
       <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">월별 주문 추이</h3>
         <div className="h-[300px]">
@@ -241,9 +243,7 @@ export default function Dashboard() {
               }
             ]}
             theme={theme}
-            animate={true}
-            motionStiffness={90}
-            motionDamping={15}
+            isInteractive={true}
           />
         </div>
       </div>

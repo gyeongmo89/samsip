@@ -19,7 +19,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl px-2 py-2">
+    // <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl px-2 py-2">
+    <div className="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 backdrop-blur-sm rounded-lg shadow-xl px-2 py-2">
+      
       <Dashboard />
     </div>
   )
