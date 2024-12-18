@@ -235,8 +235,14 @@ export default function OrderList() {
       const sortedData = data.sort((a: Order, b: Order) => {
         return new Date(b.date || '').getTime() - new Date(a.date || '').getTime();
       });
-      setOrders(sortedData);
-      setFilteredOrders(sortedData);
+      const processedOrders = sortedData.map((order: Order) => ({
+        ...order,
+        supplier: order.supplier || { id: 0, name: "삭제됨" },
+        item: order.item || { id: 0, name: "삭제됨" },
+        unit: order.unit || { id: 0, name: "삭제됨" }
+      }));
+      setOrders(processedOrders);
+      setFilteredOrders(processedOrders);
     } catch (error) {
       console.error("Error fetching orders:", error);
       alert("주문 목록을 불러오는데 실패했습니다.");

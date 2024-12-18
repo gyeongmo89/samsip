@@ -350,6 +350,16 @@ def read_orders(db: Session = Depends(get_db)):
             )
             .all()
         )
+
+        # 삭제된 데이터에 대한 처리
+        for order in orders:
+            if not order.supplier or order.supplier.is_deleted:
+                order.supplier = models.Supplier(id=0, name="삭제됨")
+            if not order.item or order.item.is_deleted:
+                order.item = models.Item(id=0, name="삭제됨")
+            if not order.unit or order.unit.is_deleted:
+                order.unit = models.Unit(id=0, name="삭제됨")
+
         return orders
     except Exception as e:
         logger.error(f"Error reading orders: {e}")
