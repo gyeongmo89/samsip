@@ -477,8 +477,41 @@ async def upload_orders(file: UploadFile = File(...), db: Session = Depends(get_
                 continue
 
             try:
-                order_date = datetime.strptime(str(row[0]), "%Y-%m-%d").date()
-            except ValueError:
+                date_str = str(row[0])
+                order_date = None
+
+                if isinstance(row[0], datetime):  # Excel datetime 객체인 경우
+                    order_date = row[0].date()
+                elif "." in date_str:
+                    try:
+                        # 날짜 문자열에서 공백 제거 및 분리
+                        parts = date_str.strip().split(".")
+                        if len(parts) == 3:
+                            year = int(parts[0])
+                            month = int(parts[1])
+                            day = int(parts[2])
+                            order_date = datetime(year, month, day).date()
+                    except (ValueError, TypeError, IndexError) as e:
+                        print(f"Error parsing date with parts '{date_str}': {str(e)}")
+
+                if order_date is None:
+                    # 다른 형식들 시도
+                    date_formats = ["%Y.%m.%d", "%Y-%m-%d", "%Y/%m/%d"]
+                    for date_format in date_formats:
+                        try:
+                            order_date = datetime.strptime(
+                                date_str.strip(), date_format
+                            ).date()
+                            break
+                        except ValueError:
+                            continue
+
+                if order_date is None:
+                    print(f"Using current date for invalid date: '{date_str}'")
+                    order_date = datetime.now().date()
+
+            except Exception as e:
+                print(f"Error processing date '{str(row[0])}': {str(e)}")
                 order_date = datetime.now().date()
 
             # 구입처 찾기 또는 생성

@@ -753,7 +753,7 @@ export default function OrderList() {
       setOrders((prevOrders) => [newOrder, ...prevOrders]);
       setFilteredOrders((prevFiltered) => [newOrder, ...prevFiltered]);
       alert("발주가 등록되었습니다.");
-    } catch (error) {
+    } catch (error) { 
       console.error("Error adding order:", error);
       alert("발주 등록에 실패했습니다.");
     }
