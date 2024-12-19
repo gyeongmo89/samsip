@@ -19,6 +19,10 @@ interface Order {
   };
 }
 
+interface SupplierStats {
+  [key: string]: number;
+}
+
 const theme = {
   background: "transparent",
   textColor: "#333333",
@@ -50,7 +54,7 @@ export default function Dashboard() {
   const [supplierData, setSupplierData] = useState<any[]>([]);
   const [categoryData, setCategoryData] = useState<any[]>([]);
   const [calendarData, setCalendarData] = useState<any[]>([]);
-  const [supplierStats, setSupplierStats] = useState<any>({});
+  const [supplierStats, setSupplierStats] = useState<SupplierStats>({});
   const [supplierBarData, setSupplierBarData] = useState<any[]>([]);
   const [isClient, setIsClient] = useState(false);
   const [currentMonth, setCurrentMonth] = useState("");
@@ -93,10 +97,29 @@ export default function Dashboard() {
     setCurrentMonth(currentMonthStr);
     setLastMonth(lastMonthStr);
 
+    if (!orders.length) {
+      // 데이터가 없을 때 기본 데이터 설정
+      setMonthlyData([
+        {
+          id: "발주건수",
+          data: []
+        },
+        {
+          id: "발주금액",
+          data: []
+        }
+      ]);
+      return;
+    }
+
+    // Get current month for highlighting
+    const nowDate = new Date();
+    const currentMonthNum = nowDate.getMonth() + 1;  // 1-based month
+
     // Process monthly data
     const monthlyOrderData = orders.reduce((acc: any, order) => {
       if (!order.date) {
-        return acc; // Skip orders without a date
+        return acc;
       }
       const date = new Date(order.date);
       const month = date.getMonth() + 1; // 1-based month
@@ -108,46 +131,56 @@ export default function Dashboard() {
       return acc;
     }, {});
 
-    // Create an array for all months (1-12) with default values
-    const monthlyData = Array.from({ length: 12 }, (_, i) => {
-      const month = i + 1;
-      const data = monthlyOrderData[month] || { count: 0, amount: 0 };
+    // Convert to nivo line chart format
+    const processedData = Object.entries(monthlyOrderData).map(([month, data]: [string, any]) => {
       return {
         x: `${month}월`,
         발주건수: data.count,
-        발주금액: data.amount
+        발주금액: data.amount,
+        isCurrentMonth: parseInt(month) === currentMonthNum
       };
     });
 
-    const lineData = [
+    // Sort by month
+    processedData.sort((a, b) => parseInt(a.x) - parseInt(b.x));
+
+    const monthlyDataFormatted = [
       {
         id: "발주건수",
-        data: monthlyData.map(d => ({ x: d.x, y: d.발주건수 }))
+        data: processedData.map((d) => ({
+          x: d.x,
+          y: d.발주건수,
+          isCurrentMonth: d.isCurrentMonth
+        }))
       },
       {
         id: "발주금액",
-        data: monthlyData.map(d => ({ x: d.x, y: d.발주금액 }))
+        data: processedData.map((d) => ({
+          x: d.x,
+          y: d.발주금액,
+          isCurrentMonth: d.isCurrentMonth
+        }))
       }
     ];
 
-    setMonthlyData(lineData);
+    setMonthlyData(monthlyDataFormatted);
 
     // Process supplier data
-    const supplierStats = orders.reduce((acc: any, order) => {
+    const supplierStats = orders.reduce((acc: SupplierStats, order) => {
       const supplierName = order.supplier.name;
       if (!acc[supplierName]) {
         acc[supplierName] = 0;
       }
-      acc[supplierName] += order.total;
+      acc[supplierName] += Math.round(order.total / 10000); // Convert to 만원
       return acc;
     }, {});
 
     const supplierDataFormatted = Object.entries(supplierStats)
-      .sort((a, b) => Number(b[1]) - Number(a[1]))
+      .sort((a, b) => b[1] - a[1])  // Sort by amount in descending order
       .map(([supplier, total]) => ({
         id: supplier,
         label: supplier,
-        value: Math.round(Number(total) / 10000),
+        value: total,
       }));
 
     // Process supplier order count data
@@ -235,18 +268,48 @@ export default function Dashboard() {
               tickPadding: 5,
               tickRotation: 0,
             }}
-            pointSize={10}
+            pointSize={12}
             pointColor={{ theme: "background" }}
             pointBorderWidth={2}
             pointBorderColor={{ from: "serieColor" }}
             pointLabelYOffset={-12}
             useMesh={true}
+            enablePoints={true}
+            markers={[
+              {
+                axis: 'x',
+                value: `${new Date().getMonth() + 1}월`,
+                lineStyle: { stroke: '#b4b4b4', strokeWidth: 2, strokeDasharray: '4 4' },
+                legend: '현재 월',
+                legendOrientation: 'vertical',
+                textStyle: { fill: '#666' }
+              }
+            ]}
+            theme={{
+              ...theme,
+              tooltip: {
+                container: {
+                  background: "#333",
+                  color: "#fff",
+                  fontSize: "12px",
+                  borderRadius: "4px",
+                  padding: "8px 12px",
+                },
+              },
+              labels: {
+                text: {
+                  fill: "#fff",
+                  fontSize: 12,
+                  fontWeight: 500,
+                },
+              },              
+            }}
             legends={[
               {
                 anchor: "top-right",
                 direction: "column",
                 justify: false,
-                translateX: 100,
+                translateX: 120,
                 translateY: 0,
                 itemsSpacing: 0,
                 itemDirection: "left-to-right",
@@ -283,25 +346,7 @@ export default function Dashboard() {
                 ],
               },
             ]}
-            theme={{
-              tooltip: {
-                container: {
-                  background: "#333",
-                  color: "#fff",
-                  fontSize: "12px",
-                  borderRadius: "4px",
-                  padding: "8px 12px",
-                },
-              },
-              labels: {
-                text: {
-                  fill: "#fff",
-                  fontSize: 12,
-                  fontWeight: 500,
-                },
-              },
-            }}
-            // theme={theme}
+          
             animate={true}
           />
         </div>
@@ -370,19 +415,6 @@ export default function Dashboard() {
                 itemOpacity: 1,
                 symbolSize: 14,
                 symbolShape: "circle",
-
-                data: [
-                  {
-                    id: "발주건수",
-                    label: "발주건수",
-                    color: "#61cdbb",
-                  },
-                  {
-                    id: "발주금액",
-                    label: "발주금액",
-                    color: "#f47560",
-                  },
-                ],
                 effects: [
                   {
                     on: "hover",
