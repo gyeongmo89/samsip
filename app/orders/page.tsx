@@ -1333,11 +1333,16 @@ export default function OrderList() {
                       ) : order.approval_status === "rejected" ? (
                         <button
                           onClick={() => handleViewRejection(order)}
-                          // className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+                          // onClick={() =>   setIsRejectionModalOpen(true)}
+                        
+                          //여기기                          
                           className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                         >
                           반려
                         </button>
+
+
+
                       ) : (
                         // <button
                         //   onClick={() => handleApprovalClick(order)}
@@ -1747,7 +1752,7 @@ export default function OrderList() {
             </button>
             <button
               onClick={selectedOrderForApproval ? handleApprovalSubmit : handleBulkApprovalConfirm}
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
               검토완료
             </button>
@@ -1763,6 +1768,7 @@ export default function OrderList() {
             >
               반려
             </button>
+            {/* 여기임 */}
           </div>
         </div>
       </Modal>
