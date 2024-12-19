@@ -364,13 +364,20 @@ export default function OrderList() {
   }) => {
     setSelectAll(e.target.checked);
     if (e.target.checked) {
-      setSelectedOrders(currentItems);
+      // Only select orders that are pending (not approved or rejected)
+      const pendingOrders = currentItems.filter(order => !order.approval_status);
+      setSelectedOrders(pendingOrders);
     } else {
       setSelectedOrders([]);
     }
   };
 
   const handleSelectOrder = (order: Order) => {
+    // Don't allow selecting orders that are already approved or rejected
+    if (order.approval_status) {
+      return;
+    }
+    
     setSelectedOrders((prev) => {
       if (prev.includes(order)) {
         return prev.filter((o) => o !== order);
@@ -608,8 +615,13 @@ export default function OrderList() {
   };
 
   const handleBulkApproval = () => {
-    if (selectedOrders.length === 0) {
-      alert("검토할 발주를 선택해주세요.");
+    // Filter out any orders that are already approved or rejected
+    const pendingOrders = selectedOrders.filter(order => !order.approval_status);
+    
+    if (pendingOrders.length === 0) {
+      alert("검토할 발주를 선택해주세요. (이미 검토된 발주는 제외됩니다)");
+      // Clear any selected orders that are not pending
+      setSelectedOrders(pendingOrders);
       return;
     }
     setIsPasswordModalOpen(true);
@@ -651,7 +663,11 @@ export default function OrderList() {
       // Update local state
       setOrders((prevOrders) =>
         prevOrders.map((order) => {
-          if (selectedOrders.some((selectedOrder) => selectedOrder.id === order.id)) {
+          if (
+            selectedOrders.some(
+              (selectedOrder) => selectedOrder.id === order.id
+            )
+          ) {
             return {
               ...order,
               approval_status: "approved",
@@ -757,7 +773,7 @@ export default function OrderList() {
         throw new Error(error.detail || "Failed to approve order");
       }
 
-      // // 현재 시간을 한국 시간대로 포맷팅
+      // 현재 시간을 한국 시간대로 포맷팅
       const now = new Date();
       const formattedDate = now
         .toLocaleString("ko-KR", {
@@ -774,14 +790,11 @@ export default function OrderList() {
       // 로컬 상태 업데이트
       setOrders((prevOrders) =>
         prevOrders.map((order) => {
-          if (
-            selectedOrders.some(
-              (selectedOrder) => selectedOrder.id === order.id
-            )
-          ) {
+          if (order.id === selectedOrderForApproval.id) {
             return {
               ...order,
               approval_status: "approved",
+              rejection_reason: undefined,
               approved_by: "이지은",
               approved_at: formattedDate,
             };
@@ -792,6 +805,8 @@ export default function OrderList() {
 
       setIsConfirmationModalOpen(false);
       setSelectedOrderForApproval(null);
+      setIsRejectionViewModalOpen(false);
+      alert("발주가 성공적으로 검토되었습니다.");
     } catch (error) {
       console.error("Error approving order:", error);
       alert("승인 처리 중 오류가 발생했습니다.");
