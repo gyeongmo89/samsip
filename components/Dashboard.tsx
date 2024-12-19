@@ -220,7 +220,7 @@ export default function Dashboard() {
       <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
       <div className="flex justify-between items-center">
           <div className="text-lg font-semibold text-gray-800 mb-4">
-            월별 발주 현황
+            월별 발주 추이
           </div>
           <div className="text-sm font-normal text-gray-500 ml-2">
             (금액단위: 만원)
@@ -229,6 +229,7 @@ export default function Dashboard() {
         <div className="h-[390px]">
           <ResponsiveLine
             data={monthlyData}
+            
             margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
             xScale={{ type: "point" }}
             yScale={{
@@ -237,6 +238,7 @@ export default function Dashboard() {
               max: "auto",
               stacked: false,
             }}
+            colors={["#61cdbb", "#f47560"]}
             axisTop={null}
             axisRight={null}
             axisBottom={{
@@ -271,6 +273,19 @@ export default function Dashboard() {
                 symbolShape: "circle",
                 symbolBorderColor: "rgba(0, 0, 0, .5)",
                 itemTextColor: "#333",
+
+                data: [
+                  {
+                    id: "발주건수",
+                    label: "발주건수",
+                    color: "#61cdbb",
+                  },
+                  {
+                    id: "발주금액",
+                    label: "발주금액",
+                    color: "#f47560",
+                  },
+                ],
 
                 effects: [
                   {
@@ -485,12 +500,12 @@ export default function Dashboard() {
                   data: [
                     {
                       id: "발주건수",
-                      label: "발주 건수",
+                      label: "발주건수",
                       color: "#61cdbb",
                     },
                     {
                       id: "발주금액",
-                      label: "발주 금액",
+                      label: "발주금액",
                       color: "#f47560",
                     },
                   ],
