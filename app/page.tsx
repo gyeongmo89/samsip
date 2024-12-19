@@ -11,7 +11,8 @@ export default function Home() {
 
   useEffect(() => {
     if (isLoggedIn) {
-      router.push('/dashboard')
+      // router.push('/dashboard')
+      router.push('/orders')
     }
   }, [isLoggedIn, router])
 

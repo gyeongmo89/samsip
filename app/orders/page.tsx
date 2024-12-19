@@ -621,20 +621,6 @@ export default function OrderList() {
       }
 
       // // 현재 시간을 한국 시간대로 포맷팅
-      // const now = new Date();
-      // const formattedDate = now
-      //   .toLocaleString("ko-KR", {
-      //     year: "2-digit",
-      //     month: "2-digit",
-      //     day: "2-digit",
-      //     hour: "2-digit",
-      //     minute: "2-digit",
-      //     hour12: false,
-      //   })
-      //   .replace(/\./g, "-")
-      //   .replace(",", "");
-
-      // 현재 시간을 한국 시간대로 포맷팅
       const now = new Date();
       const formattedDate = now
         .toLocaleString("ko-KR", {
@@ -644,11 +630,9 @@ export default function OrderList() {
           hour: "2-digit",
           minute: "2-digit",
           hour12: false,
-          timeZone: "Asia/Seoul",
         })
         .replace(/\./g, "-")
-        .replace(/, /, " ")
-        .replace(/^(\d{2}-\d{2}-\d{2})\s/, "$1  ");
+        .replace(",", "");
 
       // 로컬 상태 업데이트
       setOrders((prevOrders) =>
@@ -991,7 +975,7 @@ export default function OrderList() {
                     수정
                   </th>
                   <th className="w-[80px] px-2 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">
-                    확인
+                    검토
                   </th>
                 </tr>
               </thead>
@@ -1102,7 +1086,7 @@ export default function OrderList() {
                     <td className="px-2 py-4 whitespace-nowrap text-center">
                       {order.approval_status === "approved" ? (
                         <div className="flex flex-col items-center text-xs text-black">
-                          <span className="font-bold">이지은 확인완료</span>
+                          <span className="font-bold">이지은 검토완료</span>
                           <span>{order.approved_at}</span>
                         </div>
                       ) : order.approval_status === "rejected" ? (
@@ -1118,7 +1102,7 @@ export default function OrderList() {
                           onClick={() => handleApprovalClick(order)}
                           className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
                         >
-                          확인
+                          검토
                         </button>
                       )}
                     </td>
@@ -1504,9 +1488,9 @@ export default function OrderList() {
       </Modal>
 
       {/* 승인/반려 선택 모달 */}
-      <Modal isOpen={isConfirmationModalOpen} title="승인 확인">
+      <Modal isOpen={isConfirmationModalOpen} title="검토">
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">해당 발주를 승인하시겠습니까?</p>
+          <p className="text-sm text-gray-600">해당 발주를 검토완료 처리 하시겠습니까?</p>
           <div className="flex justify-end space-x-2">
             <button
               onClick={() => setIsConfirmationModalOpen(false)}
@@ -1518,7 +1502,7 @@ export default function OrderList() {
               onClick={handleApprovalSubmit}
               className="px-4 py-2 bg-blue-500 text-white rounded"
             >
-              승인
+              검토완료
             </button>
             <button
               onClick={() => {
@@ -1583,7 +1567,7 @@ export default function OrderList() {
               onClick={handleReapprovalStart}
               className="px-4 py-2 bg-blue-500 text-white rounded"
             >
-              재승인
+              재검토 완료
             </button>
           </div>
         </div>
