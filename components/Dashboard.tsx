@@ -94,58 +94,43 @@ export default function Dashboard() {
     setLastMonth(lastMonthStr);
 
     // Process monthly data
-    const monthlyStats = orders.reduce((acc: any, order) => {
-      if (!order.date) return acc;
-      const orderDate = new Date(order.date);
-      const month = orderDate.toLocaleDateString("ko-KR", {
-        month: "long",
-        timeZone: "Asia/Seoul",
-      });
-      if (!acc[month]) {
-        acc[month] = { 발주건수: 0, 발주금액: 0, suppliers: new Set() };
+    const monthlyOrderData = orders.reduce((acc: any, order) => {
+      if (!order.date) {
+        return acc; // Skip orders without a date
       }
-      acc[month].발주건수 += 1;
-      acc[month].발주금액 += order.total;
-      acc[month].suppliers.add(order.supplier.name);
+      const date = new Date(order.date);
+      const month = date.getMonth() + 1; // 1-based month
+      if (!acc[month]) {
+        acc[month] = { count: 0, amount: 0 };
+      }
+      acc[month].count += 1;
+      acc[month].amount += Math.round(order.total / 10000); // Convert to 만원
       return acc;
     }, {});
 
-    // Ensure both months exist in stats
-    if (!monthlyStats[currentMonthStr]) {
-      monthlyStats[currentMonthStr] = {
-        발주건수: 0,
-        발주금액: 0,
-        suppliers: new Set(),
+    // Create an array for all months (1-12) with default values
+    const monthlyData = Array.from({ length: 12 }, (_, i) => {
+      const month = i + 1;
+      const data = monthlyOrderData[month] || { count: 0, amount: 0 };
+      return {
+        x: `${month}월`,
+        발주건수: data.count,
+        발주금액: data.amount
       };
-    }
-    if (!monthlyStats[lastMonthStr]) {
-      monthlyStats[lastMonthStr] = {
-        발주건수: 0,
-        발주금액: 0,
-        suppliers: new Set(),
-      };
-    }
+    });
 
-    const monthlyDataFormatted = [
+    const lineData = [
       {
         id: "발주건수",
-        data: Object.entries(monthlyStats).map(
-          ([month, stats]: [string, any]) => ({
-            x: month,
-            y: stats.발주건수,
-          })
-        ),
+        data: monthlyData.map(d => ({ x: d.x, y: d.발주건수 }))
       },
       {
         id: "발주금액",
-        data: Object.entries(monthlyStats).map(
-          ([month, stats]: [string, any]) => ({
-            x: month,
-            y: Math.round(stats.발주금액 / 10000),
-          })
-        ),
-      },
+        data: monthlyData.map(d => ({ x: d.x, y: d.발주금액 }))
+      }
     ];
+
+    setMonthlyData(lineData);
 
     // Process supplier data
     const supplierStats = orders.reduce((acc: any, order) => {
@@ -204,13 +189,12 @@ export default function Dashboard() {
       })
     );
 
-    setMonthlyData(monthlyDataFormatted);
     setSupplierData(supplierDataFormatted);
     setCategoryData(categoryDataFormatted);
     setSupplierBarData(supplierBarData);
     setSupplierStats({
-      [currentMonthStr]: monthlyStats[currentMonthStr].suppliers.size,
-      [lastMonthStr]: monthlyStats[lastMonthStr].suppliers.size,
+      [currentMonthStr]: monthlyOrderData[new Date().getMonth() + 1]?.count || 0,
+      [lastMonthStr]: monthlyOrderData[new Date(now.getFullYear(), now.getMonth() - 1, 1).getMonth() + 1]?.count || 0,
     });
   }, [isClient, orders]);
 
@@ -386,6 +370,19 @@ export default function Dashboard() {
                 itemOpacity: 1,
                 symbolSize: 14,
                 symbolShape: "circle",
+
+                data: [
+                  {
+                    id: "발주건수",
+                    label: "발주건수",
+                    color: "#61cdbb",
+                  },
+                  {
+                    id: "발주금액",
+                    label: "발주금액",
+                    color: "#f47560",
+                  },
+                ],
                 effects: [
                   {
                     on: "hover",
