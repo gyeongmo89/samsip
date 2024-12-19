@@ -1543,7 +1543,7 @@ export default function OrderList() {
                 onChange={(e) =>
                   setFormData({ ...formData, date: e.target.value })
                 }
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black h-[38px]"
                 required
               />
             </div>
@@ -1569,6 +1569,13 @@ export default function OrderList() {
                 classNamePrefix="select"
                 placeholder="구입처 선택"
                 required
+                styles={{
+                  control: (provided) => ({
+                    ...provided,
+                    minHeight: '38px',
+                    height: '38px'
+                  }),
+                }}
               />
             </div>
 
@@ -1587,11 +1594,18 @@ export default function OrderList() {
                 classNamePrefix="select"
                 placeholder="품목 선택"
                 required
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    height: '38px',
+                    minHeight: '38px'
+                  })
+                }}
               />
             </div>
             {/* 단가 */}
             <div>
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center h-[21px]">
                 <label className="block text-sm font-medium text-gray-700">
                   단가{includeVAT ? "(VAT 포함)" : "(VAT 별도)"}{" "}
                   <span className="text-red-500">*</span>
@@ -1604,10 +1618,10 @@ export default function OrderList() {
                       checked={includeVAT}
                       onChange={handleVatToggle}
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <div className={`w-11 h-6 ${includeVAT ? 'bg-purple-600' : 'bg-gray-200'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500  rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all`}></div>
                   </label>
                   <span className="text-sm font-medium text-gray-700">
-                    VAT 포함
+                    {includeVAT ? 'VAT 포함' : 'VAT 별도'}
                   </span>
                 </div>
               </div>
@@ -1628,6 +1642,7 @@ export default function OrderList() {
                 }}
                 className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
                 required
+                style={{ height: '38px' }}
               />
             </div>
 
@@ -1669,6 +1684,7 @@ export default function OrderList() {
                 readOnly
               />
             </div>
+
             {/* 단위 */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -1738,6 +1754,13 @@ export default function OrderList() {
                 classNamePrefix="select"
                 placeholder="결제유형 선택"
                 required
+                styles={{
+                  control: (provided) => ({
+                    ...provided,
+                    minHeight: '42px',
+                    height: '42px'
+                  })
+                }}
               />
             </div>
 
@@ -1751,7 +1774,7 @@ export default function OrderList() {
                 value={formData.client}
                 onChange={handlePhoneNumberChange}
                 placeholder="010-0000-0000"
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black h-[42px]"
               />
             </div>
 

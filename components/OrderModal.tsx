@@ -259,7 +259,7 @@ export default function OrderModal({
               type="date"
               value={formData.date}
               onChange={(e) => handleInputChange("date", e.target.value)}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black h-[38px]"
               required
             />
           </div>
@@ -301,14 +301,32 @@ export default function OrderModal({
               placeholder="구입처 선택"
               isSearchable={true}
               required
+              styles={{
+                control: (provided) => ({
+                  ...provided,
+                  minHeight: '38px',
+                  height: '38px'
+                }),
+                valueContainer: (provided) => ({
+                  ...provided,
+                  height: '38px',
+                  padding: '0 6px'
+                }),
+                input: (provided) => ({
+                  ...provided,
+                  margin: '0px'
+                })
+              }}
             />
           </div>
 
           {/* 품목 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              품목 <span className="text-red-500">*</span>
-            </label>
+            <div className="flex items-center justify-between h-[24px]">
+              <label className="block text-sm font-medium text-gray-700">
+                품목 <span className="text-red-500">*</span>
+              </label>
+            </div>
             <Select
               value={formData.item_id ? {
                 value: formData.item_id,
@@ -324,12 +342,28 @@ export default function OrderModal({
               placeholder="품목 선택"
               isSearchable={true}
               required
+              styles={{
+                control: (provided) => ({
+                  ...provided,
+                  minHeight: '38px',
+                  height: '38px'
+                }),
+                valueContainer: (provided) => ({
+                  ...provided,
+                  height: '38px',
+                  padding: '0 6px'
+                }),
+                input: (provided) => ({
+                  ...provided,
+                  margin: '0px'
+                })
+              }}
             />
           </div>
 
           {/* 단가 */}
           <div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between h-[24px]">
               <label className="block text-sm font-medium text-gray-700">
                 단가{isVatIncluded ? "(VAT 포함)" : "(VAT 별도)"}{" "}
                 <span className="text-red-500">*</span>
@@ -358,7 +392,7 @@ export default function OrderModal({
               name="price"
               value={formatNumber(formData.price) || ""}
               onChange={(e) => handleInputChange("price", e.target.value)}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black h-[38px]"
               required
             />
           </div>
@@ -371,7 +405,7 @@ export default function OrderModal({
             <select
               value={formData.unit_id}
               onChange={(e) => handleInputChange("unit_id", e.target.value)}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black h-[38px]"
               required
             >
               <option value="">선택해주세요</option>
@@ -392,7 +426,7 @@ export default function OrderModal({
               type="text"
               value={formatNumber(formData.quantity) || ""}
               onChange={(e) => handleInputChange("quantity", e.target.value)}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black h-[38px]"
               required
             />
           </div>
@@ -409,7 +443,7 @@ export default function OrderModal({
               type="text"
               value={formatNumber(formData.total) || ""}
               onChange={(e) => handleInputChange("total", e.target.value)}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black h-10"
               required
               readOnly
             />
@@ -420,24 +454,31 @@ export default function OrderModal({
             <label className="block text-sm font-medium text-gray-700">
               결제주기 <span className="text-red-500">*</span>
             </label>
-            <select
-              value={
-                formData.payment_cycle === ""
-                  ? "미정"
-                  : showDaySelect
-                  ? "기타입력"
-                  : formData.payment_cycle
-              }
-              onChange={(e) => handlePaymentCycleChange(e.target.value)}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
-              required
-            >
-              {paymentCycles.map((cycle) => (
-                <option key={cycle} value={cycle}>
-                  {cycle}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={
+                  formData.payment_cycle === ""
+                    ? "미정"
+                    : showDaySelect
+                    ? "기타입력"
+                    : formData.payment_cycle
+                }
+                onChange={(e) => handlePaymentCycleChange(e.target.value)}
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black h-10 appearance-none"
+                required
+              >
+                {paymentCycles.map((cycle) => (
+                  <option key={cycle} value={cycle}>
+                    {cycle}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                </svg>
+              </div>
+            </div>
             {showDaySelect && (
               <Select
                 value={{
@@ -460,6 +501,13 @@ export default function OrderModal({
                 classNamePrefix="select"
                 placeholder="날짜 선택"
                 isSearchable
+                styles={{
+                  control: (provided) => ({
+                    ...provided,
+                    minHeight: '40px',
+                    height: '40px'
+                  }),
+                }}
               />
             )}
           </div>
@@ -474,7 +522,7 @@ export default function OrderModal({
               onChange={(e) =>
                 handleInputChange("payment_method", e.target.value)
               }
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black h-[38px]"
               required
             >
               {paymentMethods.map((method) => (
@@ -484,8 +532,6 @@ export default function OrderModal({
               ))}
             </select>
           </div>
-
-          
 
           {/* 구입 연락처 */}
           <div>
@@ -497,7 +543,7 @@ export default function OrderModal({
               value={formData.client}
               onChange={handlePhoneNumberChange}
               placeholder="010-0000-0000"
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black h-[38px]"
             />
           </div>
 
