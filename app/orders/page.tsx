@@ -769,7 +769,7 @@ export default function OrderList() {
                     )
                   }
                 >
-                  확인완료: {orders.filter((order) => order.approval_status === "approved").length}건
+                  검토완료: {orders.filter((order) => order.approval_status === "approved").length}건
                 </button>
                 <button
                   className="px-3 py-1 bg-white text-yellow-500 border border-yellow-500 rounded hover:bg-yellow-100 transition-colors"
@@ -779,7 +779,7 @@ export default function OrderList() {
                     )
                   }
                 >
-                  미확인: {orders.filter((order) => !order.approval_status).length}건
+                  미검토: {orders.filter((order) => !order.approval_status).length}건
                 </button>
                 <button
                   className="px-3 py-1 bg-white text-red-500 border border-red-500 rounded hover:bg-red-100 transition-colors"
