@@ -391,7 +391,9 @@ export default function OrderList() {
     }
 
     // 검토완료 또는 반려된 발주가 있는지 확인
-    const processedOrders = selectedOrders.filter(order => order.approval_status);
+    const processedOrders = selectedOrders.filter(
+      (order) => order.approval_status
+    );
     if (processedOrders.length > 0) {
       alert("검토완료 또는 반려된 발주건은 삭제할 수 없습니다.");
       return;
@@ -546,6 +548,43 @@ export default function OrderList() {
     });
     setIsEditModalOpen(true);
   };
+  //이상함-----
+  const [includeVAT, setIsVatIncluded] = useState(true);
+
+  // VAT 포함 가격 계산 함수
+  const calculateVatPrice = (basePrice: number, includeVat: boolean) => {
+    return includeVat
+      ? Math.round(basePrice * 1.1)
+      : Math.round(basePrice / 1.1);
+  };
+
+  // 가격 업데이트 함수
+  const updatePriceAndTotal = (price: string, quantity: string) => {
+    const numPrice = parseFloat(price.replace(/[^\d]/g, "") || "0");
+    const numQuantity = parseFloat(quantity.replace(/[^\d]/g, "") || "0");
+    const total = numPrice * numQuantity;
+    return {
+      price: numPrice.toString(),
+      total: total.toString(),
+    };
+  };
+
+  // VAT 토글 변경 시 처리하는 함수
+  const handleVatToggle = () => {
+    const currentPrice = parseInt(formData.price.replace(/,/g, "") || "0");
+    const newPrice = calculateVatPrice(currentPrice, !includeVAT);
+    const { total } = updatePriceAndTotal(
+      newPrice.toString(),
+      formData.quantity
+    );
+
+    setFormData((prev) => ({
+      ...prev,
+      price: newPrice.toString(),
+      total,
+    }));
+    setIsVatIncluded(!includeVAT);
+  };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -628,9 +667,13 @@ export default function OrderList() {
     }
 
     // 선택된 발주 중 이미 처리된 발주가 있는지 확인
-    const processedOrders = selectedOrders.filter(order => order.approval_status);
+    const processedOrders = selectedOrders.filter(
+      (order) => order.approval_status
+    );
     if (processedOrders.length > 0) {
-      alert("이미 처리된 발주가 포함되어 있습니다. 처리되지 않은 발주만 검토할 수 있습니다.");
+      alert(
+        "이미 처리된 발주가 포함되어 있습니다. 처리되지 않은 발주만 검토할 수 있습니다."
+      );
       setSelectedOrders([]); // 선택 초기화
       setSelectAll(false);
       return;
@@ -641,7 +684,9 @@ export default function OrderList() {
 
   const handleBulkApprovalConfirm = async () => {
     // 실제 처리 시에도 한번 더 체크
-    const pendingOrders = selectedOrders.filter(order => !order.approval_status);
+    const pendingOrders = selectedOrders.filter(
+      (order) => !order.approval_status
+    );
     if (pendingOrders.length === 0) {
       alert("처리할 수 있는 발주가 없습니다.");
       setIsConfirmationModalOpen(false);
@@ -736,9 +781,9 @@ export default function OrderList() {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
               password: "admin",
-              rejection_reason: "일괄 반려 처리"
+              rejection_reason: "일괄 반려 처리",
             }),
           }
         );
@@ -849,7 +894,9 @@ export default function OrderList() {
     }
 
     try {
-      const ordersToReject = selectedOrderForApproval ? [selectedOrderForApproval] : selectedOrders;
+      const ordersToReject = selectedOrderForApproval
+        ? [selectedOrderForApproval]
+        : selectedOrders;
 
       for (const order of ordersToReject) {
         const response = await fetch(
@@ -859,9 +906,9 @@ export default function OrderList() {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
               reason: rejectionReason,
-              password: "admin"
+              password: "admin",
             }),
           }
         );
@@ -874,7 +921,9 @@ export default function OrderList() {
       // Update local state
       setOrders((prevOrders) =>
         prevOrders.map((order) => {
-          if (ordersToReject.some((rejectOrder) => rejectOrder.id === order.id)) {
+          if (
+            ordersToReject.some((rejectOrder) => rejectOrder.id === order.id)
+          ) {
             return {
               ...order,
               approval_status: "rejected",
@@ -1378,15 +1427,12 @@ export default function OrderList() {
                         <button
                           onClick={() => handleViewRejection(order)}
                           // onClick={() =>   setIsRejectionModalOpen(true)}
-                        
-                          //여기기                          
+
+                          //여기기
                           className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                         >
                           반려
                         </button>
-
-
-
                       ) : (
                         // <button
                         //   onClick={() => handleApprovalClick(order)}
@@ -1474,13 +1520,7 @@ export default function OrderList() {
       </div>
 
       {/* 주문 등록 모달 */}
-      {/* <OrderModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onOrderComplete={fetchOrders}
-        // onSubmit={handleSubmit}
-        onSubmit={handleSubmit}
-      /> */}
+
       <OrderModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -1489,11 +1529,7 @@ export default function OrderList() {
       />
 
       {/* 수정 모달 */}
-      <Modal
-        isOpen={isEditModalOpen}
-        // onClose={() => setIsEditModalOpen(false)}
-        title="발주 정보 수정"
-      >
+      <Modal isOpen={isEditModalOpen} title="발주 수정">
         <form onSubmit={handleEditSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             {/* 발주일 */}
@@ -1553,21 +1589,44 @@ export default function OrderList() {
                 required
               />
             </div>
-
-            {/* 단위 */}
+            {/* 단가 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                단위 <span className="text-red-500">*</span>
-              </label>
-              <Select
-                value={{ value: formData.unit_name, label: formData.unit_name }}
-                onChange={(option) =>
-                  setFormData({ ...formData, unit_name: option?.value || "" })
-                }
-                options={units}
-                className="mt-1 text-black"
-                classNamePrefix="select"
-                placeholder="단위 선택"
+              <div className="flex justify-between items-center">
+                <label className="block text-sm font-medium text-gray-700">
+                  단가{includeVAT ? "(VAT 포함)" : "(VAT 별도)"}{" "}
+                  <span className="text-red-500">*</span>
+                </label>
+                <div className="flex items-center space-x-2">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={includeVAT}
+                      onChange={handleVatToggle}
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                  <span className="text-sm font-medium text-gray-700">
+                    VAT 포함
+                  </span>
+                </div>
+              </div>
+              <input
+                type="text"
+                value={formatNumber(formData.price) || ""}
+                onChange={(e) => {
+                  const price = e.target.value.replace(/[^\d]/g, "");
+                  const { price: newPrice, total } = updatePriceAndTotal(
+                    price,
+                    formData.quantity
+                  );
+                  setFormData({
+                    ...formData,
+                    price: newPrice,
+                    total,
+                  });
+                }}
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
                 required
               />
             </div>
@@ -1582,37 +1641,14 @@ export default function OrderList() {
                 value={formatNumber(formData.quantity) || ""}
                 onChange={(e) => {
                   const quantity = e.target.value.replace(/[^\d]/g, "");
-                  const price = formData.price.replace(/[^\d]/g, "");
+                  const { price, total } = updatePriceAndTotal(
+                    formData.price,
+                    quantity
+                  );
                   setFormData({
                     ...formData,
                     quantity,
-                    total: (
-                      parseFloat(price || "0") * parseFloat(quantity || "0")
-                    ).toString(),
-                  });
-                }}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
-                required
-              />
-            </div>
-
-            {/* 단가 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                단가 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formatNumber(formData.price) || ""}
-                onChange={(e) => {
-                  const price = e.target.value.replace(/[^\d]/g, "");
-                  const quantity = formData.quantity.replace(/[^\d]/g, "");
-                  setFormData({
-                    ...formData,
-                    price,
-                    total: (
-                      parseFloat(price || "0") * parseFloat(quantity || "0")
-                    ).toString(),
+                    total,
                   });
                 }}
                 className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
@@ -1623,13 +1659,30 @@ export default function OrderList() {
             {/* 총액 */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                총액 <span className="text-red-500">*</span>
+                총액{includeVAT ? "(VAT 포함)" : "(VAT 별도)"}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={formatNumber(formData.total) || ""}
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-gray-100 text-black"
                 readOnly
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black bg-gray-50"
+              />
+            </div>
+            {/* 단위 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                단위 <span className="text-red-500">*</span>
+              </label>
+              <Select
+                value={{ value: formData.unit_name, label: formData.unit_name }}
+                onChange={(option) =>
+                  setFormData({ ...formData, unit_name: option?.value || "" })
+                }
+                options={units}
+                className="mt-1 text-black"
+                classNamePrefix="select"
+                placeholder="단위 선택"
                 required
               />
             </div>
@@ -1774,7 +1827,7 @@ export default function OrderList() {
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
               확인
-            </button>            
+            </button>
           </div>
         </form>
       </Modal>
@@ -1783,8 +1836,8 @@ export default function OrderList() {
       <Modal isOpen={isConfirmationModalOpen} title="검토">
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
-            {selectedOrderForApproval 
-              ? "해당 발주를 검토완료 처리 하시겠습니까?" 
+            {selectedOrderForApproval
+              ? "해당 발주를 검토완료 처리 하시겠습니까?"
               : `선택한 ${selectedOrders.length}개의 발주를 검토하시겠습니까?`}
           </p>
           <div className="flex justify-end space-x-2">
@@ -1795,13 +1848,18 @@ export default function OrderList() {
               취소
             </button>
             <button
-              onClick={selectedOrderForApproval ? handleApprovalSubmit : handleBulkApprovalConfirm}
+              onClick={
+                selectedOrderForApproval
+                  ? handleApprovalSubmit
+                  : handleBulkApprovalConfirm
+              }
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
               검토완료
             </button>
             {/* Only show reject button if not reviewing a rejected order */}
-            {(!selectedOrderForApproval || selectedOrderForApproval.approval_status !== "rejected") && (
+            {(!selectedOrderForApproval ||
+              selectedOrderForApproval.approval_status !== "rejected") && (
               <button
                 onClick={() => {
                   if (selectedOrders.length === 0) {
