@@ -22,9 +22,25 @@ export default function Navbar() {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setIsLoggedIn(!!localStorage.getItem("isLoggedIn"));
-    }
+    const checkLoginStatus = () => {
+      if (typeof window !== 'undefined') {
+        setIsLoggedIn(!!localStorage.getItem("isLoggedIn"));
+      }
+    };
+
+    // Check initial status
+    checkLoginStatus();
+
+    // Add event listener for storage changes
+    window.addEventListener('storage', checkLoginStatus);
+
+    // Add custom event listener for login status changes
+    window.addEventListener('loginStatusChanged', checkLoginStatus);
+
+    return () => {
+      window.removeEventListener('storage', checkLoginStatus);
+      window.removeEventListener('loginStatusChanged', checkLoginStatus);
+    };
   }, []);
 
   const isActive = (path: string) => {

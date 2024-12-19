@@ -14,11 +14,16 @@ const geistMono = localFont({
   variable: "--font-geist-mono",
   weight: "100 900",
 });
-
-export const metadata: Metadata = {
-  title: "삼십일미 발주프로그램",
-  description: "발주 관리 시스템",
-};
+// export const metadata: Metadata = {
+//   title: "삼십일미 발주관리 시스템",
+//   description: "발주관리 시스템",
+//   icons: {
+//     icon: [
+//       { url: '/favicon.ico', sizes: 'any' },
+//       { url: '/favicon.ico', sizes: '32x32' },
+//     ],
+//   },
+// };
 
 export default function RootLayout({
   children,
@@ -27,6 +32,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
+      <head>
+        <title>삼십일미 발주관리 시스템</title>
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

@@ -14,6 +14,8 @@ export default function LoginForm() {
     e.preventDefault()
     if (username === 'heeju' && password === 'rudahtkfkd') {
       localStorage.setItem('isLoggedIn', 'true')
+      // Dispatch custom event for login status change
+      window.dispatchEvent(new Event('loginStatusChanged'))
       router.push('/orders')
     } else {
       setError('아이디 또는 비밀번호가 올바르지 않습니다.')
