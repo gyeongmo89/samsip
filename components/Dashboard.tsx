@@ -101,10 +101,10 @@ export default function Dashboard() {
         timeZone: "Asia/Seoul",
       });
       if (!acc[month]) {
-        acc[month] = { 주문건수: 0, 주문금액: 0, suppliers: new Set() };
+        acc[month] = { 발주건수: 0, 발주금액: 0, suppliers: new Set() };
       }
-      acc[month].주문건수 += 1;
-      acc[month].주문금액 += order.total;
+      acc[month].발주건수 += 1;
+      acc[month].발주금액 += order.total;
       acc[month].suppliers.add(order.supplier.name);
       return acc;
     }, {});
@@ -112,35 +112,35 @@ export default function Dashboard() {
     // Ensure both months exist in stats
     if (!monthlyStats[currentMonthStr]) {
       monthlyStats[currentMonthStr] = {
-        주문건수: 0,
-        주문금액: 0,
+        발주건수: 0,
+        발주금액: 0,
         suppliers: new Set(),
       };
     }
     if (!monthlyStats[lastMonthStr]) {
       monthlyStats[lastMonthStr] = {
-        주문건수: 0,
-        주문금액: 0,
+        발주건수: 0,
+        발주금액: 0,
         suppliers: new Set(),
       };
     }
 
     const monthlyDataFormatted = [
       {
-        id: "주문건수",
+        id: "발주건수",
         data: Object.entries(monthlyStats).map(
           ([month, stats]: [string, any]) => ({
             x: month,
-            y: stats.주문건수,
+            y: stats.발주건수,
           })
         ),
       },
       {
-        id: "주문금액",
+        id: "발주금액",
         data: Object.entries(monthlyStats).map(
           ([month, stats]: [string, any]) => ({
             x: month,
-            y: Math.round(stats.주문금액 / 10000),
+            y: Math.round(stats.발주금액 / 10000),
           })
         ),
       },
@@ -168,18 +168,18 @@ export default function Dashboard() {
     const categoryStats = orders.reduce((acc: any, order) => {
       const category = "식자재"; // Replace with actual category
       if (!acc[category]) {
-        acc[category] = { 주문건수: 0, 주문금액: 0 };
+        acc[category] = { 발주건수: 0, 발주금액: 0 };
       }
-      acc[category].주문건수 += 1;
-      acc[category].주문금액 += order.total;
+      acc[category].발주건수 += 1;
+      acc[category].발주금액 += order.total;
       return acc;
     }, {});
 
     const categoryDataFormatted = Object.entries(categoryStats).map(
       ([category, stats]: [string, any]) => ({
         category,
-        주문건수: stats.주문건수,
-        주문금액: Math.round(stats.주문금액 / 10000),
+        발주건수: stats.발주건수,
+        발주금액: Math.round(stats.발주금액 / 10000),
       })
     );
 
@@ -194,10 +194,10 @@ export default function Dashboard() {
 
   return (
     <div className="grid grid-cols-1 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 md:grid-cols-2 gap-6 animate-fadeIn">
-      {/* 월별 주문 추이 */}
+      {/* 월별 발주 추이 */}
       <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          월별 주문 추이
+          월별 발주 추이
         </h3>
         <div className="h-[300px]">
           <ResponsiveLine
@@ -403,11 +403,11 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 카테고리별 주문 현황 */}
+      {/* 카테고리별 발주 현황 */}
       <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
         <div className="flex justify-between items-center">
           <div className="text-lg font-semibold text-gray-800 mb-4">
-            카테고리별 주문 현황
+            구입처별 발주 건수 분포
           </div>
 
           <div className="text-sm font-normal text-gray-500 ml-2">
@@ -420,7 +420,7 @@ export default function Dashboard() {
               data={categoryData.map((item) => ({
                 id: item.category,
                 label: item.category,
-                value: item.주문금액,
+                value: item.발주금액,
               }))}
               margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
               innerRadius={0.5}
@@ -455,11 +455,11 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 지난달 주문 현황 비교 */}
+      {/* 지난달 발주 현황 비교 */}
       <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
         <div className="flex justify-between items-center">
           <div className="text-lg font-semibold text-gray-800 mb-4">
-            지난달 주문 현황 비교
+            지난달 발주 현황 비교
           </div>
           <div className="text-sm font-normal text-gray-500 ml-2">
             (단위: EA, 만원)
@@ -470,7 +470,7 @@ export default function Dashboard() {
             <ResponsiveRadar
               data={[
                 {
-                  metric: "주문건수",
+                  metric: "발주건수",
                   이번달:
                     monthlyData[0]?.data.find(
                       (d: { x: string }) => d.x === currentMonth
@@ -481,7 +481,7 @@ export default function Dashboard() {
                     )?.y || 0,
                 },
                 {
-                  metric: "주문금액",
+                  metric: "발주금액",
                   이번달:
                     monthlyData[1]?.data.find(
                       (d: { x: string }) => d.x === currentMonth
