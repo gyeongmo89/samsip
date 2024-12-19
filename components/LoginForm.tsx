@@ -14,7 +14,7 @@ export default function LoginForm() {
     e.preventDefault()
     if (username === 'heeju' && password === 'rudahtkfkd') {
       localStorage.setItem('isLoggedIn', 'true')
-      router.push('/dashboard')
+      router.push('/orders')
     } else {
       setError('아이디 또는 비밀번호가 올바르지 않습니다.')
     }

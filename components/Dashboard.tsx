@@ -180,7 +180,7 @@ export default function Dashboard() {
       .map(([supplier, data]: [string, any]) => ({
         supplier,
         count: data.count,
-        amount: Math.round(data.amount / 10000)
+        amount: Math.round(data.amount / 10000),
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10); // Limit to top 10 suppliers to prevent overcrowding
@@ -218,9 +218,14 @@ export default function Dashboard() {
     <div className="grid grid-cols-1 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 md:grid-cols-2 gap-6 animate-fadeIn">
       {/* 월별 발주 추이 */}
       <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          월별 발주 추이
-        </h3>
+      <div className="flex justify-between items-center">
+          <div className="text-lg font-semibold text-gray-800 mb-4">
+            월별 발주 현황
+          </div>
+          <div className="text-sm font-normal text-gray-500 ml-2">
+            (금액단위: 만원)
+          </div>
+        </div>
         <div className="h-[300px]">
           <ResponsiveLine
             data={monthlyData}
@@ -252,7 +257,7 @@ export default function Dashboard() {
             useMesh={true}
             legends={[
               {
-                anchor: "bottom-right",
+                anchor: "top-right",
                 direction: "column",
                 justify: false,
                 translateX: 100,
@@ -261,58 +266,24 @@ export default function Dashboard() {
                 itemDirection: "left-to-right",
                 itemWidth: 80,
                 itemHeight: 20,
-                itemOpacity: 0.75,
-                symbolSize: 12,
+                itemOpacity: 1,
+                symbolSize: 14,
                 symbolShape: "circle",
                 symbolBorderColor: "rgba(0, 0, 0, .5)",
-                itemTextColor: "#000",
+                itemTextColor: "#333",
 
                 effects: [
                   {
                     on: "hover",
                     style: {
                       itemTextColor: "#000",
+                      symbolSize: 20,
+                      itemBackground: "rgba(0, 0, 0, .03)",
                     },
                   },
                 ],
               },
             ]}
-            theme={theme}
-            animate={true}
-          />
-        </div>
-      </div>
-
-      {/* 구입처별 발주 금액 분포 */}
-      <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
-        <div className="flex items-center justify-between">
-          <div className="text-lg font-semibold text-gray-800 mb-4">
-            구입처별 발주 금액 분포
-          </div>
-          <div className="text-sm font-normal text-gray-500 ml-2">
-            (단위:만원)
-          </div>
-        </div>
-        <div className="h-[300px]">
-          {/* <ResponsivePie
-            data={supplierData}
-            margin={{ top: 40, right: 60, bottom: 80, left: 60 }}
-            innerRadius={0.5}
-            padAngle={0.7}
-            cornerRadius={3}
-            activeOuterRadiusOffset={8}
-            colors={{ scheme: "nivo" }}
-            borderWidth={1}
-            borderColor={{ from: "color", modifiers: [["darker", 0.2]] }}
-            arcLinkLabelsSkipAngle={10}
-            arcLinkLabelsTextColor="#333333"
-            arcLinkLabelsThickness={2}
-            arcLinkLabelsColor={{ from: "color" }}
-            arcLabelsSkipAngle={10}
-            arcLabelsTextColor={{
-              from: "color",
-              modifiers: [["darker", 4]],
-            }}
             theme={{
               tooltip: {
                 container: {
@@ -331,33 +302,23 @@ export default function Dashboard() {
                 },
               },
             }}
-            legends={[
-              {
-                anchor: "bottom",
-                direction: "row",
-                justify: false,
-                translateX: 0,
-                translateY: 56,
-                itemsSpacing: 0,
-                itemWidth: 100,
-                itemHeight: 18,
-                itemTextColor: "#999",
-                itemDirection: "left-to-right",
-                itemOpacity: 1,
-                symbolSize: 18,
-                symbolShape: "circle",
-                effects: [
-                  {
-                    on: "hover",
-                    style: {
-                      itemTextColor: "#000",
-                      symbolSize: 20,
-                    },
-                  },
-                ],
-              },
-            ]}
-          /> */}
+            // theme={theme}
+            animate={true}
+          />
+        </div>
+      </div>
+
+      {/* 구입처별 발주 금액 분포 */}
+      <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
+        <div className="flex items-center justify-between">
+          <div className="text-lg font-semibold text-gray-800 mb-4">
+            구입처별 발주 금액 분포
+          </div>
+          <div className="text-sm font-normal text-gray-500 ml-2">
+            (금액단위:만원)
+          </div>
+        </div>
+        <div className="h-[300px]">
           <ResponsivePie
             data={supplierData}
             margin={{ top: 30, right: 160, bottom: 30, left: 60 }} // 오른쪽 여백 증가
@@ -405,10 +366,10 @@ export default function Dashboard() {
                 itemsSpacing: 2, // 항목 간 간격
                 itemWidth: 100,
                 itemHeight: 20,
-                itemTextColor: "#999",
+                itemTextColor: "#333",
                 itemDirection: "left-to-right",
                 itemOpacity: 1,
-                symbolSize: 18,
+                symbolSize: 14,
                 symbolShape: "circle",
                 effects: [
                   {
@@ -416,6 +377,7 @@ export default function Dashboard() {
                     style: {
                       itemTextColor: "#000",
                       symbolSize: 20,
+                      itemBackground: "rgba(0, 0, 0, .03)",
                     },
                   },
                 ],
@@ -433,55 +395,55 @@ export default function Dashboard() {
           </div>
 
           <div className="text-sm font-normal text-gray-500 ml-2">
-            (건수: EA, 금액: 만원)
+            (금액단위: 만원)
           </div>
         </div>
-        <div className="h-[300px]">
+        <div className="h-[390px]">
           {isClient && supplierBarData.length > 0 && (
             <ResponsiveBar
               data={supplierBarData}
-              keys={['count', 'amount']}
+              keys={["count", "amount"]}
               indexBy="supplier"
-              margin={{ top: 50, right: 130, bottom: 100, left: 60 }}
-              padding={0.3}
+              margin={{ top: 50, right: 130, bottom: 55, left: 60 }}
+              padding={0.2}
               groupMode="grouped"
-              valueScale={{ 
-                type: 'linear',
+              valueScale={{
+                type: "linear",
                 min: 0,
-                max: 'auto',
+                max: "auto",
               }}
-              indexScale={{ type: 'band', round: true }}
-              colors={['#61cdbb', '#f47560']}
+              indexScale={{ type: "band", round: true }}
+              colors={["#61cdbb", "#f47560"]}
               borderColor={{
-                from: 'color',
-                modifiers: [['darker', 1.6]]
+                from: "color",
+                modifiers: [["darker", 1.6]],
               }}
               enableLabel={true}
-              label={d => String(d.value)}
+              label={(d) => String(d.value)}
               axisBottom={{
                 tickSize: 5,
                 tickPadding: 5,
                 tickRotation: -45,
-                legend: '구입처',
-                legendPosition: 'middle',
-                legendOffset: 60
+                legend: "구입처",
+                legendPosition: "middle",
+                legendOffset: 50,
               }}
               axisLeft={{
                 tickSize: 5,
                 tickPadding: 5,
                 tickRotation: 0,
-                legend: '발주 건수 (EA)',
-                legendPosition: 'middle',
-                legendOffset: -40
+                legend: "발주 건수 (EA)",
+                legendPosition: "middle",
+                legendOffset: -40,
               }}
               axisRight={{
                 tickSize: 5,
                 tickPadding: 5,
                 tickRotation: 0,
-                legend: '발주 금액 (만원)',
-                legendPosition: 'middle',
+                legend: "발주 금액 (만원)",
+                legendPosition: "middle",
                 legendOffset: 40,
-                format: value => `${value.toLocaleString()}`
+                format: (value) => `${value.toLocaleString()}`,
               }}
               labelSkipWidth={12}
               labelSkipHeight={12}
@@ -503,48 +465,46 @@ export default function Dashboard() {
                   },
                 },
               }}
-              legends={[//여기
+              legends={[
+                
                 {
-                  dataFrom: 'keys',
-                  anchor: 'top-right',
-                  direction: 'column',
+                  dataFrom: "keys",
+                  anchor: "top-right",
+                  direction: "column",
                   justify: false,
                   translateX: 155,
                   translateY: 0,
                   itemsSpacing: 2,
                   itemWidth: 100,
                   itemHeight: 20,
-                  itemDirection: 'left-to-right',
+                  itemDirection: "left-to-right",
                   itemOpacity: 1,
-                  symbolSize: 18,
+                  symbolSize: 14,
                   symbolShape: "circle",
 
                   data: [
                     {
-                      id: 'count',
-                      label: '발주 건수',
+                      id: "count",
+                      label: "발주 건수",
                       color: "#61cdbb",
-                      // color?: string;
-                      // fill?: string;
-
                     },
                     {
-                      id: 'amount',
-                      label: '발주 금액',
+                      id: "amount",
+                      label: "발주 금액",
                       color: "#f47560",
-                    }
+                    },
                   ],
                   effects: [
                     {
                       on: "hover",
                       style: {
                         itemTextColor: "#000",
-                        // symbolSize: 20,
+                        symbolSize: 20,
                         itemBackground: "rgba(0, 0, 0, .03)",
                       },
                     },
                   ],
-                }
+                },
               ]}
             />
           )}
@@ -558,7 +518,7 @@ export default function Dashboard() {
             지난달 발주 현황 비교
           </div>
           <div className="text-sm font-normal text-gray-500 ml-2">
-            (단위: EA, 만원)
+            (금액단위: 만원)
           </div>
         </div>
         <div className="h-[400px]">
@@ -596,7 +556,7 @@ export default function Dashboard() {
               keys={["이번달", "지난달"]}
               indexBy="metric"
               valueFormat={(value) => value.toLocaleString("ko-KR")}
-              margin={{ top: 70, right: 80, bottom: 40, left: 80 }}
+              margin={{ top: 70, right: 80, bottom: 20, left: 80 }}
               borderColor={{ from: "color", modifiers: [] }}
               gridLabelOffset={36}
               dotSize={8}
@@ -623,20 +583,22 @@ export default function Dashboard() {
               }}
               legends={[
                 {
-                  anchor: "top-left",
+                  anchor: "top-right",
                   direction: "row",
                   translateX: -50,
                   translateY: -40,
                   itemWidth: 85,
                   itemHeight: 20,
                   itemTextColor: "#333",
-                  symbolSize: 12,
+                  itemOpacity: 1,
+                  symbolSize: 14,
                   symbolShape: "circle",
                   effects: [
                     {
                       on: "hover",
                       style: {
                         itemTextColor: "#000",
+                        symbolSize: 20,
                         itemBackground: "rgba(0, 0, 0, .03)",
                       },
                     },
