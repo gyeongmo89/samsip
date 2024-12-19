@@ -166,6 +166,8 @@ export default function OrderList() {
   // 페이지 변경 핸들러
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);
+    setSelectedOrders([]);
+    setSelectAll(false);
   };
 
   // 페이지당 항목 수 변경 핸들러
@@ -185,6 +187,8 @@ export default function OrderList() {
 
   useEffect(() => {
     fetchOrders();
+    setSelectedOrders([]);
+    setSelectAll(false);
   }, []);
 
   useEffect(() => {
@@ -364,20 +368,13 @@ export default function OrderList() {
   }) => {
     setSelectAll(e.target.checked);
     if (e.target.checked) {
-      // Only select orders that are pending (not approved or rejected)
-      const pendingOrders = currentItems.filter(order => !order.approval_status);
-      setSelectedOrders(pendingOrders);
+      setSelectedOrders(currentItems);
     } else {
       setSelectedOrders([]);
     }
   };
 
   const handleSelectOrder = (order: Order) => {
-    // Don't allow selecting orders that are already approved or rejected
-    if (order.approval_status) {
-      return;
-    }
-    
     setSelectedOrders((prev) => {
       if (prev.includes(order)) {
         return prev.filter((o) => o !== order);
@@ -615,19 +612,33 @@ export default function OrderList() {
   };
 
   const handleBulkApproval = () => {
-    // Filter out any orders that are already approved or rejected
-    const pendingOrders = selectedOrders.filter(order => !order.approval_status);
-    
-    if (pendingOrders.length === 0) {
-      alert("검토할 발주를 선택해주세요. (이미 검토된 발주는 제외됩니다)");
-      // Clear any selected orders that are not pending
-      setSelectedOrders(pendingOrders);
+    // 현재 선택된 주문이 없으면 처리하지 않음
+    if (!selectedOrders || selectedOrders.length === 0) {
+      alert("검토할 발주를 선택해주세요.");
       return;
     }
+
+    // 선택된 발주 중 이미 처리된 발주가 있는지 확인
+    const processedOrders = selectedOrders.filter(order => order.approval_status);
+    if (processedOrders.length > 0) {
+      alert("이미 처리된 발주가 포함되어 있습니다. 처리되지 않은 발주만 검토할 수 있습니다.");
+      setSelectedOrders([]); // 선택 초기화
+      setSelectAll(false);
+      return;
+    }
+
     setIsPasswordModalOpen(true);
   };
 
   const handleBulkApprovalConfirm = async () => {
+    // 실제 처리 시에도 한번 더 체크
+    const pendingOrders = selectedOrders.filter(order => !order.approval_status);
+    if (pendingOrders.length === 0) {
+      alert("처리할 수 있는 발주가 없습니다.");
+      setIsConfirmationModalOpen(false);
+      return;
+    }
+
     const now = new Date();
     const formattedDate = now
       .toLocaleString("ko-KR", {
@@ -642,8 +653,8 @@ export default function OrderList() {
       .replace(",", "");
 
     try {
-      // Process each selected order
-      for (const order of selectedOrders) {
+      // Process each selected order that is pending
+      for (const order of pendingOrders) {
         const response = await fetch(
           `http://localhost:8000/orders/${order.id}/approve`,
           {
@@ -681,11 +692,13 @@ export default function OrderList() {
 
       // Clear selection and close modal
       setSelectedOrders([]);
+      setIsPasswordModalOpen(false);
       setIsConfirmationModalOpen(false);
       alert("선택한 발주가 성공적으로 검토되었습니다.");
     } catch (error) {
       console.error("Error during bulk approval:", error);
       alert("일부 발주 검토 처리 중 오류가 발생했습니다.");
+      setIsPasswordModalOpen(false);
       setIsConfirmationModalOpen(false);
     }
   };
@@ -729,7 +742,11 @@ export default function OrderList() {
       // Update local state
       setOrders((prevOrders) =>
         prevOrders.map((order) => {
-          if (selectedOrders.some((selectedOrder) => selectedOrder.id === order.id)) {
+          if (
+            selectedOrders.some(
+              (selectedOrder) => selectedOrder.id === order.id
+            )
+          ) {
             return {
               ...order,
               approval_status: "rejected",
@@ -803,9 +820,12 @@ export default function OrderList() {
         })
       );
 
+      // 모든 상태 초기화
       setIsConfirmationModalOpen(false);
       setSelectedOrderForApproval(null);
       setIsRejectionViewModalOpen(false);
+      setSelectedOrders([]); // 선택된 주문 초기화
+      setSelectAll(false); // 전체 선택 체크박스 초기화
       alert("발주가 성공적으로 검토되었습니다.");
     } catch (error) {
       console.error("Error approving order:", error);
@@ -1771,19 +1791,21 @@ export default function OrderList() {
             >
               검토완료
             </button>
-            <button
-              onClick={() => {
-                if (selectedOrders.length === 0) {
-                  alert("반려할 발주를 선택해주세요.");
-                  return;
-                }
-                setIsRejectionModalOpen(true);
-              }}
-              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-            >
-              반려
-            </button>
-            {/* 여기임 */}
+            {/* Only show reject button if not reviewing a rejected order */}
+            {(!selectedOrderForApproval || selectedOrderForApproval.approval_status !== "rejected") && (
+              <button
+                onClick={() => {
+                  if (selectedOrders.length === 0) {
+                    alert("반려할 발주를 선택해주세요.");
+                    return;
+                  }
+                  setIsRejectionModalOpen(true);
+                }}
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                반려
+              </button>
+            )}
           </div>
         </div>
       </Modal>
