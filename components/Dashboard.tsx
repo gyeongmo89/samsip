@@ -169,20 +169,20 @@ export default function Dashboard() {
     const supplierOrderCounts = orders.reduce((acc: any, order) => {
       const supplierName = order.supplier.name;
       if (!acc[supplierName]) {
-        acc[supplierName] = { count: 0, amount: 0 };
+        acc[supplierName] = { 발주건수: 0, 발주금액: 0 };
       }
-      acc[supplierName].count += 1;
-      acc[supplierName].amount += order.total;
+      acc[supplierName].발주건수 += 1;
+      acc[supplierName].발주금액 += order.total;
       return acc;
     }, {});
 
     const supplierBarData = Object.entries(supplierOrderCounts)
       .map(([supplier, data]: [string, any]) => ({
         supplier,
-        count: data.count,
-        amount: Math.round(data.amount / 10000),
+        발주건수: data.발주건수,
+        발주금액: Math.round(data.발주금액 / 10000),
       }))
-      .sort((a, b) => b.count - a.count)
+      .sort((a, b) => b.발주건수 - a.발주건수)
       .slice(0, 10); // Limit to top 10 suppliers to prevent overcrowding
 
     // Process category data
@@ -318,7 +318,7 @@ export default function Dashboard() {
             (금액단위:만원)
           </div>
         </div>
-        <div className="h-[300px]">
+        <div className="h-[390px]">
           <ResponsivePie
             data={supplierData}
             margin={{ top: 30, right: 160, bottom: 30, left: 60 }} // 오른쪽 여백 증가
@@ -402,7 +402,7 @@ export default function Dashboard() {
           {isClient && supplierBarData.length > 0 && (
             <ResponsiveBar
               data={supplierBarData}
-              keys={["count", "amount"]}
+              keys={["발주건수", "발주금액"]}
               indexBy="supplier"
               margin={{ top: 50, right: 130, bottom: 55, left: 60 }}
               padding={0.2}
@@ -484,12 +484,12 @@ export default function Dashboard() {
 
                   data: [
                     {
-                      id: "count",
+                      id: "발주건수",
                       label: "발주 건수",
                       color: "#61cdbb",
                     },
                     {
-                      id: "amount",
+                      id: "발주금액",
                       label: "발주 금액",
                       color: "#f47560",
                     },
@@ -521,7 +521,7 @@ export default function Dashboard() {
             (금액단위: 만원)
           </div>
         </div>
-        <div className="h-[400px]">
+        <div className="h-[390px]">
           {isClient && monthlyData.length > 0 && (
             <ResponsiveRadar
               data={[
@@ -584,7 +584,7 @@ export default function Dashboard() {
               legends={[
                 {
                   anchor: "top-right",
-                  direction: "row",
+                  direction: "column",
                   translateX: -50,
                   translateY: -40,
                   itemWidth: 85,
