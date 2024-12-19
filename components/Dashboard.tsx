@@ -134,7 +134,7 @@ export default function Dashboard() {
     // Convert to nivo line chart format
     const processedData = Object.entries(monthlyOrderData).map(([month, data]: [string, any]) => {
       return {
-        x: `${month}월`,
+        x: `${month}월`,  
         발주건수: data.count,
         발주금액: data.amount,
         isCurrentMonth: parseInt(month) === currentMonthNum

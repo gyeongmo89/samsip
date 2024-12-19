@@ -7,7 +7,14 @@ import { useState, useEffect } from "react";
 import OrderModal from "@/components/OrderModal";
 import Modal from "@/components/Modal";
 import Select from "react-select";
-import { FileDown, FileUp, Minus, Plus, Search } from "lucide-react";
+import {
+  FileDown,
+  FileUp,
+  Minus,
+  Plus,
+  Search,
+  CheckSquare,
+} from "lucide-react";
 import * as XLSX from "xlsx";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -104,7 +111,7 @@ export default function OrderList() {
     key: "date",
     direction: "desc",
   });
-  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  const [selectedOrders, setSelectedOrders] = useState<Order[]>([]);
   const [selectAll, setSelectAll] = useState(false);
 
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -129,6 +136,8 @@ export default function OrderList() {
   // 페이지네이션 상태 추가
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
 
   // 날짜 범위 변경 핸들러
   const handleDateChange = (dates: [Date | null, Date | null]) => {
@@ -355,18 +364,18 @@ export default function OrderList() {
   }) => {
     setSelectAll(e.target.checked);
     if (e.target.checked) {
-      setSelectedOrders(filteredOrders.map((_, index) => index.toString()));
+      setSelectedOrders(currentItems);
     } else {
       setSelectedOrders([]);
     }
   };
 
-  const handleSelectOrder = (index: string) => {
+  const handleSelectOrder = (order: Order) => {
     setSelectedOrders((prev) => {
-      if (prev.includes(index)) {
-        return prev.filter((i) => i !== index);
+      if (prev.includes(order)) {
+        return prev.filter((o) => o !== order);
       } else {
-        return [...prev, index];
+        return [...prev, order];
       }
     });
   };
@@ -381,9 +390,7 @@ export default function OrderList() {
     if (!confirmed) return;
 
     try {
-      const orderIds = selectedOrders.map(
-        (index) => filteredOrders[Number(index)].id
-      );
+      const orderIds = selectedOrders.map((order) => order.id);
       const response = await fetch("http://localhost:8000/orders/bulk-delete", {
         method: "DELETE",
         headers: {
@@ -407,8 +414,8 @@ export default function OrderList() {
     }
   };
 
-  const handleRowClick = (index: string) => {
-    handleSelectOrder(index);
+  const handleRowClick = (order: Order) => {
+    handleSelectOrder(order);
   };
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, "");
@@ -600,6 +607,136 @@ export default function OrderList() {
     }
   };
 
+  const handleBulkApproval = () => {
+    if (selectedOrders.length === 0) {
+      alert("검토할 발주를 선택해주세요.");
+      return;
+    }
+    setIsPasswordModalOpen(true);
+  };
+
+  const handleBulkApprovalConfirm = async () => {
+    const now = new Date();
+    const formattedDate = now
+      .toLocaleString("ko-KR", {
+        year: "2-digit",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })
+      .replace(/\./g, "-")
+      .replace(",", "");
+
+    try {
+      // Process each selected order
+      for (const order of selectedOrders) {
+        const response = await fetch(
+          `http://localhost:8000/orders/${order.id}/approve`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ password: "admin" }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to approve order ${order.id}`);
+        }
+      }
+
+      // Update local state
+      setOrders((prevOrders) =>
+        prevOrders.map((order) => {
+          if (selectedOrders.some((selectedOrder) => selectedOrder.id === order.id)) {
+            return {
+              ...order,
+              approval_status: "approved",
+              approved_by: "이지은",
+              approved_at: formattedDate,
+            };
+          }
+          return order;
+        })
+      );
+
+      // Clear selection and close modal
+      setSelectedOrders([]);
+      setIsConfirmationModalOpen(false);
+      alert("선택한 발주가 성공적으로 검토되었습니다.");
+    } catch (error) {
+      console.error("Error during bulk approval:", error);
+      alert("일부 발주 검토 처리 중 오류가 발생했습니다.");
+      setIsConfirmationModalOpen(false);
+    }
+  };
+
+  const handleBulkRejection = async () => {
+    const now = new Date();
+    const formattedDate = now
+      .toLocaleString("ko-KR", {
+        year: "2-digit",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })
+      .replace(/\./g, "-")
+      .replace(",", "");
+
+    try {
+      // Process each selected order
+      for (const order of selectedOrders) {
+        const response = await fetch(
+          `http://localhost:8000/orders/${order.id}/reject`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ 
+              password: "admin",
+              rejection_reason: "일괄 반려 처리"
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to reject order ${order.id}`);
+        }
+      }
+
+      // Update local state
+      setOrders((prevOrders) =>
+        prevOrders.map((order) => {
+          if (selectedOrders.some((selectedOrder) => selectedOrder.id === order.id)) {
+            return {
+              ...order,
+              approval_status: "rejected",
+              rejection_reason: "일괄 반려 처리",
+              approved_by: "이지은",
+              approved_at: formattedDate,
+            };
+          }
+          return order;
+        })
+      );
+
+      // Clear selection and close modal
+      setSelectedOrders([]);
+      setIsConfirmationModalOpen(false);
+      alert("선택한 발주가 성공적으로 반려되었습니다.");
+    } catch (error) {
+      console.error("Error during bulk rejection:", error);
+      alert("일부 발주 반려 처리 중 오류가 발생했습니다.");
+      setIsConfirmationModalOpen(false);
+    }
+  };
+
   const handleApprovalSubmit = async () => {
     if (!selectedOrderForApproval) return;
 
@@ -637,7 +774,11 @@ export default function OrderList() {
       // 로컬 상태 업데이트
       setOrders((prevOrders) =>
         prevOrders.map((order) => {
-          if (order.id === selectedOrderForApproval.id) {
+          if (
+            selectedOrders.some(
+              (selectedOrder) => selectedOrder.id === order.id
+            )
+          ) {
             return {
               ...order,
               approval_status: "approved",
@@ -658,44 +799,59 @@ export default function OrderList() {
   };
 
   const handleRejectionSubmit = async () => {
-    if (!selectedOrderForApproval || !rejectionReason) return;
+    if (!rejectionReason) {
+      alert("반려 사유를 입력해주세요.");
+      return;
+    }
 
     try {
-      const response = await fetch(
-        `http://localhost:8000/orders/${selectedOrderForApproval.id}/reject`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ reason: rejectionReason }),
-        }
-      );
+      const ordersToReject = selectedOrderForApproval ? [selectedOrderForApproval] : selectedOrders;
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || "Failed to reject order");
+      for (const order of ordersToReject) {
+        const response = await fetch(
+          `http://localhost:8000/orders/${order.id}/reject`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ 
+              reason: rejectionReason,
+              password: "admin"
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to reject order ${order.id}`);
+        }
       }
 
-      // 로컬 상태 업데이트
+      // Update local state
       setOrders((prevOrders) =>
         prevOrders.map((order) => {
-          if (order.id === selectedOrderForApproval.id) {
+          if (ordersToReject.some((rejectOrder) => rejectOrder.id === order.id)) {
             return {
               ...order,
               approval_status: "rejected",
               rejection_reason: rejectionReason,
+              approved_by: "이지은",
+              approved_at: new Date().toISOString(),
             };
           }
           return order;
         })
       );
 
-      setIsRejectionModalOpen(false);
-      setRejectionReason("");
+      // Clear selection and close modals
+      setSelectedOrders([]);
       setSelectedOrderForApproval(null);
+      setIsRejectionModalOpen(false);
+      setIsConfirmationModalOpen(false);
+      setRejectionReason("");
+      alert("발주가 성공적으로 반려되었습니다.");
     } catch (error) {
-      console.error("Error rejecting order:", error);
+      console.error("Error during rejection:", error);
       alert("반려 처리 중 오류가 발생했습니다.");
     }
   };
@@ -737,9 +893,74 @@ export default function OrderList() {
       setOrders((prevOrders) => [newOrder, ...prevOrders]);
       setFilteredOrders((prevFiltered) => [newOrder, ...prevFiltered]);
       alert("발주가 등록되었습니다.");
-    } catch (error) { 
+    } catch (error) {
       console.error("Error adding order:", error);
       alert("발주 등록에 실패했습니다.");
+    }
+  };
+
+  const handleBulkApprovalWithPassword = async () => {
+    const now = new Date();
+    const formattedDate = now
+      .toLocaleString("ko-KR", {
+        year: "2-digit",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })
+      .replace(/\./g, "-")
+      .replace(",", "");
+
+    try {
+      // Process each selected order
+      for (const order of selectedOrders) {
+        const response = await fetch(
+          `http://localhost:8000/orders/${order.id}/approve`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ password: approvalPassword }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to approve order ${order.id}`);
+        }
+      }
+
+      // Update local state
+      setOrders((prevOrders) =>
+        prevOrders.map((order) => {
+          if (
+            selectedOrders.some(
+              (selectedOrder) => selectedOrder.id === order.id
+            )
+          ) {
+            return {
+              ...order,
+              approval_status: "approved",
+              approved_by: "이지은",
+              approved_at: formattedDate,
+            };
+          }
+          return order;
+        })
+      );
+
+      // Clear selection and close modal
+      setSelectedOrders([]);
+      setIsPasswordModalOpen(false);
+      setApprovalPassword("");
+      alert("선택한 발주가 성공적으로 검토되었습니다.");
+    } catch (error) {
+      console.error("Error during bulk approval:", error);
+      alert("일부 발주 검토 처리 중 오류가 발생했습니다.");
+      setIsPasswordModalOpen(false);
+      setApprovalPassword("");
     }
   };
 
@@ -769,7 +990,13 @@ export default function OrderList() {
                     )
                   }
                 >
-                  검토완료: {orders.filter((order) => order.approval_status === "approved").length}건
+                  검토완료:{" "}
+                  {
+                    orders.filter(
+                      (order) => order.approval_status === "approved"
+                    ).length
+                  }
+                  건
                 </button>
                 <button
                   className="px-3 py-1 bg-white text-yellow-500 border border-yellow-500 rounded hover:bg-yellow-100 transition-colors"
@@ -779,7 +1006,8 @@ export default function OrderList() {
                     )
                   }
                 >
-                  미검토: {orders.filter((order) => !order.approval_status).length}건
+                  미검토:{" "}
+                  {orders.filter((order) => !order.approval_status).length}건
                 </button>
                 <button
                   className="px-3 py-1 bg-white text-red-500 border border-red-500 rounded hover:bg-red-100 transition-colors"
@@ -791,7 +1019,13 @@ export default function OrderList() {
                     )
                   }
                 >
-                  반려: {orders.filter((order) => order.approval_status === "rejected").length}건
+                  반려:{" "}
+                  {
+                    orders.filter(
+                      (order) => order.approval_status === "rejected"
+                    ).length
+                  }
+                  건
                 </button>
               </div>
             </div>
@@ -900,7 +1134,7 @@ export default function OrderList() {
                 className="px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-lg hover:from-blue-500 hover:to-blue-600 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl"
               >
                 <FileDown className="w-6 h-6" />
-                엑셀 다운로드
+                다운로드
               </button>
               <label className="cursor-pointer">
                 <input
@@ -911,9 +1145,16 @@ export default function OrderList() {
                 />
                 <div className="px-6 py-3 bg-gradient-to-r from-green-400 to-green-500 text-white rounded-lg hover:from-green-500 hover:to-green-600 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl">
                   <FileUp className="w-6 h-6" />
-                  엑셀 업로드
+                  업로드
                 </div>
               </label>
+              <button
+                onClick={handleBulkApproval}
+                className="px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-lg hover:from-blue-500 hover:to-blue-600 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl"
+              >
+                <CheckSquare className="w-6 h-6" />
+                일괄검토
+              </button>
             </div>
           </div>
 
@@ -984,7 +1225,7 @@ export default function OrderList() {
                   <tr
                     key={index}
                     className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() => handleRowClick(index.toString())}
+                    onClick={() => handleRowClick(order)}
                   >
                     <td
                       className="px-2 py-4 whitespace-nowrap text-center"
@@ -992,8 +1233,8 @@ export default function OrderList() {
                     >
                       <input
                         type="checkbox"
-                        checked={selectedOrders.includes(index.toString())}
-                        onChange={() => handleSelectOrder(index.toString())}
+                        checked={selectedOrders.includes(order)}
+                        onChange={() => handleSelectOrder(order)}
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     </td>
@@ -1098,12 +1339,13 @@ export default function OrderList() {
                           반려
                         </button>
                       ) : (
-                        <button
-                          onClick={() => handleApprovalClick(order)}
-                          className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                        >
-                          검토
-                        </button>
+                        // <button
+                        //   onClick={() => handleApprovalClick(order)}
+                        //   className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                        // >
+                        //   검토
+                        // </button>
+                        ""
                       )}
                     </td>
                   </tr>
@@ -1478,11 +1720,12 @@ export default function OrderList() {
               취소
             </button>
             <button
-              type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded"
+              type="button"
+              onClick={handlePasswordSubmit}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
               확인
-            </button>
+            </button>            
           </div>
         </form>
       </Modal>
@@ -1490,7 +1733,11 @@ export default function OrderList() {
       {/* 승인/반려 선택 모달 */}
       <Modal isOpen={isConfirmationModalOpen} title="검토">
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">해당 발주를 검토완료 처리 하시겠습니까?</p>
+          <p className="text-sm text-gray-600">
+            {selectedOrderForApproval 
+              ? "해당 발주를 검토완료 처리 하시겠습니까?" 
+              : `선택한 ${selectedOrders.length}개의 발주를 검토하시겠습니까?`}
+          </p>
           <div className="flex justify-end space-x-2">
             <button
               onClick={() => setIsConfirmationModalOpen(false)}
@@ -1499,17 +1746,20 @@ export default function OrderList() {
               취소
             </button>
             <button
-              onClick={handleApprovalSubmit}
-              className="px-4 py-2 bg-blue-500 text-white rounded"
+              onClick={selectedOrderForApproval ? handleApprovalSubmit : handleBulkApprovalConfirm}
+              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
             >
               검토완료
             </button>
             <button
               onClick={() => {
-                setIsConfirmationModalOpen(false);
+                if (selectedOrders.length === 0) {
+                  alert("반려할 발주를 선택해주세요.");
+                  return;
+                }
                 setIsRejectionModalOpen(true);
               }}
-              className="px-4 py-2 bg-red-500 text-white rounded"
+              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
             >
               반려
             </button>
@@ -1539,7 +1789,7 @@ export default function OrderList() {
             </button>
             <button
               onClick={handleRejectionSubmit}
-              className="px-4 py-2 bg-blue-500 text-white rounded"
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
               저장
             </button>
@@ -1565,7 +1815,7 @@ export default function OrderList() {
             </button>
             <button
               onClick={handleReapprovalStart}
-              className="px-4 py-2 bg-blue-500 text-white rounded"
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
               재검토 완료
             </button>
