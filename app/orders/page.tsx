@@ -390,6 +390,13 @@ export default function OrderList() {
       return;
     }
 
+    // 검토완료 또는 반려된 발주가 있는지 확인
+    const processedOrders = selectedOrders.filter(order => order.approval_status);
+    if (processedOrders.length > 0) {
+      alert("검토완료 또는 반려된 발주건은 삭제할 수 없습니다.");
+      return;
+    }
+
     const confirmed = confirm("선택한 주문을 삭제하시겠습니까?");
     if (!confirmed) return;
 
@@ -403,15 +410,17 @@ export default function OrderList() {
         body: JSON.stringify(orderIds),
       });
 
-      if (response.ok) {
-        fetchOrders();
-        setSelectedOrders([]);
-        setSelectAll(false);
-        alert("선택한 주문이 삭제되었습니다.");
-      } else {
-        const error = await response.json();
-        throw new Error(error.detail || "주문 삭제 실패");
+      if (!response.ok) {
+        throw new Error("Failed to delete orders");
       }
+
+      // 성공적으로 삭제된 경우 UI 업데이트
+      setOrders((prevOrders) =>
+        prevOrders.filter((order) => !selectedOrders.includes(order))
+      );
+      setSelectedOrders([]); // 선택 초기화
+      setSelectAll(false);
+      alert("선택한 주문이 삭제되었습니다.");
     } catch (error) {
       console.error("Error deleting orders:", error);
       alert("주문 삭제 중 오류가 발생했습니다.");
