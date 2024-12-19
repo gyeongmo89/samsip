@@ -226,7 +226,7 @@ export default function Dashboard() {
             (금액단위: 만원)
           </div>
         </div>
-        <div className="h-[300px]">
+        <div className="h-[390px]">
           <ResponsiveLine
             data={monthlyData}
             margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
