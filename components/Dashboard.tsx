@@ -51,6 +51,7 @@ export default function Dashboard() {
   const [categoryData, setCategoryData] = useState<any[]>([]);
   const [calendarData, setCalendarData] = useState<any[]>([]);
   const [supplierStats, setSupplierStats] = useState<any>({});
+  const [supplierBarData, setSupplierBarData] = useState<any[]>([]);
   const [isClient, setIsClient] = useState(false);
   const [currentMonth, setCurrentMonth] = useState("");
   const [lastMonth, setLastMonth] = useState("");
@@ -164,6 +165,26 @@ export default function Dashboard() {
         value: Math.round(Number(total) / 10000),
       }));
 
+    // Process supplier order count data
+    const supplierOrderCounts = orders.reduce((acc: any, order) => {
+      const supplierName = order.supplier.name;
+      if (!acc[supplierName]) {
+        acc[supplierName] = { count: 0, amount: 0 };
+      }
+      acc[supplierName].count += 1;
+      acc[supplierName].amount += order.total;
+      return acc;
+    }, {});
+
+    const supplierBarData = Object.entries(supplierOrderCounts)
+      .map(([supplier, data]: [string, any]) => ({
+        supplier,
+        count: data.count,
+        amount: Math.round(data.amount / 10000)
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10); // Limit to top 10 suppliers to prevent overcrowding
+
     // Process category data
     const categoryStats = orders.reduce((acc: any, order) => {
       const category = "식자재"; // Replace with actual category
@@ -186,6 +207,7 @@ export default function Dashboard() {
     setMonthlyData(monthlyDataFormatted);
     setSupplierData(supplierDataFormatted);
     setCategoryData(categoryDataFormatted);
+    setSupplierBarData(supplierBarData);
     setSupplierStats({
       [currentMonthStr]: monthlyStats[currentMonthStr].suppliers.size,
       [lastMonthStr]: monthlyStats[lastMonthStr].suppliers.size,
@@ -261,11 +283,11 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 구입처별 주문 금액 분포 */}
+      {/* 구입처별 발주 금액 분포 */}
       <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
         <div className="flex items-center justify-between">
           <div className="text-lg font-semibold text-gray-800 mb-4">
-            구입처별 주문 금액 분포
+            구입처별 발주 금액 분포
           </div>
           <div className="text-sm font-normal text-gray-500 ml-2">
             (단위:만원)
@@ -403,42 +425,66 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 카테고리별 발주 현황 */}
+      {/* 구입처별 발주 현황  */}
       <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
         <div className="flex justify-between items-center">
           <div className="text-lg font-semibold text-gray-800 mb-4">
-            구입처별 발주 건수 분포
+            구입처별 발주 현황
           </div>
 
           <div className="text-sm font-normal text-gray-500 ml-2">
-            (단위: 만원)
+            (건수: EA, 금액: 만원)
           </div>
         </div>
         <div className="h-[300px]">
-          {isClient && categoryData.length > 0 && (
-            <ResponsivePie
-              data={categoryData.map((item) => ({
-                id: item.category,
-                label: item.category,
-                value: item.발주금액,
-              }))}
-              margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
-              innerRadius={0.5}
-              padAngle={0.7}
-              cornerRadius={3}
-              activeOuterRadiusOffset={8}
-              colors={{ scheme: "nivo" }}
-              borderWidth={1}
-              borderColor={{
-                from: "color",
-                modifiers: [["darker", 0.2]],
+          {isClient && supplierBarData.length > 0 && (
+            <ResponsiveBar
+              data={supplierBarData}
+              keys={['count', 'amount']}
+              indexBy="supplier"
+              margin={{ top: 50, right: 130, bottom: 100, left: 60 }}
+              padding={0.3}
+              groupMode="grouped"
+              valueScale={{ 
+                type: 'linear',
+                min: 0,
+                max: 'auto',
               }}
-              arcLinkLabelsSkipAngle={10}
-              arcLinkLabelsTextColor="#333333"
-              arcLinkLabelsThickness={2}
-              arcLinkLabelsColor={{ from: "color" }}
-              arcLabelsSkipAngle={10}
-              arcLabelsTextColor="#ffffff"
+              indexScale={{ type: 'band', round: true }}
+              colors={['#61cdbb', '#f47560']}
+              borderColor={{
+                from: 'color',
+                modifiers: [['darker', 1.6]]
+              }}
+              enableLabel={true}
+              label={d => String(d.value)}
+              axisBottom={{
+                tickSize: 5,
+                tickPadding: 5,
+                tickRotation: -45,
+                legend: '구입처',
+                legendPosition: 'middle',
+                legendOffset: 60
+              }}
+              axisLeft={{
+                tickSize: 5,
+                tickPadding: 5,
+                tickRotation: 0,
+                legend: '발주 건수 (EA)',
+                legendPosition: 'middle',
+                legendOffset: -40
+              }}
+              axisRight={{
+                tickSize: 5,
+                tickPadding: 5,
+                tickRotation: 0,
+                legend: '발주 금액 (만원)',
+                legendPosition: 'middle',
+                legendOffset: 40,
+                format: value => `${value.toLocaleString()}`
+              }}
+              labelSkipWidth={12}
+              labelSkipHeight={12}
               theme={{
                 tooltip: {
                   container: {
@@ -449,7 +495,57 @@ export default function Dashboard() {
                     padding: "8px 12px",
                   },
                 },
+                labels: {
+                  text: {
+                    fill: "#fff",
+                    fontSize: 12,
+                    fontWeight: 500,
+                  },
+                },
               }}
+              legends={[//여기
+                {
+                  dataFrom: 'keys',
+                  anchor: 'top-right',
+                  direction: 'column',
+                  justify: false,
+                  translateX: 155,
+                  translateY: 0,
+                  itemsSpacing: 2,
+                  itemWidth: 100,
+                  itemHeight: 20,
+                  itemDirection: 'left-to-right',
+                  itemOpacity: 1,
+                  symbolSize: 18,
+                  symbolShape: "circle",
+
+                  data: [
+                    {
+                      id: 'count',
+                      label: '발주 건수',
+                      color: "#61cdbb",
+                      // color?: string;
+                      // fill?: string;
+
+                    },
+                    {
+                      id: 'amount',
+                      label: '발주 금액',
+                      color: "#f47560",
+                    }
+                  ],
+                  effects: [
+                    {
+                      on: "hover",
+                      style: {
+                        itemTextColor: "#000",
+                        // symbolSize: 20,
+                        itemBackground: "rgba(0, 0, 0, .03)",
+                      },
+                    },
+                  ],
+                }
+              ]}
             />
           )}
         </div>
