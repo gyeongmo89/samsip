@@ -23,6 +23,40 @@ interface SupplierStats {
   [key: string]: number;
 }
 
+interface MonthlyDataPoint {
+  x: string;
+  y: number;
+  isCurrentMonth: boolean;
+}
+
+interface MonthlyChartData {
+  id: string;
+  data: MonthlyDataPoint[];
+}
+
+interface SupplierOrderData {
+  발주건수: number;
+  발주금액: number;
+}
+
+interface SupplierBarDataPoint {
+  supplier: string;
+  발주건수: number;
+  발주금액: number;
+  [key: string]: string | number;
+}
+
+interface CategoryStats {
+  발주건수: number;
+  발주금액: number;
+}
+
+interface CategoryDataPoint {
+  category: string;
+  발주건수: number;
+  발주금액: number;
+}
+
 const theme = {
   background: "transparent",
   textColor: "#333333",
@@ -50,12 +84,12 @@ const theme = {
 };
 
 export default function Dashboard() {
-  const [monthlyData, setMonthlyData] = useState<any[]>([]);
-  const [supplierData, setSupplierData] = useState<any[]>([]);
-  const [categoryData, setCategoryData] = useState<any[]>([]);
-  const [calendarData, setCalendarData] = useState<any[]>([]);
+  const [monthlyData, setMonthlyData] = useState<MonthlyChartData[]>([]);
+  const [supplierData, setSupplierData] = useState<{ id: string; label: string; value: number; }[]>([]);
+  const [categoryData, setCategoryData] = useState<CategoryDataPoint[]>([]);
+  // const [calendarData, setCalendarData] = useState<{ date: string; value: number; }[]>([]);
   const [supplierStats, setSupplierStats] = useState<SupplierStats>({});
-  const [supplierBarData, setSupplierBarData] = useState<any[]>([]);
+  const [supplierBarData, setSupplierBarData] = useState<SupplierBarDataPoint[]>([]);
   const [isClient, setIsClient] = useState(false);
   const [currentMonth, setCurrentMonth] = useState("");
   const [lastMonth, setLastMonth] = useState("");
@@ -117,26 +151,26 @@ export default function Dashboard() {
     const currentMonthNum = nowDate.getMonth() + 1;  // 1-based month
 
     // Process monthly data
-    const monthlyOrderData = orders.reduce((acc: any, order) => {
+    const monthlyOrderData = orders.reduce((acc: Record<number, SupplierOrderData>, order) => {
       if (!order.date) {
         return acc;
       }
       const date = new Date(order.date);
       const month = date.getMonth() + 1; // 1-based month
       if (!acc[month]) {
-        acc[month] = { count: 0, amount: 0 };
+        acc[month] = { 발주건수: 0, 발주금액: 0 };
       }
-      acc[month].count += 1;
-      acc[month].amount += Math.round(order.total / 10000); // Convert to 만원
+      acc[month].발주건수 += 1;
+      acc[month].발주금액 += Math.round(order.total / 10000); // Convert to 만원
       return acc;
     }, {});
 
     // Convert to nivo line chart format
-    const processedData = Object.entries(monthlyOrderData).map(([month, data]: [string, any]) => {
+    const processedData = Object.entries(monthlyOrderData).map(([month, data]: [string, SupplierOrderData]) => {
       return {
         x: `${month}월`,  
-        발주건수: data.count,
-        발주금액: data.amount,
+        발주건수: data.발주건수,
+        발주금액: data.발주금액,
         isCurrentMonth: parseInt(month) === currentMonthNum
       };
     });
@@ -184,7 +218,7 @@ export default function Dashboard() {
       }));
 
     // Process supplier order count data
-    const supplierOrderCounts = orders.reduce((acc: any, order) => {
+    const supplierOrderCounts = orders.reduce((acc: Record<string, SupplierOrderData>, order) => {
       const supplierName = order.supplier.name;
       if (!acc[supplierName]) {
         acc[supplierName] = { 발주건수: 0, 발주금액: 0 };
@@ -195,7 +229,7 @@ export default function Dashboard() {
     }, {});
 
     const supplierBarData = Object.entries(supplierOrderCounts)
-      .map(([supplier, data]: [string, any]) => ({
+      .map(([supplier, data]: [string, SupplierOrderData]) => ({
         supplier,
         발주건수: data.발주건수,
         발주금액: Math.round(data.발주금액 / 10000),
@@ -204,7 +238,7 @@ export default function Dashboard() {
       .slice(0, 10); // Limit to top 10 suppliers to prevent overcrowding
 
     // Process category data
-    const categoryStats = orders.reduce((acc: any, order) => {
+    const categoryStats = orders.reduce((acc: Record<string, CategoryStats>, order) => {
       const category = "식자재"; // Replace with actual category
       if (!acc[category]) {
         acc[category] = { 발주건수: 0, 발주금액: 0 };
@@ -215,7 +249,7 @@ export default function Dashboard() {
     }, {});
 
     const categoryDataFormatted = Object.entries(categoryStats).map(
-      ([category, stats]: [string, any]) => ({
+      ([category, stats]: [string, CategoryStats]) => ({
         category,
         발주건수: stats.발주건수,
         발주금액: Math.round(stats.발주금액 / 10000),
@@ -226,8 +260,8 @@ export default function Dashboard() {
     setCategoryData(categoryDataFormatted);
     setSupplierBarData(supplierBarData);
     setSupplierStats({
-      [currentMonthStr]: monthlyOrderData[new Date().getMonth() + 1]?.count || 0,
-      [lastMonthStr]: monthlyOrderData[new Date(now.getFullYear(), now.getMonth() - 1, 1).getMonth() + 1]?.count || 0,
+      [currentMonthStr]: monthlyOrderData[new Date().getMonth() + 1]?.발주건수 || 0,
+      [lastMonthStr]: monthlyOrderData[new Date(now.getFullYear(), now.getMonth() - 1, 1).getMonth() + 1]?.발주건수 || 0,
     });
   }, [isClient, orders]);
 
@@ -312,7 +346,6 @@ export default function Dashboard() {
                 translateX: 120,
                 translateY: 0,
                 itemsSpacing: 0,
-                itemDirection: "left-to-right",
                 itemWidth: 80,
                 itemHeight: 20,
                 itemOpacity: 1,
@@ -415,6 +448,19 @@ export default function Dashboard() {
                 itemOpacity: 1,
                 symbolSize: 14,
                 symbolShape: "circle",
+
+                data: [
+                  {
+                    id: "발주건수",
+                    label: "발주건수",
+                    color: "#61cdbb",
+                  },
+                  {
+                    id: "발주금액",
+                    label: "발주금액",
+                    color: "#f47560",
+                  },
+                ],
                 effects: [
                   {
                     on: "hover",

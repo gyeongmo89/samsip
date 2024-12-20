@@ -1,8 +1,7 @@
-import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
-import { DataProvider } from '@/contexts/DataContext'
+import { DataProvider } from "@/contexts/DataContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -28,7 +27,7 @@ const geistMono = localFont({
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="ko">
@@ -42,7 +41,9 @@ export default function RootLayout({
       >
         <Navbar />
         <DataProvider>
-          <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-4">{children}</div>
+          <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-4">
+            {children}
+          </div>
         </DataProvider>
       </body>
     </html>
