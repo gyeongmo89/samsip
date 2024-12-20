@@ -13,17 +13,17 @@ export default function DownloadForms() {
       // 발주 양식
       const template = [
         {
-          발주일: "YYYY-MM-DD",
-          구입처: "",
-          품목: "",
-          단가: "",
-          단위: "",
-          수량: "",
-          총액: "=D2*F2", // 단가 * 수량
-          결제주기: "",
-          대금지급방법: "",
-          구입연락처: "",
-          비고: "",
+          "발주일(*)": "YYYY.M.D(ex. 2024.1.1)",
+          "구입처(*)": "",
+          "품목(*)": "",
+          "단가(*)": "",
+          "단위(*)": "",
+          "수량(*)": "숫자만 입력(ex. 1)",
+          "총액(*)": "=D2*F2", // 단가 * 수량
+          "결제주기(*)": "미정 or 매월초 or 매월중순 or 매월말 or ?일 로 작성(?는 정해진 날짜, ex.5일)",
+          "대금지급방법(*)": "계좌이체 or 현금 or 카드결제",
+          구입연락처: "010-0000-0000",
+          비고: "부가세 별도",
         },
       ];
       ws = XLSX.utils.json_to_sheet(template);
@@ -31,15 +31,15 @@ export default function DownloadForms() {
 
       // 열 너비 설정
       const columnWidths = [
-        { wch: 12 }, // 발주일
+        { wch: 14 }, // 발주일
         { wch: 15 }, // 구입처
         { wch: 20 }, // 품목
         { wch: 10 }, // 단가
         { wch: 8 }, // 단위
         { wch: 8 }, // 수량
         { wch: 12 }, // 총액
-        { wch: 12 }, // 결제주기
-        { wch: 15 }, // 대금지급방법
+        { wch: 18 }, // 결제주기
+        { wch: 18 }, // 대금지급방법
         { wch: 15 }, // 구입연락처
         { wch: 30 }, // 비고
       ];
@@ -47,10 +47,10 @@ export default function DownloadForms() {
     } else if (formType === "supplier") {
       // 구입처 양식
       const template = [
-        {
-          구입처: "",
+        {          
+          "구입처(*)": "",
           연락처: "",
-          주소: "",
+          비고: "",
         },
       ];
       ws = XLSX.utils.json_to_sheet(template);
@@ -68,8 +68,9 @@ export default function DownloadForms() {
       const template = [
         {
           품목: "",
-          가격: "",
-          설명: "",
+          "품목(*)": "",
+          "가격(*)": "",          
+          비고: "(ex. 부가세 별도)",
         },
       ];
       ws = XLSX.utils.json_to_sheet(template);
