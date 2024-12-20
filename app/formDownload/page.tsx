@@ -49,7 +49,7 @@ export default function DownloadForms() {
       const template = [
         {          
           "구입처(*)": "",
-          연락처: "",
+          연락처: "010-0000-0000",
           비고: "",
         },
       ];
@@ -66,8 +66,7 @@ export default function DownloadForms() {
     } else {
       // 품목 양식
       const template = [
-        {
-          품목: "",
+        {          
           "품목(*)": "",
           "가격(*)": "",          
           비고: "(ex. 부가세 별도)",
@@ -80,7 +79,7 @@ export default function DownloadForms() {
       const columnWidths = [
         { wch: 20 }, // 품목
         { wch: 12 }, // 가격
-        { wch: 40 }, // 설명
+        { wch: 40 }, // 비고
       ];
       ws["!cols"] = columnWidths;
     }
