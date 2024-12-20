@@ -46,17 +46,6 @@ interface SupplierBarDataPoint {
   [key: string]: string | number;
 }
 
-interface CategoryStats {
-  발주건수: number;
-  발주금액: number;
-}
-
-interface CategoryDataPoint {
-  category: string;
-  발주건수: number;
-  발주금액: number;
-}
-
 const theme = {
   background: "transparent",
   textColor: "#333333",
@@ -86,8 +75,6 @@ const theme = {
 export default function Dashboard() {
   const [monthlyData, setMonthlyData] = useState<MonthlyChartData[]>([]);
   const [supplierData, setSupplierData] = useState<{ id: string; label: string; value: number; }[]>([]);
-  const [categoryData, setCategoryData] = useState<CategoryDataPoint[]>([]);
-  // const [calendarData, setCalendarData] = useState<{ date: string; value: number; }[]>([]);
   const [supplierStats, setSupplierStats] = useState<SupplierStats>({});
   const [supplierBarData, setSupplierBarData] = useState<SupplierBarDataPoint[]>([]);
   const [isClient, setIsClient] = useState(false);
@@ -237,27 +224,7 @@ export default function Dashboard() {
       .sort((a, b) => b.발주건수 - a.발주건수)
       .slice(0, 10); // Limit to top 10 suppliers to prevent overcrowding
 
-    // Process category data
-    const categoryStats = orders.reduce((acc: Record<string, CategoryStats>, order) => {
-      const category = "식자재"; // Replace with actual category
-      if (!acc[category]) {
-        acc[category] = { 발주건수: 0, 발주금액: 0 };
-      }
-      acc[category].발주건수 += 1;
-      acc[category].발주금액 += order.total;
-      return acc;
-    }, {});
-
-    const categoryDataFormatted = Object.entries(categoryStats).map(
-      ([category, stats]: [string, CategoryStats]) => ({
-        category,
-        발주건수: stats.발주건수,
-        발주금액: Math.round(stats.발주금액 / 10000),
-      })
-    );
-
     setSupplierData(supplierDataFormatted);
-    setCategoryData(categoryDataFormatted);
     setSupplierBarData(supplierBarData);
     setSupplierStats({
       [currentMonthStr]: monthlyOrderData[new Date().getMonth() + 1]?.발주건수 || 0,
