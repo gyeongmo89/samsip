@@ -19,12 +19,16 @@ export default function Navbar() {
   const [showMessage, setShowMessage] = useState(false);
   const [message, setMessage] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState('');
   const pathname = usePathname();
 
   useEffect(() => {
     const checkLoginStatus = () => {
       if (typeof window !== 'undefined') {
-        setIsLoggedIn(!!localStorage.getItem("isLoggedIn"));
+        const loggedIn = !!localStorage.getItem("isLoggedIn");
+        const username = localStorage.getItem("username") || '';
+        setIsLoggedIn(loggedIn);
+        setCurrentUser(username);
       }
     };
 
@@ -159,17 +163,20 @@ export default function Navbar() {
             <div className="flex items-center gap-2 ml-8">
               {isLoggedIn ? (
                 <>
-                  <div onClick={handleImageClick} className="cursor-default">
+                  <div className={`cursor-${currentUser === 'jieun' ? 'default' : 'default'}`}>
                     <Image
-                      src="/heeju.jpeg"
+                      src={currentUser === 'jieun' ? "/lee.png" : "/heeju.jpeg"}
                       alt="avatar"
                       width={40}
                       height={40}
                       className="ml-2 rounded-full object-cover"
+                      onClick={currentUser === 'jieun' ? undefined : handleImageClick}
                     />
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="text-white text-sm ml-2 cursor-default" onClick={handleNameClick}>박희주 매니저</div>
+                    <div className="text-white text-sm ml-2 cursor-default" onClick={currentUser === 'jieun' ? undefined : handleNameClick}>
+                      {currentUser === 'jieun' ? '이지은 대표' : '박희주 매니저'}
+                    </div>
                     <div>
                       <button
                         onClick={handleLogout}

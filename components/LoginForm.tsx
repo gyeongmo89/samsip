@@ -12,8 +12,10 @@ export default function LoginForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (username === 'heeju' && password === 'rudahtkfkd') {
+    if ((username === 'heeju' && password === 'rudahtkfkd') || 
+        (username === 'jieun' && password === 'admin')) {
       localStorage.setItem('isLoggedIn', 'true')
+      localStorage.setItem('username', username) // Store the username
       // Dispatch custom event for login status change
       window.dispatchEvent(new Event('loginStatusChanged'))
       router.push('/orders')
