@@ -5,6 +5,7 @@
 import { useState, useEffect, ReactNode } from "react";
 import Modal from "./Modal";
 import Select, { SingleValue, ActionMeta } from "react-select";
+import { API_BASE_URL } from "@/config";
 
 interface OrderModalProps {
   isOpen: boolean;
@@ -92,9 +93,9 @@ export default function OrderModal({
     const fetchData = async () => {
       try {
         const [suppliersRes, itemsRes, unitsRes] = await Promise.all([
-          fetch("http://localhost:8000/suppliers"),
-          fetch("http://localhost:8000/items"),
-          fetch("http://localhost:8000/units"),
+          fetch(`${API_BASE_URL}/suppliers`),
+          fetch(`${API_BASE_URL}/items`),
+          fetch(`${API_BASE_URL}/units`),
         ]);
 
         if (!suppliersRes.ok || !itemsRes.ok || !unitsRes.ok) {
@@ -130,7 +131,7 @@ export default function OrderModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:8000/orders/", {
+      const response = await fetch(`${API_BASE_URL}/orders/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

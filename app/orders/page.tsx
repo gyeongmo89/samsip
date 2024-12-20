@@ -19,6 +19,7 @@ import * as XLSX from "xlsx";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { ko } from "date-fns/locale";
+import { API_BASE_URL } from "@/config";
 
 // import { useData } from "@/contexts/DataContext";
 
@@ -195,9 +196,9 @@ export default function OrderList() {
     const fetchData = async () => {
       try {
         const [suppliersRes, itemsRes, unitsRes] = await Promise.all([
-          fetch("http://localhost:8000/suppliers"),
-          fetch("http://localhost:8000/items"),
-          fetch("http://localhost:8000/units"),
+          fetch(`${API_BASE_URL}/suppliers`),
+          fetch(`${API_BASE_URL}/items`),
+          fetch(`${API_BASE_URL}/units`),
         ]);
 
         if (!suppliersRes.ok || !itemsRes.ok || !unitsRes.ok) {
@@ -239,7 +240,7 @@ export default function OrderList() {
   const fetchOrders = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch("http://localhost:8000/orders/");
+      const response = await fetch(`${API_BASE_URL}/orders/`);
       if (!response.ok) {
         throw new Error("Failed to fetch orders");
       }
@@ -404,7 +405,7 @@ export default function OrderList() {
 
     try {
       const orderIds = selectedOrders.map((order) => order.id);
-      const response = await fetch("http://localhost:8000/orders/bulk-delete", {
+      const response = await fetch(`${API_BASE_URL}/orders/bulk-delete`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -495,7 +496,7 @@ export default function OrderList() {
     formData.append("file", file);
 
     try {
-      const response = await fetch("http://localhost:8000/orders/upload", {
+      const response = await fetch(`${API_BASE_URL}/orders/upload`, {
         method: "POST",
         body: formData,
       });
@@ -592,7 +593,7 @@ export default function OrderList() {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/orders/${editingOrder.id}`,
+        `${API_BASE_URL}/orders/${editingOrder.id}`,
         {
           method: "PUT",
           headers: {
@@ -623,7 +624,7 @@ export default function OrderList() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:8000/orders", {
+      const response = await fetch(`${API_BASE_URL}/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -710,7 +711,7 @@ export default function OrderList() {
       // Process each selected order that is pending
       for (const order of pendingOrders) {
         const response = await fetch(
-          `http://localhost:8000/orders/${order.id}/approve`,
+          `${API_BASE_URL}/orders/${order.id}/approve`,
           {
             method: "POST",
             headers: {
@@ -775,7 +776,7 @@ export default function OrderList() {
       // Process each selected order
       for (const order of selectedOrders) {
         const response = await fetch(
-          `http://localhost:8000/orders/${order.id}/reject`,
+          `${API_BASE_URL}/orders/${order.id}/reject`,
           {
             method: "POST",
             headers: {
@@ -829,7 +830,7 @@ export default function OrderList() {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/orders/${selectedOrderForApproval.id}/approve`,
+        `${API_BASE_URL}/orders/${selectedOrderForApproval.id}/approve`,
         {
           method: "POST",
           headers: {
@@ -900,7 +901,7 @@ export default function OrderList() {
 
       for (const order of ordersToReject) {
         const response = await fetch(
-          `http://localhost:8000/orders/${order.id}/reject`,
+          `${API_BASE_URL}/orders/${order.id}/reject`,
           {
             method: "POST",
             headers: {
@@ -1010,7 +1011,7 @@ export default function OrderList() {
       // Process each selected order
       for (const order of selectedOrders) {
         const response = await fetch(
-          `http://localhost:8000/orders/${order.id}/approve`,
+          `${API_BASE_URL}/orders/${order.id}/approve`,
           {
             method: "POST",
             headers: {

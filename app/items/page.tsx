@@ -5,6 +5,7 @@ import { FileDown, Plus, Search, Minus } from 'lucide-react'
 import Modal from '@/components/Modal'
 import * as XLSX from 'xlsx'
 import { useData } from '@/contexts/DataContext'
+import { API_BASE_URL } from "@/config";
 
 interface Item {
   id: number;
@@ -35,7 +36,7 @@ export default function ItemList() {
 
   const fetchItems = async () => {
     try {
-      const response = await fetch('http://localhost:8000/items')
+      const response = await fetch(`${API_BASE_URL}/items`)
       if (!response.ok) throw new Error('Failed to fetch items')
       const data = await response.json()
       const sortedData = [...data].sort((a, b) => b.id - a.id)
@@ -52,7 +53,7 @@ export default function ItemList() {
       // 단가에서 쉼표 제거하고 숫자로 변환
       const priceValue = formData.price ? parseFloat(formData.price.replace(/,/g, '')) : null;
 
-      const response = await fetch('http://localhost:8000/items/', {
+      const response = await fetch(`${API_BASE_URL}/items/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -119,7 +120,7 @@ export default function ItemList() {
     try {
       if (!editingItem) return
 
-      const response = await fetch(`http://localhost:8000/items/${editingItem.id}`, {
+      const response = await fetch(`${API_BASE_URL}/items/${editingItem.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -207,7 +208,7 @@ export default function ItemList() {
 
     try {
       const itemIds = selectedItems.map(index => filteredItems[Number(index)].id)
-      const response = await fetch('http://localhost:8000/items/bulk-delete', {
+      const response = await fetch(`${API_BASE_URL}/items/bulk-delete`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

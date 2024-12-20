@@ -5,6 +5,7 @@ import { FileDown, Plus, Search, Minus } from "lucide-react";
 import Modal from "@/components/Modal";
 import * as XLSX from "xlsx";
 import { useData } from "@/contexts/DataContext";
+import { API_BASE_URL } from "@/config";
 
 interface Supplier {
   id: number;
@@ -40,7 +41,7 @@ export default function SupplierList() {
     setError(null);
     try {
       console.log("Fetching suppliers...");
-      const response = await fetch("http://localhost:8000/suppliers");
+      const response = await fetch(`${API_BASE_URL}/suppliers`);
       console.log("Response status:", response.status);
       if (!response.ok) throw new Error("Failed to fetch suppliers");
       const data = await response.json();
@@ -60,7 +61,7 @@ export default function SupplierList() {
   const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:8000/suppliers/', {
+      const response = await fetch(`${API_BASE_URL}/suppliers/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -107,7 +108,7 @@ export default function SupplierList() {
       if (!editingSupplier) return;
 
       const response = await fetch(
-        `http://localhost:8000/suppliers/${editingSupplier.id}`,
+        `${API_BASE_URL}/suppliers/${editingSupplier.id}`,
         {
           method: "PUT",
           headers: {
@@ -210,7 +211,7 @@ export default function SupplierList() {
         (index) => filteredSuppliers[parseInt(index)].id
       );
       const response = await fetch(
-        "http://localhost:8000/suppliers/bulk-delete",
+        `${API_BASE_URL}/suppliers/bulk-delete`,
         {
           method: "DELETE",
           headers: {

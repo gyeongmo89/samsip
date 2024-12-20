@@ -5,6 +5,7 @@ import Modal from '@/components/Modal'
 import { FileDown, Plus, Search, Minus } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { useData } from '@/contexts/DataContext'
+import { API_BASE_URL } from "@/config";
 
 export default function UnitList() {
   interface Unit {
@@ -34,7 +35,7 @@ export default function UnitList() {
 
   const fetchUnits = async () => {
     try {
-      const response = await fetch('http://localhost:8000/units')
+      const response = await fetch(`${API_BASE_URL}/units`)
       if (!response.ok) throw new Error('Failed to fetch units')
       const data = await response.json()
       // 최신 데이터가 위로 오도록 정렬
@@ -50,7 +51,7 @@ export default function UnitList() {
   const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault()
     try {
-      const response = await fetch('http://localhost:8000/units', {
+      const response = await fetch(`${API_BASE_URL}/units`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -98,7 +99,7 @@ export default function UnitList() {
     try {
       if (!editingUnit) return
 
-      const response = await fetch(`http://localhost:8000/units/${editingUnit.id}`, {
+      const response = await fetch(`${API_BASE_URL}/units/${editingUnit.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -189,7 +190,7 @@ export default function UnitList() {
 
     try {
       const unitIds = selectedUnits.map(index => filteredUnits[parseInt(index)].id.toString())
-      const response = await fetch('http://localhost:8000/units/bulk-delete', {
+      const response = await fetch(`${API_BASE_URL}/units/bulk-delete`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

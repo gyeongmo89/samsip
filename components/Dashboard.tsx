@@ -5,6 +5,7 @@ import { ResponsiveLine } from "@nivo/line";
 import { ResponsivePie } from "@nivo/pie";
 import { ResponsiveBar } from "@nivo/bar";
 import { ResponsiveRadar } from "@nivo/radar";
+import { API_BASE_URL } from "@/config";
 
 interface Order {
   id: number;
@@ -91,7 +92,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await fetch("http://localhost:8000/orders/");
+        const response = await fetch(`${API_BASE_URL}/orders/`);
         const data: Order[] = await response.json();
         setOrders(data);
       } catch (error) {
