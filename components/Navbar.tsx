@@ -100,7 +100,7 @@ export default function Navbar() {
                   height={40}
                   className="mr-2 rounded-full object-cover"
                 />
-                <h1 className="text-white text-xl font-bold">
+                <h1 className="hidden md:block text-white text-xl font-bold">
                   삼십일미 발주관리 시스템
                 </h1>
               </Link>
