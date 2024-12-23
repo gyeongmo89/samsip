@@ -82,6 +82,7 @@ export default function Dashboard() {
   const [currentMonth, setCurrentMonth] = useState("");
   const [lastMonth, setLastMonth] = useState("");
   const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Set client-side rendering flag
   useEffect(() => {
@@ -91,14 +92,18 @@ export default function Dashboard() {
   // Fetch orders
   useEffect(() => {
     const fetchOrders = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch(`${API_BASE_URL}/orders/`);
         const data: Order[] = await response.json();
         setOrders(data);
       } catch (error) {
         console.error("Error fetching orders:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
+
     fetchOrders();
   }, []);
 
@@ -235,6 +240,13 @@ export default function Dashboard() {
 
   return (
     <div className="grid grid-cols-1 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 md:grid-cols-2 gap-6 animate-fadeIn">
+      {/* 로딩 상태 표시 */}
+      {isLoading && (
+        <div className="text-center py-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto"></div>
+          <p className="mt-2 text-gray-600">데이터를 불러오는 중...</p>
+        </div>
+      )}
       {/* 월별 발주 추이 */}
       <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
       <div className="flex justify-between items-center">

@@ -28,6 +28,7 @@ export default function ItemList() {
   const [editingItem, setEditingItem] = useState<Item | null>(null)
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [selectAll, setSelectAll] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
   const { lastUpdate } = useData()
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function ItemList() {
   }, [lastUpdate])
 
   const fetchItems = async () => {
+    setIsLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/items`)
       if (!response.ok) throw new Error('Failed to fetch items')
@@ -44,6 +46,8 @@ export default function ItemList() {
       setFilteredItems(sortedData)
     } catch (error) {
       console.error('Error fetching items:', error)
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -285,56 +289,65 @@ export default function ItemList() {
             </div>
           </div>
 
+          {/* 로딩 상태 표시 */}
+          {isLoading && (
+            <div className="text-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto"></div>
+              <p className="mt-2 text-gray-600">데이터를 불러오는 중...</p>
+            </div>
+          )}
           {/* 품목 목록 테이블 */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white rounded-lg overflow-hidden">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900">
-                    <input
-                      type="checkbox"
-                      checked={selectAll}
-                      onChange={handleSelectAll}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                  </th>
-                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">품목명</th>
-                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">단가</th>
-                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">비고</th>
-                  <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">수정</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredItems.map((item, index) => (
-                  <tr 
-                    key={item.id} 
-                    className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() => handleSelectItem(index.toString())}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-center" onClick={(e) => e.stopPropagation()}>
+          {!isLoading && (
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white rounded-lg overflow-hidden">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="px-6 py-3 text-center text-sm font-bold text-gray-900">
                       <input
                         type="checkbox"
-                        checked={selectedItems.includes(index.toString())}
-                        onChange={() => handleSelectItem(index.toString())}
+                        checked={selectAll}
+                        onChange={handleSelectAll}
                         className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">{item.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">{item.price?.toLocaleString()}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-black">{item.description}</td>
-                    <td className="px-6 py-4 text-center">
-                      <button
-                        onClick={() => handleEditClick(item)}
-                        className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
-                      >
-                        수정
-                      </button>
-                    </td>
+                    </th>
+                    <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">품목명</th>
+                    <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">단가</th>
+                    <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">비고</th>
+                    <th className="px-6 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">수정</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredItems.map((item, index) => (
+                    <tr 
+                      key={item.id} 
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => handleSelectItem(index.toString())}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-center" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selectedItems.includes(index.toString())}
+                          onChange={() => handleSelectItem(index.toString())}
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-black">{item.name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-black">{item.price?.toLocaleString()}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-black">{item.description}</td>
+                      <td className="px-6 py-4 text-center">
+                        <button
+                          onClick={() => handleEditClick(item)}
+                          className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+                        >
+                          수정
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
 

@@ -238,8 +238,8 @@ export default function OrderList() {
   }, [orders, searchTerm]);
 
   const fetchOrders = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const response = await fetch(`${API_BASE_URL}/orders/`);
       if (!response.ok) {
         throw new Error("Failed to fetch orders");
@@ -1251,6 +1251,14 @@ export default function OrderList() {
               </button>
             </div>
           </div>
+
+          {/* 로딩 상태 표시 */}
+          {isLoading && (
+            <div className="text-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto"></div>
+              <p className="mt-2 text-gray-600">데이터를 불러오는 중...</p>
+            </div>
+          )}
 
           {/* 발주 목록 테이블 */}
           <div className="overflow-x-auto w-full">
