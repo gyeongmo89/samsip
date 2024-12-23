@@ -464,7 +464,7 @@ export default function OrderList() {
       비고: order.notes,
       검토상태: order.approval_status === "approved" ? "검토완료" : "검토대기",
       검토자: order.approved_by || "",
-      검토시간: order.approved_at || "",
+      검토시간: order.approved_at ? formatDateTime(order.approved_at) : "",
     }));
 
     // 워크시트 생성
@@ -1052,6 +1052,26 @@ export default function OrderList() {
     }
   };
 
+  // 시간 포맷팅 함수 추가
+  const formatDateTime = (dateTimeStr: string) => {
+    if (!dateTimeStr) return "";
+  
+    // UTC 시간을 Date 객체로 변환
+    const date = new Date(dateTimeStr);
+  
+    // 한국 시간으로 변환 (UTC+9)
+    const kstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
+  
+    // 날짜와 시간 포맷팅
+    const year = kstDate.getFullYear();
+    const month = String(kstDate.getMonth() + 1).padStart(2, '0');
+    const day = String(kstDate.getDate()).padStart(2, '0');
+    const hours = String(kstDate.getHours()).padStart(2, '0');
+    const minutes = String(kstDate.getMinutes()).padStart(2, '0');
+  
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-4">
       {/* <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12"> */}
@@ -1424,7 +1444,7 @@ export default function OrderList() {
                       {order.approval_status === "approved" ? (
                         <div className="flex flex-col items-center text-xs text-black">
                           <span className="font-bold">이지은 검토완료</span>
-                          <span>{order.approved_at}</span>
+                          <span>{formatDateTime(order.approved_at || '')}</span>
                         </div>
                       ) : order.approval_status === "rejected" ? (
                         <button
