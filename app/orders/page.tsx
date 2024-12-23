@@ -1055,21 +1055,64 @@ export default function OrderList() {
   // 시간 포맷팅 함수 추가
   const formatDateTime = (dateTimeStr: string) => {
     if (!dateTimeStr) return "";
-  
-    // UTC 시간을 Date 객체로 변환
-    const date = new Date(dateTimeStr);
-  
-    // 한국 시간으로 변환 (UTC+9)
-    const kstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
-  
-    // 날짜와 시간 포맷팅
-    const year = kstDate.getFullYear();
-    const month = String(kstDate.getMonth() + 1).padStart(2, '0');
-    const day = String(kstDate.getDate()).padStart(2, '0');
-    const hours = String(kstDate.getHours()).padStart(2, '0');
-    const minutes = String(kstDate.getMinutes()).padStart(2, '0');
-  
-    return `${year}-${month}-${day} ${hours}:${minutes}`;
+
+    try {
+      // 현재 형식이 "YY- MM- DD- HH:mm" 형태로 오는 경우
+      if (dateTimeStr.includes('-')) {
+        const [year, month, day, time] = dateTimeStr.split('-').map(part => part.trim());
+        // 4자리 연도로 변환 (20 + YY)
+        const fullYear = `20${year}`;
+        return `${fullYear}-${month}-${day} ${time}`;
+      }
+
+      // ISO 형식으로 오는 경우를 위한 기존 처리
+      const date = new Date(dateTimeStr);
+      if (!isNaN(date.getTime())) {
+        const koreanOptions: Intl.DateTimeFormatOptions = {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+          timeZone: "Asia/Seoul",
+        };
+        return new Intl.DateTimeFormat("ko-KR", koreanOptions).format(date);
+      }
+
+      return dateTimeStr;
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return dateTimeStr;
+    }
+  };
+
+  const handleApprove = async (orderId: number) => {
+    try {
+      // 현재 시간을 YY- MM- DD- HH:mm 형식으로 포맷팅
+      const now = new Date();
+      const currentTime = `${String(now.getFullYear()).slice(-2)}- ${String(now.getMonth() + 1).padStart(2, '0')}- ${String(now.getDate()).padStart(2, '0')}- ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+      const response = await fetch(`${API_BASE_URL}/orders/${orderId}/approve`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          approved_by: "이지은",
+          approved_at: currentTime
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to approve order');
+      }
+
+      fetchOrders();
+    } catch (error) {
+      console.error('Error approving order:', error);
+      alert('발주 검토 처리 중 오류가 발생했습니다.');
+    }
   };
 
   return (
