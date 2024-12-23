@@ -454,13 +454,13 @@ export default function OrderList() {
       날짜: order.date,
       거래처: order.supplier.name,
       품목: order.item.name,
+      단가: order.price,
       단위: order.unit.name,
       수량: order.quantity,
-      단가: order.price,
-      합계: order.total,
+      총액: order.total,
       결제주기: order.payment_cycle,
-      결제방식: order.payment_method,
-      거래처: order.client,
+      결제유형: order.payment_method,
+      구입연락처: order.client,
       비고: order.notes,
       검토상태: order.approval_status === "approved" ? "검토완료" : "검토대기",
       검토자: order.approved_by || "",
@@ -475,6 +475,8 @@ export default function OrderList() {
     // 파일 다운로드
     const today = new Date().toISOString().split("T")[0];
     XLSX.writeFile(wb, `발주목록_${today}.xlsx`);
+
+    alert("엑셀 다운로드 완료");
   };
 
   const handleFileUpload = async (
@@ -1307,9 +1309,6 @@ export default function OrderList() {
                     비고
                   </th>
                   <th className="w-[80px] px-2 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">
-                    검토상태
-                  </th>
-                  <th className="w-[80px] px-2 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">
                     수정
                   </th>
                   <th className="w-[80px] px-2 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">
@@ -1409,6 +1408,19 @@ export default function OrderList() {
                       )}
                     </td>
                     <td className="px-2 py-4 whitespace-nowrap text-center text-black">
+                      <button
+                        onClick={() => handleEditClick(order)}
+                        className={`px-4 py-2 text-white rounded-lg transition-colors ${
+                          order.approval_status === "approved"
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-yellow-500 hover:bg-yellow-600"
+                        }`}
+                        disabled={order.approval_status === "approved"}
+                      >
+                        수정
+                      </button>
+                    </td>
+                    <td className="px-2 py-4 whitespace-nowrap text-center">
                       {order.approval_status === "approved" ? (
                         <div className="flex flex-col items-center text-xs text-black">
                           <span className="font-bold">이지은 검토완료</span>
@@ -1432,28 +1444,6 @@ export default function OrderList() {
                         //   검토
                         // </button>
                         ""
-                      )}
-                    </td>
-                    <td className="px-2 py-4 whitespace-nowrap text-center text-black">
-                      <button
-                        onClick={() => handleEditClick(order)}
-                        className={`px-4 py-2 text-white rounded-lg transition-colors ${
-                          order.approval_status === "approved"
-                            ? "bg-gray-400 cursor-not-allowed"
-                            : "bg-yellow-500 hover:bg-yellow-600"
-                        }`}
-                        disabled={order.approval_status === "approved"}
-                      >
-                        수정
-                      </button>
-                    </td>
-                    <td className="px-2 py-4 whitespace-nowrap text-center">
-                      {order.approval_status === "approved" ? (
-                        <div className="text-green-600">검토완료</div>
-                      ) : order.approval_status === "rejected" ? (
-                        <div className="text-red-500">반려</div>
-                      ) : (
-                        <div className="text-gray-500">검토대기</div>
                       )}
                     </td>
                   </tr>
@@ -1792,7 +1782,7 @@ export default function OrderList() {
             </div>
 
             {/* 비고 */}
-            <div>
+            <div className="col-span-2">
               <label className="block text-sm font-medium text-gray-700">
                 비고
               </label>
@@ -1800,21 +1790,6 @@ export default function OrderList() {
                 value={formData.notes}
                 onChange={(e) =>
                   setFormData({ ...formData, notes: e.target.value })
-                }
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
-                rows={3}
-              />
-            </div>
-
-            {/* 검토 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                검토
-              </label>
-              <textarea
-                value={formData.review}
-                onChange={(e) =>
-                  setFormData({ ...formData, review: e.target.value })
                 }
                 className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black"
                 rows={3}
