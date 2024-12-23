@@ -1057,27 +1057,10 @@ export default function OrderList() {
     if (!dateTimeStr) return "";
 
     try {
-      // 현재 형식이 "YY- MM- DD- HH:mm" 형태로 오는 경우
-      if (dateTimeStr.includes('-')) {
-        const [year, month, day, time] = dateTimeStr.split('-').map(part => part.trim());
-        // 4자리 연도로 변환 (20 + YY)
-        const fullYear = `20${year}`;
-        return `${fullYear}-${month}-${day} ${time}`;
-      }
-
-      // ISO 형식으로 오는 경우를 위한 기존 처리
-      const date = new Date(dateTimeStr);
-      if (!isNaN(date.getTime())) {
-        const koreanOptions: Intl.DateTimeFormatOptions = {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-          timeZone: "Asia/Seoul",
-        };
-        return new Intl.DateTimeFormat("ko-KR", koreanOptions).format(date);
+      // 날짜와 시간이 공백으로 구분된 경우 (예: "2024-12-23 15:14")
+      const [datePart, timePart] = dateTimeStr.split(' ');
+      if (datePart && timePart) {
+        return `${datePart} ${timePart}`;
       }
 
       return dateTimeStr;
@@ -1089,9 +1072,14 @@ export default function OrderList() {
 
   const handleApprove = async (orderId: number) => {
     try {
-      // 현재 시간을 YY- MM- DD- HH:mm 형식으로 포맷팅
+      // 현재 시간을 YYYY-MM-DD HH:mm 형식으로 포맷팅
       const now = new Date();
-      const currentTime = `${String(now.getFullYear()).slice(-2)}- ${String(now.getMonth() + 1).padStart(2, '0')}- ${String(now.getDate()).padStart(2, '0')}- ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const currentTime = `${year}-${month}-${day} ${hours}:${minutes}`;
 
       const response = await fetch(`${API_BASE_URL}/orders/${orderId}/approve`, {
         method: 'POST',
