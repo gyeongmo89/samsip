@@ -1,28 +1,30 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { useState } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const router = useRouter()
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if ((username === 'heeju' && password === 'rudahtkfkd') || 
-        (username === 'jieun' && password === 'admin')) {
-      localStorage.setItem('isLoggedIn', 'true')
-      localStorage.setItem('username', username) // Store the username
+    e.preventDefault();
+    if (
+      (username === "heeju" && password === "rudahtkfkd") ||
+      (username === "jieun" && password === "admin")
+    ) {
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("username", username); // Store the username
       // Dispatch custom event for login status change
-      window.dispatchEvent(new Event('loginStatusChanged'))
-      router.push('/orders')
+      window.dispatchEvent(new Event("loginStatusChanged"));
+      router.push("/orders");
     } else {
-      setError('아이디 또는 비밀번호가 올바르지 않습니다.')
+      setError("아이디 또는 비밀번호가 올바르지 않습니다.");
     }
-  }
+  };
 
   return (
     <div className="fixed inset-0 bg-gray-700 bg-opacity-50 flex items-center justify-center z-50">
@@ -36,7 +38,7 @@ export default function LoginForm() {
               height={60}
               className="rounded-full"
             />
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900">
               삼십일미 발주관리 시스템
             </h2>
           </div>
@@ -44,7 +46,9 @@ export default function LoginForm() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="username" className="sr-only">아이디</label>
+            <label htmlFor="username" className="sr-only">
+              아이디
+            </label>
             <input
               id="username"
               name="username"
@@ -57,7 +61,9 @@ export default function LoginForm() {
             />
           </div>
           <div>
-            <label htmlFor="password" className="sr-only">비밀번호</label>
+            <label htmlFor="password" className="sr-only">
+              비밀번호
+            </label>
             <input
               id="password"
               name="password"
@@ -71,9 +77,7 @@ export default function LoginForm() {
           </div>
 
           {error && (
-            <div className="text-red-500 text-sm text-center">
-              {error}
-            </div>
+            <div className="text-red-500 text-sm text-center">{error}</div>
           )}
 
           <button
@@ -90,5 +94,5 @@ export default function LoginForm() {
         </div>
       </div>
     </div>
-  )
+  );
 }

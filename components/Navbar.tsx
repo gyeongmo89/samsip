@@ -244,16 +244,7 @@ export default function Navbar() {
             onClick={() => setIsOpen(false)}
           >
             통계
-          </Link>
-          <Link
-            href="/orderlist"
-            className={`text-gray-300 hover:bg-gray-700/50 hover:text-white block rounded-md px-3 py-2 text-base font-medium transition-colors ${isActive(
-              "/orderlist"
-            )}`}
-            onClick={() => setIsOpen(false)}
-          >
-            주문 목록
-          </Link>
+          </Link>         
           <Link
             href="/orders"
             className={`text-gray-300 hover:bg-gray-700/50 hover:text-white block rounded-md px-3 py-2 text-base font-medium transition-colors ${isActive(
