@@ -1057,13 +1057,19 @@ export default function OrderList() {
     if (!dateTimeStr) return "";
 
     try {
-      // 날짜와 시간이 공백으로 구분된 경우 (예: "2024-12-23 15:14")
-      const [datePart, timePart] = dateTimeStr.split(' ');
-      if (datePart && timePart) {
-        return `${datePart} ${timePart}`;
-      }
+      // UTC 시간을 Date 객체로 변환
+      const date = new Date(dateTimeStr);
+      
+      // UTC+9 (한국 시간)으로 변환
+      const kstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
+      
+      const year = kstDate.getFullYear();
+      const month = String(kstDate.getMonth() + 1).padStart(2, '0');
+      const day = String(kstDate.getDate()).padStart(2, '0');
+      const hours = String(kstDate.getHours()).padStart(2, '0');
+      const minutes = String(kstDate.getMinutes()).padStart(2, '0');
 
-      return dateTimeStr;
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
     } catch (error) {
       console.error("Error formatting date:", error);
       return dateTimeStr;
@@ -1072,14 +1078,9 @@ export default function OrderList() {
 
   const handleApprove = async (orderId: number) => {
     try {
-      // 현재 시간을 YYYY-MM-DD HH:mm 형식으로 포맷팅
       const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const currentTime = `${year}-${month}-${day} ${hours}:${minutes}`;
+      // UTC 시간으로 변환 (서버에 맞춤)
+      const currentTime = now.toISOString();
 
       const response = await fetch(`${API_BASE_URL}/orders/${orderId}/approve`, {
         method: 'POST',
@@ -1096,7 +1097,36 @@ export default function OrderList() {
         throw new Error('Failed to approve order');
       }
 
-      fetchOrders();
+      // 응답 데이터를 받아서 즉시 상태 업데이트
+      const updatedOrder = await response.json();
+      
+      // orders 배열에서 해당 주문을 찾아 업데이트
+      setOrders(prevOrders => 
+        prevOrders.map(order => 
+          order.id === orderId 
+            ? {
+                ...order,
+                approval_status: 'approved',
+                approved_by: '이지은',
+                approved_at: currentTime
+              }
+            : order
+        )
+      );
+
+      // filteredOrders도 같이 업데이트
+      setFilteredOrders(prevOrders => 
+        prevOrders.map(order => 
+          order.id === orderId 
+            ? {
+                ...order,
+                approval_status: 'approved',
+                approved_by: '이지은',
+                approved_at: currentTime
+              }
+            : order
+        )
+      );
     } catch (error) {
       console.error('Error approving order:', error);
       alert('발주 검토 처리 중 오류가 발생했습니다.');
