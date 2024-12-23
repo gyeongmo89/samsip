@@ -1211,23 +1211,23 @@ export default function OrderList() {
               {/* <div className="flex gap-2"> */}
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold shadow-lg hover:shadow-xl flex items-center gap-2"
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold shadow-md hover:shadow-lg flex items-center gap-1 text-sm"
               >
-                <Plus className="w-6 h-6" />
-                발주등록
+                <Plus className="w-4 h-4" />
+                등록
               </button>
               <button
                 onClick={handleDeleteOrders}
-                className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold shadow-lg hover:shadow-xl flex items-center gap-2"
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold shadow-md hover:shadow-lg flex items-center gap-1 text-sm"
               >
-                <Minus className="w-6 h-6" />
-                발주삭제
+                <Minus className="w-4 h-4" />
+                삭제
               </button>
               <button
                 onClick={handleExcelDownload}
-                className="px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-lg hover:from-blue-500 hover:to-blue-600 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl"
+                className="px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-lg hover:from-blue-500 hover:to-blue-600 transition-all flex items-center gap-1 shadow-md hover:shadow-lg text-sm"
               >
-                <FileDown className="w-6 h-6" />
+                <FileDown className="w-4 h-4" />
                 다운로드
               </button>
               <label className="cursor-pointer">
@@ -1237,16 +1237,16 @@ export default function OrderList() {
                   onChange={handleFileUpload}
                   className="hidden"
                 />
-                <div className="px-6 py-3 bg-gradient-to-r from-green-400 to-green-500 text-white rounded-lg hover:from-green-500 hover:to-green-600 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl">
-                  <FileUp className="w-6 h-6" />
+                <div className="px-4 py-2 bg-gradient-to-r from-green-400 to-green-500 text-white rounded-lg hover:from-green-500 hover:to-green-600 transition-all flex items-center gap-1 shadow-md hover:shadow-lg text-sm">
+                  <FileUp className="w-4 h-4" />
                   업로드
                 </div>
               </label>
               <button
                 onClick={handleBulkApproval}
-                className="px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-lg hover:from-blue-500 hover:to-blue-600 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl"
+                className="px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-lg hover:from-blue-500 hover:to-blue-600 transition-all flex items-center gap-1 shadow-md hover:shadow-lg text-sm"
               >
-                <CheckSquare className="w-6 h-6" />
+                <CheckSquare className="w-4 h-4" />
                 검토
               </button>
             </div>
