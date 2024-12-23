@@ -1056,20 +1056,32 @@ export default function OrderList() {
   const formatDateTime = (dateTimeStr: string) => {
     if (!dateTimeStr) return "";
 
-    try {
-      // UTC 시간을 Date 객체로 변환
-      const date = new Date(dateTimeStr);
-      
-      // UTC+9 (한국 시간)으로 변환
-      const kstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
-      
-      const year = kstDate.getFullYear();
-      const month = String(kstDate.getMonth() + 1).padStart(2, '0');
-      const day = String(kstDate.getDate()).padStart(2, '0');
-      const hours = String(kstDate.getHours()).padStart(2, '0');
-      const minutes = String(kstDate.getMinutes()).padStart(2, '0');
+    console.log('Original dateTimeStr:', dateTimeStr); // 디버깅용
 
-      return `${year}-${month}-${day} ${hours}:${minutes}`;
+    try {
+      // 날짜 형식이 "YY- MM- DD- HH:mm" 인 경우
+      if (dateTimeStr.includes('- ')) {
+        const parts = dateTimeStr.split('- ');
+        if (parts.length >= 3) {
+          const [year, month, day] = parts;
+          const time = parts[3] || '00:00';
+          return `20${year}-${month}-${day} ${time}`;
+        }
+      }
+
+      // ISO 형식인 경우
+      const date = new Date(dateTimeStr);
+      if (!isNaN(date.getTime())) {
+        const kstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
+        const year = kstDate.getFullYear();
+        const month = String(kstDate.getMonth() + 1).padStart(2, '0');
+        const day = String(kstDate.getDate()).padStart(2, '0');
+        const hours = String(kstDate.getHours()).padStart(2, '0');
+        const minutes = String(kstDate.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}`;
+      }
+
+      return dateTimeStr;
     } catch (error) {
       console.error("Error formatting date:", error);
       return dateTimeStr;
@@ -1078,9 +1090,16 @@ export default function OrderList() {
 
   const handleApprove = async (orderId: number) => {
     try {
+      // 현재 시간을 "YY- MM- DD- HH:mm" 형식으로 포맷팅
       const now = new Date();
-      // UTC 시간으로 변환 (서버에 맞춤)
-      const currentTime = now.toISOString();
+      const year = String(now.getFullYear()).slice(-2);
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const currentTime = `${year}- ${month}- ${day}- ${hours}:${minutes}`;
+
+      console.log('Sending currentTime:', currentTime); // 디버깅용
 
       const response = await fetch(`${API_BASE_URL}/orders/${orderId}/approve`, {
         method: 'POST',
@@ -1097,9 +1116,6 @@ export default function OrderList() {
         throw new Error('Failed to approve order');
       }
 
-      // 응답 데이터를 받아서 즉시 상태 업데이트
-      const updatedOrder = await response.json();
-      
       // orders 배열에서 해당 주문을 찾아 업데이트
       setOrders(prevOrders => 
         prevOrders.map(order => 
