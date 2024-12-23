@@ -1247,7 +1247,7 @@ export default function OrderList() {
                 className="px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-lg hover:from-blue-500 hover:to-blue-600 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl"
               >
                 <CheckSquare className="w-6 h-6" />
-                일괄검토
+                검토
               </button>
             </div>
           </div>

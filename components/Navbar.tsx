@@ -165,7 +165,7 @@ export default function Navbar() {
                 <>
                   <div className={`cursor-${currentUser === 'jieun' ? 'default' : 'default'}`}>
                     <Image
-                      src={currentUser === 'jieun' ? "/lee.png" : "/heeju.jpeg"}
+                      src={currentUser === 'jieun' ? "/jieun.png" : "/heeju.jpeg"}
                       alt="avatar"
                       width={40}
                       height={40}
