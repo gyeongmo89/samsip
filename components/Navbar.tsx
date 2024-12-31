@@ -107,10 +107,10 @@ export default function Navbar() {
             </div>
             <div>
               <div className="hidden md:block">
-                <div className="ml-10 flex items-baseline space-x-4">
+                <div className="ml-10 flex items-baseline space-x-2">
                   <Link
                     href="/orders"
-                    className={`text-white hover:bg-green-400 hover:text-black rounded-md px-3 py-2 text-md font-medium transition-colors hover:scale-110 transform  ${isActive(
+                    className={`text-white hover:bg-green-400 hover:text-black rounded-md px-2 py-2 text-md font-medium transition-colors hover:scale-110 transform whitespace-nowrap ${isActive(
                       "/orders"
                     )}`}
                   >
@@ -118,7 +118,7 @@ export default function Navbar() {
                   </Link>
                   <Link
                     href="/supplier"
-                    className={`text-white hover:bg-green-400 hover:text-black rounded-md px-3 py-2 text-md font-medium transition-colors hover:scale-110 transform ${isActive(
+                    className={`text-white hover:bg-green-400 hover:text-black rounded-md px-2 py-2 text-md font-medium transition-colors hover:scale-110 transform whitespace-nowrap ${isActive(
                       "/supplier"
                     )}`}
                   >
@@ -126,7 +126,7 @@ export default function Navbar() {
                   </Link>
                   <Link
                     href="/items"
-                    className={`text-white hover:bg-green-400 hover:text-black rounded-md px-3 py-2 text-md font-medium transition-colors hover:scale-110 transform ${isActive(
+                    className={`text-white hover:bg-green-400 hover:text-black rounded-md px-2 py-2 text-md font-medium transition-colors hover:scale-110 transform whitespace-nowrap ${isActive(
                       "/items"
                     )}`}
                   >
@@ -134,7 +134,7 @@ export default function Navbar() {
                   </Link>
                   <Link
                     href="/units"
-                    className={`text-white hover:bg-green-400 hover:text-black rounded-md px-3 py-2 text-md font-medium transition-colors hover:scale-110 transform ${isActive(
+                    className={`text-white hover:bg-green-400 hover:text-black rounded-md px-2 py-2 text-md font-medium transition-colors hover:scale-110 transform whitespace-nowrap ${isActive(
                       "/units"
                     )}`}
                   >
@@ -142,7 +142,7 @@ export default function Navbar() {
                   </Link>
                   <Link
                     href="/dashboard"
-                    className={`text-white hover:bg-green-400 hover:text-black rounded-md px-3 py-2 text-md font-medium transition-colors hover:scale-110 transform ${isActive(
+                    className={`text-white hover:bg-green-400 hover:text-black rounded-md px-2 py-2 text-md font-medium transition-colors hover:scale-110 transform whitespace-nowrap ${isActive(
                       "/dashboard"
                     )}`}
                   >
@@ -150,7 +150,7 @@ export default function Navbar() {
                   </Link>
                   <Link
                     href="/formDownload"
-                    className={`text-white hover:bg-green-400 hover:text-black rounded-md px-3 py-2 text-md font-medium transition-colors hover:scale-110 transform ${isActive(
+                    className={`text-white hover:bg-green-400 hover:text-black rounded-md px-2 py-2 text-md font-medium transition-colors hover:scale-110 transform whitespace-nowrap ${isActive(
                       "/formDownload"
                     )}`}
                   >
