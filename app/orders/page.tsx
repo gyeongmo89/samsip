@@ -101,14 +101,14 @@ export default function OrderList() {
     price: "",
     total: "",
     payment_cycle: "",
-    payment_method: "계좌이체",
+    payment_method: "daily",
     client: "",
     notes: "",
     review: "",
   });
 
-  const paymentMethods = ["계좌이체", "현금", "카드결제"];
-  const paymentCycles = ["미정", "매월초", "매월중순", "매월말", "기타입력"];
+  const paymentMethods = ["daily", "weekly", "monthly"];
+  const paymentCycles = ["미정", "마감후 한달안", "매주 월요일", "월초카드결제", "주문과 동시결제", "카드결제(선결제)"];
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState({
@@ -1832,13 +1832,20 @@ export default function OrderList() {
                 classNamePrefix="select"
                 placeholder="결제주기 선택"
                 required
+                styles={{
+                  control: (provided) => ({
+                    ...provided,
+                    minHeight: '38px',
+                    height: '38px'
+                  }),
+                }}
               />
             </div>
 
             {/* 결제유형 */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                결제유형 <span className="text-red-500">*</span>
+                구입주기 <span className="text-red-500">*</span>
               </label>
               <Select
                 value={{
@@ -1857,14 +1864,14 @@ export default function OrderList() {
                 }))}
                 className="mt-1 text-black"
                 classNamePrefix="select"
-                placeholder="결제유형 선택"
+                placeholder="구입주기 선택"
                 required
                 styles={{
                   control: (provided) => ({
                     ...provided,
-                    minHeight: '42px',
-                    height: '42px'
-                  })
+                    minHeight: '38px',
+                    height: '38px'
+                  }),
                 }}
               />
             </div>
