@@ -42,7 +42,7 @@ const defaultFormData = {
   price: "",
   total: "",
   payment_cycle: "",
-  payment_method: "계좌이체",
+  payment_method: "daily",
   client: "",
   notes: "",
   date: new Date().toISOString().split("T")[0],
@@ -62,8 +62,8 @@ export default function OrderModal({
   const [showDaySelect, setShowDaySelect] = useState(false);
   const [isVatIncluded, setIsVatIncluded] = useState(true);
 
-  const paymentMethods = ["계좌이체", "현금", "카드결제"];
-  const paymentCycles = ["미정", "매월초", "매월중순", "매월말", "기타입력"];
+  const paymentMethods = ["daily", "weekly", "monthly"];
+  const paymentCycles = ["미정", "마감후 한달안", "매주 월요일", "월초카드결제", "주문과 동시결제", "카드결제(선결제)"];
 
   const formatNumber = (value: string | undefined | null) => {
     if (!value) return "";
@@ -450,73 +450,29 @@ export default function OrderModal({
             />
           </div>
 
-          {/* 결제주기 */}
+          {/* <div className="mb-4"> */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              결제주기 <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              대금지급 주기 <span className="text-red-500">*</span>
             </label>
-            <div className="relative">
-              <select
-                value={
-                  formData.payment_cycle === ""
-                    ? "미정"
-                    : showDaySelect
-                    ? "기타입력"
-                    : formData.payment_cycle
-                }
-                onChange={(e) => handlePaymentCycleChange(e.target.value)}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black h-10 appearance-none"
-                required
-              >
-                {paymentCycles.map((cycle) => (
-                  <option key={cycle} value={cycle}>
-                    {cycle}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                </svg>
-              </div>
-            </div>
-            {showDaySelect && (
-              <Select
-                value={{
-                  value: formData.payment_cycle,
-                  label: `${formData.payment_cycle}일`,
-                }}
-                onChange={(option: SingleValue<{ value: string; label: string }>, actionMeta: ActionMeta<{ value: string; label: string }>) => {
-                  if (option) {
-                    setFormData((prev) => ({
-                      ...prev,
-                      payment_cycle: option.value,
-                    }));
-                  }
-                }}
-                options={Array.from({ length: 31 }, (_, i) => ({
-                  value: (i + 1).toString(),
-                  label: `${i + 1}일`,
-                }))}
-                className="mt-2 text-black"
-                classNamePrefix="select"
-                placeholder="날짜 선택"
-                isSearchable
-                styles={{
-                  control: (provided) => ({
-                    ...provided,
-                    minHeight: '40px',
-                    height: '40px'
-                  }),
-                }}
-              />
-            )}
+            <select
+              value={formData.payment_cycle}
+              onChange={(e) => handlePaymentCycleChange(e.target.value)}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black h-[38px]"
+              required
+            >
+              <option value="" className="text-black">선택하세요</option>
+              {paymentCycles.map((cycle) => (
+                <option key={cycle} value={cycle} className="text-black">
+                  {cycle}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* 결제유형 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              결제유형 <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              구입주기 <span className="text-red-500">*</span>
             </label>
             <select
               value={formData.payment_method}
@@ -526,8 +482,9 @@ export default function OrderModal({
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black h-[38px]"
               required
             >
+              <option value="" className="text-black">선택하세요</option>
               {paymentMethods.map((method) => (
-                <option key={method} value={method}>
+                <option key={method} value={method} className="text-black">
                   {method}
                 </option>
               ))}

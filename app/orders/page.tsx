@@ -1158,6 +1158,9 @@ export default function OrderList() {
           <div className="flex justify-between items-center ">
             <div className="flex justify-between items-center w-full">
               <h2 className="text-2xl font-bold text-gray-800">발주현황</h2>
+              <span className="text-lg text-gray-600">
+                (총액: {formatNumber(filteredOrders.reduce((sum, order) => sum + (order.total || 0), 0).toString())}원)
+              </span>
               <div className="flex gap-2 font-semibold text-sm">
                 <button
                   className="px-3 py-1 bg-white text-blue-500 border border-blue-500 rounded hover:bg-blue-100 transition-colors"
