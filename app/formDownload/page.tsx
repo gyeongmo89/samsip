@@ -17,11 +17,11 @@ export default function DownloadForms() {
           "구입처(*)": "",
           "품목(*)": "",
           "단가(*)": "",
-          "단위(*)": "",
-          "수량(*)": "숫자만 입력(ex. 1)",
-          "총액(*)": "=D2*F2", // 단가 * 수량
-          "대금지급주기(*)": "미정 or 마감후 한달안 or 매주 월요일 or 월초카드결제 or 주문과 동시결제 or 카드결제(선결제)",
-          "구입주기(*)": "daily or weekly or monthly",
+          "단위": "", // updated field name
+          "수량": "숫자만 입력(ex. 1)", // updated field name
+          "총액": "=D2*F2", // updated field name // 단가 * 수량
+          "대금지급주기": "미정 or 마감후 한달안 or 매주 월요일 or 월초카드결제 or 주문과 동시결제 or 카드결제(선결제)", // updated field name
+          "구입주기": "daily or weekly or monthly", // updated field name
           구입연락처: "010-0000-0000",
           비고: "부가세 별도",
         },

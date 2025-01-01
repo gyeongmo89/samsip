@@ -41,12 +41,12 @@ const defaultFormData = {
   quantity: "",
   price: "",
   total: "",
-  payment_cycle: "",
-  payment_method: "daily",
+  payment_schedule: "",  // 대금지급주기
+  purchase_cycle: "daily",  // 구입주기
   client: "",
   notes: "",
   date: new Date().toISOString().split("T")[0],
-  custom_payment_cycle: "",
+  custom_payment_schedule: "",
 };
 
 export default function OrderModal({
@@ -143,11 +143,11 @@ export default function OrderModal({
           quantity: parseFloat(formData.quantity.replace(/,/g, "")),
           price: parseFloat(formData.price.replace(/,/g, "")),
           total: parseFloat(formData.total.replace(/,/g, "")),
-          payment_cycle:
-            formData.payment_cycle === "기타입력"
-              ? formData.custom_payment_cycle
-              : formData.payment_cycle,
-          payment_method: formData.payment_method,
+          payment_schedule:
+            formData.payment_schedule === "기타입력"
+              ? formData.custom_payment_schedule
+              : formData.payment_schedule,
+          purchase_cycle: formData.purchase_cycle,
           client: formData.client,
           notes: formData.notes,
           date: formData.date,
@@ -179,10 +179,10 @@ export default function OrderModal({
   const handlePaymentCycleChange = (value: string) => {
     if (value === "기타입력") {
       setShowDaySelect(true);
-      setFormData((prev) => ({ ...prev, payment_cycle: "1" }));
+      setFormData((prev) => ({ ...prev, payment_schedule: "1" }));
     } else {
       setShowDaySelect(false);
-      setFormData((prev) => ({ ...prev, payment_cycle: value }));
+      setFormData((prev) => ({ ...prev, payment_schedule: value }));
     }
   };
 
@@ -456,7 +456,7 @@ export default function OrderModal({
               대금지급 주기 <span className="text-red-500">*</span>
             </label>
             <select
-              value={formData.payment_cycle}
+              value={formData.payment_schedule}
               onChange={(e) => handlePaymentCycleChange(e.target.value)}
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black h-[38px]"
               required
@@ -475,9 +475,9 @@ export default function OrderModal({
               구입주기 <span className="text-red-500">*</span>
             </label>
             <select
-              value={formData.payment_method}
+              value={formData.purchase_cycle}
               onChange={(e) =>
-                handleInputChange("payment_method", e.target.value)
+                handleInputChange("purchase_cycle", e.target.value)
               }
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black h-[38px]"
               required

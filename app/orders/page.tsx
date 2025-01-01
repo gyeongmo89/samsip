@@ -31,8 +31,8 @@ interface Order {
   quantity: number;
   price: number;
   total: number;
-  payment_cycle: string;
-  payment_method: string;
+  payment_schedule: string;  // 대금지급주기
+  purchase_cycle: string;    // 구입주기
   client: string;
   notes?: string;
   date?: string;
@@ -69,8 +69,8 @@ interface FormData {
   quantity: string;
   price: string;
   total: string;
-  payment_cycle: string;
-  payment_method: string;
+  payment_schedule: string;  // 대금지급주기
+  purchase_cycle: string;    // 구입주기
   client: string;
   notes: string;
   review: string;
@@ -100,8 +100,8 @@ export default function OrderList() {
     quantity: "",
     price: "",
     total: "",
-    payment_cycle: "",
-    payment_method: "daily",
+    payment_schedule: "",  // 대금지급주기
+    purchase_cycle: "",    // 구입주기
     client: "",
     notes: "",
     review: "",
@@ -458,8 +458,8 @@ export default function OrderList() {
       단위: order.unit.name,
       수량: order.quantity,
       총액: order.total,
-      결제주기: order.payment_cycle,
-      결제유형: order.payment_method,
+      결제주기: order.payment_schedule,  // 대금지급주기
+      결제유형: order.purchase_cycle,    // 구입주기
       구입연락처: order.client,
       비고: order.notes,
       검토상태: order.approval_status === "approved" ? "검토완료" : "검토대기",
@@ -535,8 +535,8 @@ export default function OrderList() {
       quantity: order.quantity.toString(),
       price: order.price.toString(),
       total: order.total.toString(),
-      payment_cycle: order.payment_cycle,
-      payment_method: order.payment_method,
+      payment_schedule: order.payment_schedule,  // 대금지급주기
+      purchase_cycle: order.purchase_cycle,    // 구입주기
       client: order.client,
       notes: order.notes ?? "",
       review: order.review ?? "",
@@ -1486,10 +1486,10 @@ export default function OrderList() {
                       {order.total.toLocaleString()}
                     </td>
                     <td className="px-2 py-4 whitespace-nowrap text-center text-black">
-                      {order.payment_cycle}
+                      {order.payment_schedule}
                     </td>
                     <td className="px-2 py-4 whitespace-nowrap text-center text-black">
-                      {order.payment_method}
+                      {order.purchase_cycle}
                     </td>
                     <td className="px-2 py-4 whitespace-nowrap text-center text-black">
                       {order.client}
@@ -1815,13 +1815,13 @@ export default function OrderList() {
               </label>
               <Select
                 value={{
-                  value: formData.payment_cycle,
-                  label: formData.payment_cycle,
+                  value: formData.payment_schedule,
+                  label: formData.payment_schedule,
                 }}
                 onChange={(option) =>
                   setFormData({
                     ...formData,
-                    payment_cycle: option?.value || "",
+                    payment_schedule: option?.value || "",
                   })
                 }
                 options={paymentCycles.map((cycle) => ({
@@ -1849,13 +1849,13 @@ export default function OrderList() {
               </label>
               <Select
                 value={{
-                  value: formData.payment_method,
-                  label: formData.payment_method,
+                  value: formData.purchase_cycle,
+                  label: formData.purchase_cycle,
                 }}
                 onChange={(option) =>
                   setFormData({
                     ...formData,
-                    payment_method: option?.value || "",
+                    purchase_cycle: option?.value || "",
                   })
                 }
                 options={paymentMethods.map((method) => ({
