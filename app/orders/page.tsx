@@ -1157,10 +1157,12 @@ export default function OrderList() {
         <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
           <div className="flex justify-between items-center ">
             <div className="flex justify-between items-center w-full">
-              <h2 className="text-2xl font-bold text-gray-800">발주현황</h2>
-              <span className="text-lg text-gray-600">
-                (총액: {formatNumber(filteredOrders.reduce((sum, order) => sum + (order.total || 0), 0).toString())}원)
-              </span>
+              <div className="flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-gray-800">발주현황</h2>
+                <span className="text-lg text-gray-600">
+                  (총액: {formatNumber(filteredOrders.reduce((sum, order) => sum + (order.total || 0), 0).toString())}원)
+                </span>
+              </div>
               <div className="flex gap-2 font-semibold text-sm">
                 <button
                   className="px-3 py-1 bg-white text-blue-500 border border-blue-500 rounded hover:bg-blue-100 transition-colors"
@@ -1397,10 +1399,10 @@ export default function OrderList() {
                     총액
                   </th>
                   <th className="w-[100px] px-2 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">
-                    결제주기
+                    대금지급주기
                   </th>
                   <th className="w-[120px] px-2 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">
-                    결제유형
+                    구입주기
                   </th>
                   <th className="w-[120px] px-2 py-3 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">
                     구입연락처
