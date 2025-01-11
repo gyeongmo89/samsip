@@ -89,7 +89,7 @@ export default function LoginForm() {
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-600 space-y-1">
-          <div>The copyright of this system belongs to Kimgyongmo.</div>
+          <div>The copyright of this system belongs to Kimgyeongmo.</div>
           <div>Version 1.0.0</div>
         </div>
       </div>
